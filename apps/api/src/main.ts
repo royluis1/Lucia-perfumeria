@@ -7,7 +7,8 @@ async function bootstrap() {
   // Habilitamos CORS para que tu frontend en Next.js pueda hacerle peticiones
   app.enableCors(); 
   
-  await app.listen(3001);
-  console.log('🚀 Backend corriendo en http://localhost:3001');
+  const port = Number(process.env.PORT ?? 3001);
+  await app.listen(port);
+  console.log(`Backend corriendo en http://localhost:${port}`);
 }
 bootstrap();

@@ -15,7 +15,7 @@ export default function HomePage() {
             LUCÍA
           </a>
           <nav className="hidden gap-8 text-xs uppercase tracking-[0.16em] md:flex">
-            <a href="#coleccion">Colección</a>
+            <a href="/shop">Colección</a>
             <a href="#categorias">Categorías</a>
             <a href="#historia">Nuestra historia</a>
           </nav>
@@ -38,7 +38,7 @@ export default function HomePage() {
           </p>
           <a
             className="mt-10 inline-flex border border-black bg-black px-7 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black"
-            href="#coleccion"
+            href="/shop"
           >
             Explorar colección
           </a>
@@ -71,7 +71,7 @@ export default function HomePage() {
             <p className="text-xs uppercase tracking-[0.3em] text-black/50">Selección Lucía</p>
             <h2 className="mt-3 font-display text-5xl font-bold uppercase tracking-[-0.03em]">Favoritos</h2>
           </div>
-          <a className="hidden text-xs font-bold uppercase tracking-[0.18em] underline md:block" href="#">Ver todo</a>
+          <a className="hidden text-xs font-bold uppercase tracking-[0.18em] underline md:block" href="/shop">Ver todo</a>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {featuredProducts.map((product, index) => (
