@@ -1,0 +1,83 @@
+// apps/api/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(CUSTOMER)
+  name          String
+  phone         String?
+  mfaEnabled    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  SUPERADMIN
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  name          String
+  brand         String
+  description   String
+  price         Decimal
+  stock         Int
+  sku           String   @unique
+  isActive      Boolean  @default(true)
+  weightGrams   Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  userId         String
+  subtotal       Decimal
+  shippingCost   Decimal
+  total          Decimal
+  status         OrderStatus   @default(PENDING)
+  paymentStatus  PaymentStatus @default(PENDING)
+  trackingCode   String?
+  createdAt      DateTime      @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROCESS
+  REFUNDED
+  CHARGED_BACK
+}
+
+model Review {
+  id                 String   @id @default(uuid())
+  productId          String
+  userId             String
+  rating             Int      
+  comment            String
+  isVerifiedPurchase Boolean  @default(false)
+  isApproved         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+}
