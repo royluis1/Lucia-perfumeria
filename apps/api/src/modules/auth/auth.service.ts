@@ -4,9 +4,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import * as bcrypt from 'bcryptjs';
+import { createHash, randomBytes } from 'crypto';
+
+export const REFRESH_COOKIE_NAME = 'lucia_refresh_token';
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -66,14 +71,87 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    const { accessToken, refreshToken } = await this.createSession(user);
     const { passwordHash: _passwordHash, ...publicUser } = user;
 
-    return { accessToken, user: publicUser };
+    return { accessToken, refreshToken, user: publicUser };
+  }
+
+  async refresh(refreshToken: string) {
+    if (!refreshToken) throw new UnauthorizedException('Refresh token inválido');
+    const tokenHash = this.hashRefreshToken(refreshToken);
+    const now = new Date();
+    const nextRefreshToken = this.generateRefreshToken();
+    const nextTokenHash = this.hashRefreshToken(nextRefreshToken);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const session = await tx.refreshSession.findUnique({
+        where: { tokenHash },
+        include: { user: true },
+      });
+      if (!session || session.revokedAt || session.expiresAt <= now) {
+        throw new UnauthorizedException('Refresh token inválido o expirado');
+      }
+      const revoked = await tx.refreshSession.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      if (revoked.count !== 1) {
+        throw new UnauthorizedException('Refresh token inválido');
+      }
+      await tx.refreshSession.create({
+        data: {
+          tokenHash: nextTokenHash,
+          userId: session.userId,
+          expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+        },
+      });
+      return session.user;
+    });
+
+    return {
+      accessToken: await this.signAccessToken(result),
+      refreshToken: nextRefreshToken,
+      user: this.toPublicUser(result),
+    };
+  }
+
+  async logout(refreshToken: string | undefined) {
+    if (refreshToken) {
+      await this.prisma.refreshSession.updateMany({
+        where: { tokenHash: this.hashRefreshToken(refreshToken), revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+  }
+
+  private async createSession(user: { id: string; email: string; role: Role }) {
+    const refreshToken = this.generateRefreshToken();
+    await this.prisma.refreshSession.create({
+      data: {
+        tokenHash: this.hashRefreshToken(refreshToken),
+        userId: user.id,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+    return { accessToken: await this.signAccessToken(user), refreshToken };
+  }
+
+  private signAccessToken(user: { id: string; email: string; role: Role }) {
+    return this.jwtService.signAsync({ sub: user.id, email: user.email, role: user.role });
+  }
+
+  private generateRefreshToken() {
+    return randomBytes(48).toString('base64url');
+  }
+
+  private hashRefreshToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private toPublicUser<T extends { passwordHash: string }>(user: T): Omit<T, 'passwordHash'> {
+    const { passwordHash: _passwordHash, ...publicUser } = user;
+    return publicUser;
   }
 
   private readonly publicUserSelect = {

@@ -6,9 +6,10 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule],
   controllers: [],
   providers: [],
 })
