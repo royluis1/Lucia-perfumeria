@@ -12,7 +12,7 @@ type CartItem = {
 
 type Cart = { items: CartItem[]; subtotal: string };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);

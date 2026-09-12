@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { getAccessToken } from '../lib/auth';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export function AddToCartButton({ productId, disabled }: { productId: string; disabled?: boolean }) {
   const [message, setMessage] = useState('');

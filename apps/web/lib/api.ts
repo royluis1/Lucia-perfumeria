@@ -19,7 +19,7 @@ export type ProductList = {
   totalPages: number;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export async function getProducts(searchParams?: URLSearchParams): Promise<ProductList> {
   const query = searchParams?.toString();

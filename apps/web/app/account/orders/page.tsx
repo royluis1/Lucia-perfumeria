@@ -12,7 +12,7 @@ type Order = {
   items: Array<{ quantity: number; product: { name: string; brand: string } }>;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);

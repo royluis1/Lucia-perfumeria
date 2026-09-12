@@ -20,6 +20,9 @@ export default function HomePage() {
             <a href="#historia">Nuestra historia</a>
           </nav>
           <div className="flex items-center gap-4 text-xs uppercase tracking-[0.12em]">
+            <a className="font-bold underline underline-offset-4" href="/login">
+              Ingresar
+            </a>
             <button aria-label="Buscar productos" type="button">Buscar</button>
             <button aria-label="Abrir carrito" type="button">Carrito (0)</button>
           </div>

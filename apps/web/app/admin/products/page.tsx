@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { getAccessToken } from '../../../lib/auth';
 
 type Product = { id: string; name: string; brand: string; price: string; stock: number; isActive: boolean };
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);

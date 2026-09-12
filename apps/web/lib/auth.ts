@@ -8,7 +8,7 @@ export type AuthResponse = {
   };
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${apiUrl}/auth/login`, {
