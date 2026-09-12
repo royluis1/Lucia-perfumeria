@@ -18,6 +18,7 @@ model User {
   phone         String?
   mfaEnabled    Boolean  @default(false)
   createdAt     DateTime @default(now())
+  cart          Cart?
 }
 
 enum Role {
@@ -39,6 +40,27 @@ model Product {
   weightGrams   Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  cartItems     CartItem[]
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
 }
 
 model Order {
