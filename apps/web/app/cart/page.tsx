@@ -52,6 +52,7 @@ export default function CartPage() {
           ))}
           <div className="flex justify-between pt-6 text-lg font-semibold"><span>Subtotal</span><span>${cart.subtotal}</span></div>
           <a className="mt-6 block w-full border border-black bg-black px-8 py-4 text-center text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-gold hover:text-black" href="/checkout">Continuar al checkout</a>
+          <a className="mt-4 block text-center text-xs uppercase tracking-[0.16em] underline" href="/account/orders">Ver mis pedidos</a>
         </div>
       )}
     </main>

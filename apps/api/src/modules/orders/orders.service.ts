@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ShippingAddress } from './dto/create-order.dto';
+import { ShippingService } from '../shipping/shipping.service';
 
 const orderInclude = {
   items: {
@@ -16,7 +17,10 @@ type OrderWithItems = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly shippingService: ShippingService,
+  ) {}
 
   async create(userId: string, shippingAddress: ShippingAddress) {
     try {
@@ -38,6 +42,16 @@ export class OrdersService {
           };
         });
         const subtotal = lines.reduce((sum, line) => sum.add(line.subtotal), new Prisma.Decimal(0));
+        const weightGrams = cart.items.reduce(
+          (sum, item) => sum + item.product.weightGrams * item.quantity,
+          0,
+        );
+        const shippingQuote = this.shippingService.quote({
+          postalCode: shippingAddress.postalCode,
+          weightGrams,
+          declaredValue: Number(subtotal.toString()),
+        });
+        const shippingCost = new Prisma.Decimal(shippingQuote.cost);
 
         for (const line of lines) {
           const updated = await tx.product.updateMany({
@@ -51,8 +65,8 @@ export class OrdersService {
           data: {
             userId,
             subtotal,
-            shippingCost: new Prisma.Decimal(0),
-            total: subtotal,
+            shippingCost,
+            total: subtotal.add(shippingCost),
             shippingAddress: shippingAddress as unknown as Prisma.InputJsonValue,
             items: { create: lines },
           },
