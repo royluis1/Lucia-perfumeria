@@ -10,28 +10,29 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String
-  role          Role     @default(CUSTOMER)
-  name          String
-  phone         String?
-  mfaEnabled    Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  cart          Cart?
-  orders        Order[]
-  reviews       Review[]
+  id              String           @id @default(uuid())
+  email           String           @unique
+  passwordHash    String
+  role            Role             @default(CUSTOMER)
+  name            String
+  phone           String?
+  mfaEnabled      Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  cart            Cart?
+  orders          Order[]
+  reviews         Review[]
   refreshSessions RefreshSession[]
+  auditLogs       AuditLog[]       @relation("AuditLogActor")
 }
 
 model RefreshSession {
-  id         String   @id @default(uuid())
-  tokenHash  String   @unique
-  userId     String
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
@@ -44,21 +45,21 @@ enum Role {
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  slug          String   @unique
-  name          String
-  brand         String
-  description   String
-  price         Decimal
-  stock         Int
-  sku           String   @unique
-  isActive      Boolean  @default(true)
-  weightGrams   Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  cartItems     CartItem[]
-  orderItems    OrderItem[]
-  reviews       Review[]
+  id          String      @id @default(uuid())
+  slug        String      @unique
+  name        String
+  brand       String
+  description String
+  price       Decimal
+  stock       Int
+  sku         String      @unique
+  isActive    Boolean     @default(true)
+  weightGrams Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     Review[]
 }
 
 model Cart {
@@ -71,29 +72,31 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   cartId    String
   productId String
   quantity  Int
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId])
 }
 
 model Order {
-  id             String        @id @default(uuid())
-  userId         String
-  subtotal       Decimal
-  shippingCost   Decimal
-  total          Decimal
-  status         OrderStatus   @default(PENDING)
-  paymentStatus  PaymentStatus @default(PENDING)
-  trackingCode   String?
-  shippingAddress Json
-  createdAt      DateTime      @default(now())
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items          OrderItem[]
+  id                String             @id @default(uuid())
+  userId            String
+  subtotal          Decimal
+  shippingCost      Decimal
+  total             Decimal
+  status            OrderStatus        @default(PENDING)
+  paymentStatus     PaymentStatus      @default(PENDING)
+  trackingCode      String?
+  shippingAddress   Json
+  createdAt         DateTime           @default(now())
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items             OrderItem[]
+  paymentPreference PaymentPreference?
+  paymentEvents     PaymentEvent[]
 }
 
 model OrderItem {
@@ -128,11 +131,38 @@ enum PaymentStatus {
   CHARGED_BACK
 }
 
+model PaymentPreference {
+  id        String         @id @default(uuid())
+  orderId   String         @unique
+  total     Decimal
+  status    PaymentStatus  @default(PENDING)
+  sandbox   Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events    PaymentEvent[]
+}
+
+model PaymentEvent {
+  id             String            @id @default(uuid())
+  idempotencyKey String            @unique
+  eventType      String
+  preferenceId   String
+  orderId        String
+  status         PaymentStatus
+  createdAt      DateTime          @default(now())
+  preference     PaymentPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
+  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([preferenceId, createdAt])
+  @@index([orderId, createdAt])
+}
+
 model Review {
   id                 String   @id @default(uuid())
   productId          String
   userId             String
-  rating             Int      
+  rating             Int
   comment            String
   isVerifiedPurchase Boolean  @default(false)
   isApproved         Boolean  @default(false)
@@ -142,4 +172,19 @@ model Review {
 
   @@index([productId, isApproved])
   @@index([userId, productId, isApproved])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json
+  createdAt DateTime @default(now())
+  actor     User     @relation("AuditLogActor", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
 }

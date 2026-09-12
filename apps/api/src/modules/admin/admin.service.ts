@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 const adminProductSelect = {
   id: true, slug: true, name: true, brand: true, description: true,
@@ -12,38 +13,52 @@ const adminProductSelect = {
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   listProducts() {
     return this.prisma.product.findMany({ select: adminProductSelect, orderBy: { createdAt: 'desc' } });
   }
 
-  async createProduct(dto: CreateProductDto) {
+  async createProduct(actorId: string, dto: CreateProductDto) {
     try {
-      return await this.prisma.product.create({ data: dto, select: adminProductSelect });
+      const product = await this.prisma.product.create({ data: dto, select: adminProductSelect });
+      await this.auditLog.record(actorId, 'CREATE_PRODUCT', 'Product', product.id, {
+        slug: product.slug,
+        sku: product.sku,
+      });
+      return product;
     } catch (error) {
       this.handleUniqueError(error);
       throw error;
     }
   }
 
-  async updateProduct(id: string, dto: UpdateProductDto) {
+  async updateProduct(actorId: string, id: string, dto: UpdateProductDto) {
     await this.ensureProduct(id);
     try {
-      return await this.prisma.product.update({ where: { id }, data: dto, select: adminProductSelect });
+      const product = await this.prisma.product.update({ where: { id }, data: dto, select: adminProductSelect });
+      await this.auditLog.record(actorId, 'UPDATE_PRODUCT', 'Product', id, {
+        fields: Object.keys(dto),
+      });
+      return product;
     } catch (error) {
       this.handleUniqueError(error);
       throw error;
     }
   }
 
-  async deactivateProduct(id: string) {
+  async deactivateProduct(actorId: string, id: string) {
     await this.ensureProduct(id);
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: { id },
       data: { isActive: false },
       select: adminProductSelect,
     });
+    await this.auditLog.record(actorId, 'DEACTIVATE_PRODUCT', 'Product', id);
+    return product;
   }
 
   listPendingReviews() {
@@ -58,19 +73,26 @@ export class AdminService {
     });
   }
 
-  async approveReview(id: string) {
+  async approveReview(actorId: string, id: string) {
     await this.ensureReview(id);
-    return this.prisma.review.update({
+    const review = await this.prisma.review.update({
       where: { id },
       data: { isApproved: true },
       select: { id: true, rating: true, comment: true, isApproved: true, createdAt: true },
     });
+    await this.auditLog.record(actorId, 'APPROVE_REVIEW', 'Review', id);
+    return review;
   }
 
-  async deleteReview(id: string) {
+  async deleteReview(actorId: string, id: string) {
     await this.ensureReview(id);
     await this.prisma.review.delete({ where: { id } });
+    await this.auditLog.record(actorId, 'DELETE_REVIEW', 'Review', id);
     return { id, deleted: true };
+  }
+
+  listAuditLogs(page?: number, limit?: number) {
+    return this.auditLog.list(page, limit);
   }
 
   private async ensureProduct(id: string) {

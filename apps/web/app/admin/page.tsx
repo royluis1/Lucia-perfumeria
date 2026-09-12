@@ -18,7 +18,7 @@ export default function AdminPage() {
           <section className="border border-black/10 bg-white p-6" key={title}>
             <h2 className="font-display text-3xl font-bold uppercase">{title}</h2>
             <p className="mt-3 text-sm leading-6 text-black/60">{description}</p>
-            <button className="mt-8 border border-black px-4 py-3 text-xs font-bold uppercase tracking-[0.14em]" type="button">Abrir módulo</button>
+            {title === 'Productos' ? <Link className="mt-8 inline-block border border-black px-4 py-3 text-xs font-bold uppercase tracking-[0.14em]" href="/admin/products">Abrir módulo</Link> : <button className="mt-8 border border-black px-4 py-3 text-xs font-bold uppercase tracking-[0.14em]" type="button">Abrir módulo</button>}
           </section>
         ))}
       </div>
