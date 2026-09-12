@@ -15,7 +15,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register({ email, password, name, phone }: RegisterDto) {
+  async register(body: RegisterDto) {
+    this.validateRegisterPayload(body);
+    const { email, password, name, phone } = body;
     const normalizedEmail = this.normalizeEmail(email);
     this.validateCredentials(normalizedEmail, password, name);
 
@@ -47,7 +49,11 @@ export class AuthService {
     }
   }
 
-  async login({ email, password }: LoginDto) {
+  async login(body: LoginDto) {
+    if (!this.isRecord(body) || typeof body.email !== 'string' || typeof body.password !== 'string') {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    const { email, password } = body;
     const normalizedEmail = this.normalizeEmail(email);
     if (!normalizedEmail || typeof password !== 'string' || !password) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -96,6 +102,22 @@ export class AuthService {
         'Email, nombre y una contraseña de al menos 8 caracteres son requeridos',
       );
     }
+  }
+
+  private validateRegisterPayload(body: RegisterDto) {
+    if (
+      !this.isRecord(body) ||
+      typeof body.email !== 'string' ||
+      typeof body.password !== 'string' ||
+      typeof body.name !== 'string' ||
+      (body.phone !== undefined && typeof body.phone !== 'string')
+    ) {
+      throw new ConflictException('Email, nombre y una contraseña de al menos 8 caracteres son requeridos');
+    }
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
   private isPrismaUniqueConstraintError(error: unknown): error is { code: string } {

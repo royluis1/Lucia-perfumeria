@@ -3,9 +3,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './modules/products/products.module';
 import { CartModule } from './modules/cart/cart.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CartModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule],
   controllers: [],
   providers: [],
 })

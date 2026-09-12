@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { AddToCartButton } from '../../../components/add-to-cart-button';
 import { getProduct } from '../../../lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -38,9 +39,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className="mt-6 text-2xl">{price}</p>
           <p className="mt-8 max-w-lg leading-7 text-black/65">{product.description}</p>
           <p className="mt-6 text-sm text-black/55">Disponible para compra</p>
-          <button className="mt-8 border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black" type="button">
-            Agregar al carrito
-          </button>
+          <AddToCartButton productId={product.id} />
         </div>
       </section>
     </main>

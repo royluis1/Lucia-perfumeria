@@ -7,7 +7,7 @@ type CartItem = {
   productId: string;
   quantity: number;
   product: { name: string; brand: string; price: string; slug: string };
-  lineTotal: string;
+  subtotal: string;
 };
 
 type Cart = { items: CartItem[]; subtotal: string };
@@ -47,11 +47,11 @@ export default function CartPage() {
           {cart.items.map((item) => (
             <div className="flex justify-between border-b border-black/10 py-5" key={item.productId}>
               <div><h2 className="font-semibold">{item.product.name}</h2><p className="text-sm text-black/55">{item.product.brand} · Cantidad: {item.quantity}</p></div>
-              <p className="font-semibold">${item.lineTotal}</p>
+              <p className="font-semibold">${item.subtotal}</p>
             </div>
           ))}
           <div className="flex justify-between pt-6 text-lg font-semibold"><span>Subtotal</span><span>${cart.subtotal}</span></div>
-          <button className="mt-6 w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-gold hover:text-black" type="button">Continuar al checkout</button>
+          <a className="mt-6 block w-full border border-black bg-black px-8 py-4 text-center text-xs font-bold uppercase tracking-[0.18em] text-white hover:bg-gold hover:text-black" href="/checkout">Continuar al checkout</a>
         </div>
       )}
     </main>

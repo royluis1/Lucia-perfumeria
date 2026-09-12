@@ -1,4 +1,4 @@
-export class CartItemDto {
-  productId!: string;
-  quantity!: number;
+export interface CartItemDto {
+  productId: string;
+  quantity: number;
 }
