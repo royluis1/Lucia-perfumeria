@@ -12,6 +12,8 @@ const publicProductSelect = {
   description: true,
   price: true,
   weightGrams: true,
+  category: true,
+  imageUrl: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
@@ -29,24 +31,38 @@ export class ProductsService {
     }
 
     const search = query.search?.trim();
+    const category = query.category?.trim();
+    const brand = query.brand?.trim();
     const where: Prisma.ProductWhereInput = {
       isActive: true,
+      ...(category ? { category } : {}),
+      ...(brand ? { brand: { equals: brand, mode: 'insensitive' } } : {}),
       ...(search
         ? {
             OR: [
               { name: { contains: search, mode: 'insensitive' } },
               { brand: { contains: search, mode: 'insensitive' } },
+              { category: { contains: search, mode: 'insensitive' } },
               { slug: { contains: search, mode: 'insensitive' } },
             ],
           }
         : {}),
     };
 
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
+      query.sort === 'price_asc'
+        ? { price: 'asc' }
+        : query.sort === 'price_desc'
+          ? { price: 'desc' }
+          : query.sort === 'name'
+            ? { name: 'asc' }
+            : { createdAt: 'desc' };
+
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
         select: publicProductSelect,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),

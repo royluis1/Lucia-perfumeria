@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { SiteFooter } from '../components/site-footer';
+import { CartProvider } from '../lib/cart';
+import { CartSidebar } from '../components/cart-sidebar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,7 +14,13 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}<SiteFooter /></body>
+      <body>
+        <CartProvider>
+          {children}
+          <CartSidebar />
+        </CartProvider>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

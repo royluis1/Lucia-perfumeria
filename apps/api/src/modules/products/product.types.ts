@@ -6,6 +6,8 @@ export interface PublicProduct {
   description: string;
   price: string;
   weightGrams: number;
+  category: string;
+  imageUrl: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

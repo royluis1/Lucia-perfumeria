@@ -10,7 +10,8 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "incremental": true
+    "incremental": true,
+    "isolatedModules": true
   },
-  "exclude": ["dist", "prisma"]
+  "exclude": ["dist", "prisma", "node_modules", "__mocks__", "jest.config.js", "**/*.spec.ts"]
 }

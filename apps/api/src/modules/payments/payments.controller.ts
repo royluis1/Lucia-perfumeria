@@ -16,8 +16,9 @@ export class PaymentsController {
   @Post('webhook')
   receiveWebhook(
     @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Headers('x-webhook-secret') webhookSecret: string | undefined,
     @Body() body: LocalPaymentWebhookDto,
   ) {
-    return this.paymentsService.receiveLocalWebhook(idempotencyKey, body);
+    return this.paymentsService.receiveLocalWebhook(idempotencyKey, webhookSecret, body);
   }
 }

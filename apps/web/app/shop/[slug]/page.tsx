@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
 import { getProduct } from '../../../lib/api';
 
@@ -15,7 +16,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const price = Number(product.price).toLocaleString('es-AR', {
+  const priceValue = Number(product.price);
+  const price = priceValue.toLocaleString('es-AR', {
     style: 'currency',
     currency: 'ARS',
     maximumFractionDigits: 0,
@@ -23,15 +25,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main>
-      <header className="border-b border-black/10 px-6 py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
-          <a className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Volver al catálogo</a>
-        </div>
-      </header>
+      <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
-        <div className="flex aspect-square items-end justify-center bg-white p-16">
-          <div className="h-72 w-40 bg-gradient-to-b from-white to-black/10 shadow-xl" />
+        <div className="relative flex aspect-square items-end justify-center overflow-hidden bg-white p-16">
+          {product.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="absolute inset-0 h-full w-full object-cover" src={product.imageUrl} alt={product.name} />
+          ) : (
+            <div className="h-72 w-40 bg-gradient-to-b from-white to-black/10 shadow-xl" />
+          )}
         </div>
         <div className="self-center">
           <p className="text-xs uppercase tracking-[0.3em] text-black/50">{product.brand}</p>
@@ -39,7 +41,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className="mt-6 text-2xl">{price}</p>
           <p className="mt-8 max-w-lg leading-7 text-black/65">{product.description}</p>
           <p className="mt-6 text-sm text-black/55">Disponible para compra</p>
-          <AddToCartButton productId={product.id} />
+          <AddToCartButton
+            productId={product.id}
+            productName={product.name}
+            productBrand={product.brand}
+            productPrice={priceValue}
+          />
         </div>
       </section>
     </main>

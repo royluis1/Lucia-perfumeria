@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, Matches, Min, MinLength } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, Matches, Min, MinLength } from 'class-validator';
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
@@ -37,4 +37,12 @@ export class CreateProductDto {
   @IsInt()
   @Min(0)
   weightGrams!: number;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }

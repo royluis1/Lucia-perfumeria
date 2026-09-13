@@ -8,9 +8,10 @@ import { ShippingModule } from './modules/shipping/shipping.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule, MailModule],
   controllers: [],
   providers: [],
 })

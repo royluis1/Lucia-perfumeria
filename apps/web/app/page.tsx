@@ -1,3 +1,5 @@
+import { Header } from '../components/header';
+
 const categories = ['Mujer', 'Hombre', 'Niños', 'Nicho'];
 
 const featuredProducts = [
@@ -9,26 +11,7 @@ const featuredProducts = [
 export default function HomePage() {
   return (
     <main>
-      <header className="border-b border-black/10 bg-canvas">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">
-            LUCÍA
-          </a>
-          <nav className="hidden gap-8 text-xs uppercase tracking-[0.16em] md:flex">
-            <a href="/shop">Colección</a>
-            <a href="#categorias">Categorías</a>
-            <a href="#historia">Nuestra historia</a>
-          </nav>
-          <div className="flex items-center gap-4 text-xs uppercase tracking-[0.12em]">
-            <a className="font-bold underline underline-offset-4" href="/login">
-              Ingresar
-            </a>
-            <button aria-label="Buscar productos" type="button">Buscar</button>
-            <button aria-label="Abrir carrito" type="button">Carrito (0)</button>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       <section className="mx-auto grid min-h-[70vh] max-w-7xl items-end gap-10 px-6 py-16 md:grid-cols-[1.1fr_0.9fr] md:py-24">
         <div>
           <p className="mb-6 text-xs uppercase tracking-[0.3em] text-black/60">Nueva colección / 2026</p>

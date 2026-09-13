@@ -4,8 +4,10 @@ import {
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PaymentStatus, Prisma } from '@prisma/client';
+import { timingSafeEqual } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LocalPaymentEvent, LocalPaymentWebhookDto } from './dto/payment.dto';
 
@@ -43,7 +45,11 @@ export class PaymentsService {
     };
   }
 
-  async receiveLocalWebhook(idempotencyKey: string | undefined, body: LocalPaymentWebhookDto) {
+  async receiveLocalWebhook(
+    idempotencyKey: string | undefined,
+    webhookSecret: string | undefined,
+    body: LocalPaymentWebhookDto,
+  ) {
     const key = idempotencyKey?.trim();
     if (!key || key.length > 128) {
       throw new BadRequestException('Idempotency-Key requerido');
@@ -56,6 +62,7 @@ export class PaymentsService {
     if (body.event !== LocalPaymentEvent.PAYMENT || body.sandbox !== true) {
       throw new BadRequestException('Sólo se aceptan eventos locales de prueba en sandbox');
     }
+    this.assertWebhookSecret(webhookSecret);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -126,5 +133,25 @@ export class PaymentsService {
 
   private isUniqueConstraintError(error: unknown): error is { code: string } {
     return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
+  }
+
+  private assertWebhookSecret(provided: string | undefined): void {
+    const expected = process.env.PAYMENTS_WEBHOOK_SECRET;
+    if (!expected) {
+      throw new ServiceUnavailableException(
+        'PAYMENTS_WEBHOOK_SECRET no está configurado; no se aceptan webhooks',
+      );
+    }
+    if (!provided) {
+      throw new UnauthorizedException('Falta X-Webhook-Secret');
+    }
+    const expectedBuffer = Buffer.from(expected);
+    const providedBuffer = Buffer.from(provided);
+    if (
+      expectedBuffer.length !== providedBuffer.length ||
+      !timingSafeEqual(expectedBuffer, providedBuffer)
+    ) {
+      throw new UnauthorizedException('X-Webhook-Secret inválido');
+    }
   }
 }

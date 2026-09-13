@@ -2,38 +2,58 @@
 
 import { useState } from 'react';
 import { getAccessToken } from '../lib/auth';
+import { useCart } from '../lib/cart';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
-export function AddToCartButton({ productId, disabled }: { productId: string; disabled?: boolean }) {
+export function AddToCartButton({
+  productId,
+  productName,
+  productBrand,
+  productPrice,
+  disabled,
+}: {
+  productId: string;
+  productName: string;
+  productBrand: string;
+  productPrice: number;
+  disabled?: boolean;
+}) {
   const [message, setMessage] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const { addItem } = useCart();
 
-  async function addToCart() {
-    const token = getAccessToken();
-    if (!token) {
-      window.location.href = '/login';
-      return;
-    }
-
+  async function handleAddToCart() {
     setIsAdding(true);
     setMessage('');
     try {
-      const response = await fetch(`${apiUrl}/cart/items`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId, quantity: 1 }),
+      addItem({
+        id: productId,
+        productId,
+        name: productName,
+        brand: productBrand,
+        price: productPrice,
       });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(body?.message ?? 'No se pudo agregar el producto');
+
+      const token = getAccessToken();
+      if (token) {
+        const response = await fetch(`${apiUrl}/cart/items`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId, quantity: 1 }),
+        });
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as { message?: string } | null;
+          throw new Error(body?.message ?? 'No se pudo sincronizar con el servidor');
+        }
       }
+
       setMessage('Agregado al carrito');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo agregar el producto');
+      setMessage(error instanceof Error ? error.message : 'Error al agregar');
     } finally {
       setIsAdding(false);
     }
@@ -42,9 +62,9 @@ export function AddToCartButton({ productId, disabled }: { productId: string; di
   return (
     <div>
       <button
-        className="mt-8 border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-8 w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         disabled={disabled || isAdding}
-        onClick={addToCart}
+        onClick={handleAddToCart}
         type="button"
       >
         {isAdding ? 'Agregando...' : 'Agregar al carrito'}

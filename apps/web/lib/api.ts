@@ -7,9 +7,13 @@ export type Product = {
   price: string;
   isActive: boolean;
   weightGrams: number;
+  category: string;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type ProductSort = 'recent' | 'price_asc' | 'price_desc' | 'name';
 
 export type ProductList = {
   data: Product[];
