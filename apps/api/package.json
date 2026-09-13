@@ -2,18 +2,43 @@
   "name": "api",
   "version": "1.0.0",
   "description": "",
+  "packageManager": "pnpm@12.3.4",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx prisma generate && tsc -p tsconfig.json",
+    "prisma": "prisma",
+    "start": "pnpm build && node dist/main.js",
+    "start:dev": "pnpm build && node dist/main.js",
+    "test": "jest --config jest.config.js --runInBand"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "prisma": {
+    "seed": "node prisma/seed.cjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "unrs-resolver"
+    ]
+  },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/multer": "^2.2.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/supertest": "^7.2.1",
+    "jest": "^30.5.1",
     "prisma": "5.22.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -22,6 +47,12 @@
     "@nestjs/platform-express": "^12.0.1",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "helmet": "^8.3.0",
+    "multer": "^2.3.0",
+    "nodemailer": "^10.0.8",
+    "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   }
