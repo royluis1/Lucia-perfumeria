@@ -17,6 +17,15 @@
   "prisma": {
     "seed": "node prisma/seed.cjs"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "unrs-resolver"
+    ]
+  },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",

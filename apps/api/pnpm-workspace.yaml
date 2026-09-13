@@ -1,6 +1,6 @@
-allowBuilds:
-  '@parcel/watcher': set this to true or false
-  '@prisma/client': false
-  '@prisma/engines': false
-  prisma: false
-  unrs-resolver: set this to true or false
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - unrs-resolver
