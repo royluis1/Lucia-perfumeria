@@ -1,4 +1,5 @@
 import { Header } from '../components/header';
+import { COMPANY, LEGAL_LINKS } from '../lib/brand';
 
 const categories = ['Mujer', 'Hombre', 'Niños', 'Nicho'];
 
@@ -108,6 +109,13 @@ export default function HomePage() {
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[0.18em]">Lucía Perfumería</h3>
             <p className="mt-5 text-sm leading-6 text-black/65">© 2026 Lucía Perfumería. Todos los derechos reservados.</p>
+            <p className="mt-3 border-t border-black/10 pt-3 text-xs leading-5 text-black/50">{COMPANY.legalName} · CUIT {COMPANY.cuit} · {COMPANY.address}</p>
+            <a
+              className="mt-5 inline-block border border-black px-4 py-3 text-xs font-bold uppercase tracking-[0.12em]"
+              href={LEGAL_LINKS.arrepentimiento}
+            >
+              Botón de arrepentimiento
+            </a>
           </div>
         </div>
       </footer>

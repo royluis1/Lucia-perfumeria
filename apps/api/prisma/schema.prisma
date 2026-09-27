@@ -203,3 +203,22 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([userId, createdAt])
 }
+
+model CancellationRequest {
+  id          String             @id @default(uuid())
+  name        String
+  email       String
+  orderNumber String?
+  reason      String
+  status      CancellationStatus @default(OPEN)
+  createdAt   DateTime           @default(now())
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+enum CancellationStatus {
+  OPEN
+  PROCESSED
+  CLOSED
+}

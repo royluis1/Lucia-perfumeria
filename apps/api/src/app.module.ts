@@ -9,9 +9,10 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { MailModule } from './modules/mail/mail.module';
+import { CancellationModule } from './modules/cancellation/cancellation.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule, MailModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule, MailModule, CancellationModule],
   controllers: [],
   providers: [],
 })
