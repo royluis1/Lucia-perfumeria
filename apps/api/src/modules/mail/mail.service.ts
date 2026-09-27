@@ -15,18 +15,28 @@ export class MailService {
 
   constructor() {
     const host = process.env.MAIL_HOST?.trim();
-    const port = Number(process.env.MAIL_PORT ?? 1025);
     const user = process.env.MAIL_USER?.trim();
     const pass = process.env.MAIL_PASS?.trim();
+    const defaultPort = host?.toLowerCase().includes('gmail') ? 587 : 1025;
+    const port = Number(process.env.MAIL_PORT ?? defaultPort) || defaultPort;
+    const secure =
+      process.env.MAIL_SECURE !== undefined
+        ? Number(process.env.MAIL_SECURE) === 1
+        : port === 465;
 
     if (host) {
       this.transporter = nodemailer.createTransport({
         host,
         port,
-        secure: Number(process.env.MAIL_SECURE ?? 0) === 1,
+        secure,
         auth: user && pass ? { user, pass } : undefined,
-        ignoreTLS: Number(process.env.MAIL_IGNORE_TLS ?? 1) === 1,
+        ignoreTLS: Number(process.env.MAIL_IGNORE_TLS ?? 0) === 1,
       });
+      if (!user || !pass) {
+        this.logger.warn(
+          `MAIL_USER/MAIL_PASS no configurados: los proveedores (Gmail, etc.) rechazarán los envíos reales.`,
+        );
+      }
     } else {
       this.transporter = null;
       this.logger.warn(

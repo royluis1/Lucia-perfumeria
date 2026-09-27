@@ -2,7 +2,7 @@ import { ProductCard } from '../../components/product-card';
 import { Header } from '../../components/header';
 import { SortSelect } from '../../components/sort-select';
 import { getProducts } from '../../lib/api';
-import type { ProductSort } from '../../lib/api';
+import type { ProductList, ProductSort } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,12 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   if (params.sort) query.set('sort', params.sort);
   if (params.page) query.set('page', params.page);
 
-  const products = await getProducts(query);
+  let products: ProductList | null = null;
+  try {
+    products = await getProducts(query);
+  } catch {
+    products = null;
+  }
   const currentSort = sortOptions.some((option) => option.value === params.sort) ? (params.sort as ProductSort) : 'recent';
 
   return (
@@ -65,7 +70,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           <SortSelect value={currentSort} search={search} category={params.category} />
         </div>
 
-        {products.data.length > 0 ? (
+        {products === null ? (
+          <p className="mt-16 border border-black/10 bg-white p-8 text-sm leading-6 text-black/65">
+            No pudimos conectar con el catálogo en este momento. Intentalo de nuevo en unos minutos.
+          </p>
+        ) : products.data.length > 0 ? (
           <div className="mt-12 grid gap-x-5 gap-y-12 md:grid-cols-3">
             {products.data.map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
