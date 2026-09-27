@@ -2,9 +2,16 @@ import { ProductCard } from '../../components/product-card';
 import { Header } from '../../components/header';
 import { SortSelect } from '../../components/sort-select';
 import { getProducts } from '../../lib/api';
+import type { Metadata } from 'next';
 import type { ProductList, ProductSort } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Catálogo',
+  description: 'Explorá la colección completa de fragancias de Lucía Perfumería: mujer, hombre y nicho.',
+  alternates: { canonical: '/shop' },
+};
 
 const categories = ['Florales', 'Cítricos', 'Amaderados'];
 

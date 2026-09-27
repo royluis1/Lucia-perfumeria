@@ -1,15 +1,58 @@
 import { Header } from '../components/header';
 import { COMPANY, LEGAL_LINKS } from '../lib/brand';
+import { getProducts } from '../lib/api';
+import type { Product } from '../lib/api';
 
 const categories = ['Mujer', 'Hombre', 'Niños', 'Nicho'];
 
-const featuredProducts = [
-  { name: 'Eau de Parfum No. 01', type: 'Floral amaderado', price: '$ 89.900' },
-  { name: 'Eau de Parfum No. 02', type: 'Ámbar especiado', price: '$ 94.500' },
-  { name: 'Eau de Parfum No. 03', type: 'Cítrico fresco', price: '$ 76.200' },
+const featuredProductFallback = [
+  { name: 'Eau de Parfum No. 01', brand: 'Floral amaderado', price: '$ 89.900' },
+  { name: 'Eau de Parfum No. 02', brand: 'Ámbar especiado', price: '$ 94.500' },
+  { name: 'Eau de Parfum No. 03', brand: 'Cítrico fresco', price: '$ 76.200' },
 ];
 
-export default function HomePage() {
+type Category = { name: string; href: string };
+type FeaturedProduct = { slug?: string; name: string; brand: string; price: string };
+
+function formatPrice(value: string | number): string {
+  return Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+}
+
+async function getHomeData(): Promise<{ categories: Category[]; featured: FeaturedProduct[] }> {
+  try {
+    const [featuredList, catalog] = await Promise.all([
+      getProducts(new URLSearchParams({ limit: '3', sort: 'recent' })),
+      getProducts(new URLSearchParams({ limit: '100', sort: 'recent' })),
+    ]);
+
+    const seen = new Map<string, string>();
+    for (const product of catalog.data) {
+      if (product.category && !seen.has(product.category)) {
+        seen.set(product.category, product.category);
+      }
+    }
+    const fallbackCategories: Category[] = categories.map((name) => ({ name, href: `#${name}` }));
+    const realCategories: Category[] = [...seen.values()].map((name) => ({ name, href: `/shop?category=${encodeURIComponent(name)}` }));
+    const productCategories = realCategories.length >= 2 ? realCategories : fallbackCategories;
+
+    const featured: FeaturedProduct[] = featuredList.data.map((product: Product) => ({
+      slug: product.slug,
+      name: product.name,
+      brand: product.brand,
+      price: formatPrice(product.price),
+    }));
+
+    return { categories: productCategories, featured };
+  } catch {
+    return {
+      categories: categories.map((name) => ({ name, href: `#${name}` })),
+      featured: featuredProductFallback,
+    };
+  }
+}
+
+export default async function HomePage() {
+  const { categories: homeCategories, featured } = await getHomeData();
   return (
     <main>
       <Header />
@@ -43,9 +86,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs uppercase tracking-[0.3em] text-black/50">Encontrá tu aroma</p>
           <div className="mt-8 grid gap-3 md:grid-cols-4">
-            {categories.map((category) => (
-              <a className="border border-black/15 px-6 py-8 text-2xl font-semibold transition hover:border-gold hover:bg-gold-soft" href="#" key={category}>
-                {category}
+            {homeCategories.map((category) => (
+              <a className="border border-black/15 px-6 py-8 text-2xl font-semibold transition hover:border-gold hover:bg-gold-soft" href={category.href} key={category.name}>
+                {category.name}
               </a>
             ))}
           </div>
@@ -61,18 +104,20 @@ export default function HomePage() {
           <a className="hidden text-xs font-bold uppercase tracking-[0.18em] underline md:block" href="/shop">Ver todo</a>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {featuredProducts.map((product, index) => (
-            <article key={product.name}>
-              <div className={`flex aspect-[4/5] items-end justify-center p-10 ${index === 1 ? 'bg-black/10' : 'bg-white'}`}>
-                <div className="h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl" />
-              </div>
-              <div className="flex justify-between gap-4 pt-5">
-                <div>
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <p className="mt-1 text-sm text-black/55">{product.type}</p>
+          {featured.map((product) => (
+            <article key={product.slug ?? product.name}>
+              <a className="block" href={product.slug ? `/shop/${product.slug}` : '/shop'}>
+                <div className="flex aspect-[4/5] items-end justify-center bg-white p-10">
+                  <div className="h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl" />
                 </div>
-                <p className="text-sm font-semibold">{product.price}</p>
-              </div>
+                <div className="flex justify-between gap-4 pt-5">
+                  <div>
+                    <h3 className="font-semibold">{product.name}</h3>
+                    <p className="mt-1 text-sm text-black/55">{product.brand}</p>
+                  </div>
+                  <p className="text-sm font-semibold">{product.price}</p>
+                </div>
+              </a>
             </article>
           ))}
         </div>
@@ -101,9 +146,10 @@ export default function HomePage() {
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[0.18em]">Ayuda</h3>
             <ul className="mt-5 space-y-3 text-sm text-black/65">
-              <li><a href="#">Preguntas frecuentes</a></li>
-              <li><a href="#">Envíos y medios de pago</a></li>
-              <li><a href="#">Términos y condiciones</a></li>
+              <li><a href="/faq">Preguntas frecuentes</a></li>
+              <li><a href="/envios">Envíos y medios de pago</a></li>
+              <li><a href="/terminos">Términos y condiciones</a></li>
+              <li><a href="/contacto">Contacto</a></li>
             </ul>
           </div>
           <div>

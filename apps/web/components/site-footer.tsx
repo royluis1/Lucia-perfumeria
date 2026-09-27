@@ -1,8 +1,18 @@
 import { COMPANY, LEGAL_LINKS } from '../lib/brand';
 
 const links = {
-  about: ['Trabajá con nosotros', 'Catálogo mayorista', 'Nuestros locales', 'Eventos'],
-  help: ['Seguimiento de envío', 'Preguntas frecuentes', 'Envíos y medios de pago', 'Términos y condiciones'],
+  about: [
+    { label: 'Nosotros', href: '/nosotros' },
+    { label: 'Catálogo mayorista', href: '/contacto' },
+    { label: 'Trabajá con nosotros', href: '/contacto' },
+    { label: 'Eventos', href: '/contacto' },
+  ],
+  help: [
+    { label: 'Envíos y medios de pago', href: '/envios' },
+    { label: 'Preguntas frecuentes', href: '/faq' },
+    { label: 'Contacto', href: '/contacto' },
+    { label: 'Términos y condiciones', href: '/terminos' },
+  ],
 };
 
 export function SiteFooter() {
@@ -35,12 +45,12 @@ export function SiteFooter() {
   );
 }
 
-function FooterColumn({ title, links: columnLinks }: { title: string; links: string[] }) {
+function FooterColumn({ title, links: columnLinks }: { title: string; links: Array<{ label: string; href: string }> }) {
   return (
     <div>
       <h3 className="text-xs font-bold uppercase tracking-[0.18em]">{title}</h3>
       <ul className="mt-5 space-y-3 text-sm text-black/65">
-        {columnLinks.map((link) => <li key={link}><a href="#">{link}</a></li>)}
+        {columnLinks.map((link) => <li key={link.label}><a href={link.href}>{link.label}</a></li>)}
       </ul>
     </div>
   );

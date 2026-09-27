@@ -2,10 +2,32 @@ import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
 import { getProduct } from '../../../lib/api';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const product = await getProduct(slug);
+    return {
+      title: product.name,
+      description: product.description.slice(0, 155),
+      alternates: { canonical: `/shop/${product.slug}` },
+      openGraph: {
+        title: `${product.name} · Lucía Perfumería`,
+        description: product.description.slice(0, 155),
+        type: 'website',
+        url: `/shop/${product.slug}`,
+        ...(product.imageUrl ? { images: [product.imageUrl] } : {}),
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
@@ -23,8 +45,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
     maximumFractionDigits: 0,
   });
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    brand: { '@type': 'Brand', name: product.brand },
+    description: product.description,
+    ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
+    sku: product.slug,
+    category: product.category,
+    offers: {
+      '@type': 'Offer',
+      url: `/shop/${product.slug}`,
+      priceCurrency: 'ARS',
+      price: product.price,
+      availability: 'https://schema.org/InStock',
+    },
+  };
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
         <div className="relative flex aspect-square items-end justify-center overflow-hidden bg-white p-16">
