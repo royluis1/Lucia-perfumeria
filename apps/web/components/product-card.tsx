@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { AddToCartButton } from './add-to-cart-button';
+import { WishlistButton } from './wishlist-button';
 import type { Product } from '../lib/api';
 
 export function ProductCard({ product }: { product: Product }) {
   const priceValue = Number(product.price);
 
   return (
-    <article>
+    <article className="relative">
       <Link href={`/shop/${product.slug}`} className="group block">
         <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden bg-white p-10 transition group-hover:bg-gold-soft">
           {product.imageUrl ? (
@@ -27,6 +28,9 @@ export function ProductCard({ product }: { product: Product }) {
           <p className="text-sm font-semibold">{priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</p>
         </div>
       </Link>
+      <div className="absolute right-4 top-4 z-10">
+        <WishlistButton product={product} />
+      </div>
       <AddToCartButton
         productId={product.id}
         productName={product.name}

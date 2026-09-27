@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SiteFooter } from '../components/site-footer';
 import { CartProvider } from '../lib/cart';
+import { WishlistProvider } from '../lib/wishlist';
 import { CartSidebar } from '../components/cart-sidebar';
 import './globals.css';
 
@@ -45,8 +46,10 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <CartProvider>
-          {children}
-          <CartSidebar />
+          <WishlistProvider>
+            {children}
+            <CartSidebar />
+          </WishlistProvider>
         </CartProvider>
         <SiteFooter />
       </body>
