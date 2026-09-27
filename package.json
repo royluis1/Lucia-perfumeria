@@ -2,18 +2,5 @@
   "name": "lucia-perfumeria",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@12.3.4",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@prisma/client",
-      "@prisma/engines",
-      "@swc/core",
-      "@tailwindcss/oxide",
-      "esbuild",
-      "prisma",
-      "sharp",
-      "unrs-resolver"
-    ]
-  }
+  "packageManager": "pnpm@12.3.4"
 }
