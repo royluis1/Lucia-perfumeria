@@ -1,0 +1,68 @@
+# Blueprint de Render para deploy de Lucía Perfumería (plan gratuito).
+# En la UI de Render: New -> Blueprint -> conectar este repo.
+# Si nombrás los servicios distinto, ajustá los valores de API_CORS_ORIGIN, WEB_APP_URL
+# y NEXT_PUBLIC_API_URL (los .onrender.com abajo).
+# IMPORTANTE: la API de Render se duerme tras inactividad; la web también puede dormirse
+# (elige plan "starter" o un ping externo si querés 24/7).
+
+databases:
+  - name: lucia-postgres
+    plan: free
+    databaseName: lucia_perfumeria
+    user: lucia
+
+services:
+  - type: web
+    name: lucia-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    buildCommand: pnpm install && npx prisma generate && pnpm build
+    preDeployCommand: npx prisma db push
+    startCommand: node dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lucia-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYMENTS_WEBHOOK_SECRET
+        generateValue: true
+      # Cambiar si el servicio web se llama distinto o se usa un dominio propio:
+      - key: API_CORS_ORIGIN
+        value: https://lucia-web.onrender.com
+      - key: WEB_APP_URL
+        value: https://lucia-web.onrender.com
+      # Token sandbox de Mercado Pago; si está vacío, checkout local sin pagos reales.
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        value: ""
+      - key: GOOGLE_CLIENT_ID
+        value: ""
+      - key: GOOGLE_CLIENT_SECRET
+        value: ""
+      - key: GOOGLE_REDIRECT_URI
+        value: https://lucia-api.onrender.com/auth/google/callback
+      - key: GOOGLE_OAUTH_CLIENT_REDIRECT
+        value: https://lucia-web.onrender.com/auth/oauth
+
+  - type: web
+    name: lucia-web
+    runtime: node
+    plan: free
+    rootDir: apps/web
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NEXT_PUBLIC_API_URL
+        value: https://lucia-api.onrender.com
