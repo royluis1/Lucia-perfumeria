@@ -25,6 +25,7 @@ model User {
   refreshSessions    RefreshSession[]
   passwordResetToken PasswordResetToken?
   auditLogs          AuditLog[]          @relation("AuditLogActor")
+  wishlist           WishlistItem[]
 }
 
 model PasswordResetToken {
@@ -75,6 +76,7 @@ model Product {
   cartItems   CartItem[]
   orderItems  OrderItem[]
   reviews     Review[]
+  wishlistItems WishlistItem[]
 }
 
 model Cart {
@@ -221,4 +223,17 @@ enum CancellationStatus {
   OPEN
   PROCESSED
   CLOSED
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
 }
