@@ -5,6 +5,7 @@ import { extname, join } from 'path';
 import { mkdirSync } from 'fs';
 import { randomBytes } from 'crypto';
 import { Role } from '@prisma/client';
+import { CancellationStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -14,6 +15,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
 import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
+import { CancellationService } from '../cancellation/cancellation.service';
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 
@@ -21,7 +23,10 @@ const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.av
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN, Role.SUPERADMIN)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly cancellationService: CancellationService,
+  ) {}
 
   @Post('products/upload')
   @UseInterceptors(
@@ -112,5 +117,15 @@ export class AdminController {
       page === undefined ? undefined : Number(page),
       limit === undefined ? undefined : Number(limit),
     );
+  }
+
+  @Get('cancellations')
+  listCancellations(@Query('status') status?: CancellationStatus) {
+    return this.cancellationService.list({ status });
+  }
+
+  @Patch('cancellations/:id')
+  setCancellationStatus(@Param('id') id: string, @Query('status') status: CancellationStatus) {
+    return this.cancellationService.setStatus(id, status);
   }
 }

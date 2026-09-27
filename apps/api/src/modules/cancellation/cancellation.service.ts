@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CancellationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCancellationDto } from './dto/create-cancellation.dto';
@@ -6,6 +6,14 @@ import { CreateCancellationDto } from './dto/create-cancellation.dto';
 @Injectable()
 export class CancellationService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private parseStatus(value?: CancellationStatus): CancellationStatus | undefined {
+    if (value === undefined) return undefined;
+    if (!Object.values(CancellationStatus).includes(value)) {
+      throw new BadRequestException('status inválido');
+    }
+    return value;
+  }
 
   async create(dto: CreateCancellationDto) {
     return this.prisma.cancellationRequest.create({
@@ -23,7 +31,9 @@ export class CancellationService {
   async list(params?: { status?: CancellationStatus; limit?: number; offset?: number }) {
     const limit = Math.min(params?.limit ?? 50, 100);
     const offset = params?.offset ?? 0;
-    const where: Prisma.CancellationRequestWhereInput = params?.status ? { status: params.status } : {};
+    const where: Prisma.CancellationRequestWhereInput = this.parseStatus(params?.status)
+      ? { status: this.parseStatus(params?.status) }
+      : {};
     const [total, data] = await Promise.all([
       this.prisma.cancellationRequest.count({ where }),
       this.prisma.cancellationRequest.findMany({
@@ -37,9 +47,14 @@ export class CancellationService {
   }
 
   async setStatus(id: string, status: CancellationStatus) {
+    const parsed = this.parseStatus(status);
+    if (!parsed) {
+      throw new BadRequestException('status requerido');
+    }
+    await this.prisma.cancellationRequest.findUniqueOrThrow({ where: { id } });
     return this.prisma.cancellationRequest.update({
       where: { id },
-      data: { status },
+      data: { status: parsed },
     });
   }
 }
