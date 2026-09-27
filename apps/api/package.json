@@ -22,6 +22,8 @@
       "@parcel/watcher",
       "@prisma/client",
       "@prisma/engines",
+      "@swc/core",
+      "esbuild",
       "prisma",
       "unrs-resolver"
     ]

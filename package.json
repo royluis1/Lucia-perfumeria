@@ -8,10 +8,12 @@
       "@parcel/watcher",
       "@prisma/client",
       "@prisma/engines",
-      "prisma",
-      "unrs-resolver",
+      "@swc/core",
       "@tailwindcss/oxide",
-      "sharp"
+      "esbuild",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
     ]
   }
 }
