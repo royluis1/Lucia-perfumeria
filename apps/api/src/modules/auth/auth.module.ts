@@ -1,0 +1,26 @@
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthRateLimitGuard } from './auth-rate-limit.guard';
+import { RolesGuard } from './roles.guard';
+
+const jwtSecret = process.env.JWT_SECRET ?? '';
+
+if (!jwtSecret || jwtSecret.length < 32) {
+  throw new Error('JWT_SECRET debe estar configurado y tener al menos 32 caracteres');
+}
+
+@Module({
+  imports: [
+    JwtModule.register({
+      secret: jwtSecret,
+      signOptions: { expiresIn: '1d' },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtAuthGuard, AuthRateLimitGuard, RolesGuard],
+  exports: [JwtModule, JwtAuthGuard, RolesGuard],
+})
+export class AuthModule {}
