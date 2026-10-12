@@ -11,9 +11,10 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { MailModule } from './modules/mail/mail.module';
 import { CancellationModule } from './modules/cancellation/cancellation.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule, MailModule, CancellationModule, WishlistModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, CartModule, OrdersModule, ShippingModule, ReviewsModule, AdminModule, PaymentsModule, MailModule, CancellationModule, WishlistModule, HealthModule],
   controllers: [],
   providers: [],
 })
