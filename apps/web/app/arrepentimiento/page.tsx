@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { API_URL } from '../../lib/config';
+
+const apiUrl = API_URL;
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -27,7 +30,6 @@ export default function ArrepentimientoPage() {
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
     try {
       const response = await fetch(`${apiUrl}/cancellations`, {
         method: 'POST',

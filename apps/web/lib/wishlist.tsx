@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAccessToken } from './auth';
 import type { Product } from './api';
+import { API_URL } from './config';
 
 type WishlistItem = {
   product: Product;
@@ -17,7 +18,7 @@ type WishlistContextType = {
   remove: (productId: string) => Promise<void>;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 

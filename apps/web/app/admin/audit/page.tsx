@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAccessToken } from '../../../lib/auth';
+import { API_URL } from '../../../lib/config';
 
 type AuditEntry = {
   id: string;
@@ -13,7 +14,7 @@ type AuditEntry = {
   createdAt: string;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export default function AdminAuditPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);

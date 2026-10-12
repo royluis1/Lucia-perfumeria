@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getProducts } from '../lib/api';
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_WEB_APP_URL ?? 'https://lucia-perfumeria.vercel.app';
+import { SITE_URL } from '../lib/config';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [

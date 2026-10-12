@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { getAccessToken } from '../lib/auth';
 import { useCart } from '../lib/cart';
+import { API_URL } from '../lib/config';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export function AddToCartButton({
   productId,

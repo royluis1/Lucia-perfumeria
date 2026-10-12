@@ -1,3 +1,5 @@
+import { API_URL } from './config';
+
 export type AuthResponse = {
   accessToken: string;
   user: {
@@ -20,7 +22,7 @@ export type UserProfile = {
   createdAt: string;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export async function login(email: string, password: string): Promise<LoginResult> {
   const response = await fetch(`${apiUrl}/auth/login`, {

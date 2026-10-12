@@ -2,8 +2,9 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { getAccessToken } from '../../lib/auth';
+import { API_URL } from '../../lib/config';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export default function CheckoutPage() {
   const [form, setForm] = useState({

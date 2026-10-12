@@ -1,3 +1,5 @@
+import { API_URL } from './config';
+
 export type Product = {
   id: string;
   slug: string;
@@ -23,7 +25,7 @@ export type ProductList = {
   totalPages: number;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export async function getProducts(searchParams?: URLSearchParams): Promise<ProductList> {
   const query = searchParams?.toString();

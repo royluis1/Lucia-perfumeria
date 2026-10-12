@@ -1,7 +1,8 @@
 import { getAccessToken } from './auth';
 import type { AuthResponse } from './auth';
+import { API_URL } from './config';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+const apiUrl = API_URL;
 
 export type Order = {
   id: string;

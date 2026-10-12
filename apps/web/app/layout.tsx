@@ -3,9 +3,8 @@ import { SiteFooter } from '../components/site-footer';
 import { CartProvider } from '../lib/cart';
 import { WishlistProvider } from '../lib/wishlist';
 import { CartSidebar } from '../components/cart-sidebar';
+import { SITE_URL } from '../lib/config';
 import './globals.css';
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_WEB_APP_URL ?? 'https://lucia-perfumeria.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
