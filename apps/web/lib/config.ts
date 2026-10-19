@@ -14,4 +14,4 @@ export const API_URL = (configuredApiUrl ?? 'http://localhost:3005').replace(/\/
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   process.env.NEXT_PUBLIC_WEB_APP_URL ??
-  'https://lucia-perfumeria.vercel.app';
+  'https://lucia-perfumeria-royluis1.vercel.app';

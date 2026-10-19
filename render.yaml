@@ -28,10 +28,11 @@ services:
       - key: PAYMENTS_WEBHOOK_SECRET
         generateValue: true
       # Front en Vercel: orígenes permitidos por CORS y links de emails.
+      # El proyecto real vive en lucia-perfumeria-royluis1.vercel.app.
       - key: API_CORS_ORIGIN
-        value: https://lucia-perfumeria.vercel.app
+        value: https://lucia-perfumeria-royluis1.vercel.app,https://lucia-perfumeria.vercel.app
       - key: WEB_APP_URL
-        value: https://lucia-perfumeria.vercel.app
+        value: https://lucia-perfumeria-royluis1.vercel.app
       # URL pública HTTPS de esta API; Mercado Pago envía las notificaciones acá.
       - key: API_PUBLIC_URL
         value: https://lucia-perfumeria-609t.onrender.com
@@ -48,4 +49,4 @@ services:
       - key: GOOGLE_REDIRECT_URI
         value: https://lucia-perfumeria-609t.onrender.com/auth/google/callback
       - key: GOOGLE_OAUTH_CLIENT_REDIRECT
-        value: https://lucia-perfumeria.vercel.app/auth/oauth
+        value: https://lucia-perfumeria-royluis1.vercel.app/auth/oauth
