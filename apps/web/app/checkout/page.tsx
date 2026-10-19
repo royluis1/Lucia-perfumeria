@@ -77,8 +77,8 @@ export default function CheckoutPage() {
         <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
         <a className="text-xs uppercase tracking-[0.18em] underline" href="/cart">Volver al carrito</a>
       </div>
-      <h1 className="mt-20 font-display text-6xl font-bold uppercase leading-none">Checkout</h1>
-      <p className="mt-5 text-black/60">Completá tus datos de envío. El precio final se valida en el servidor.</p>
+      <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Checkout</h1>
+      <p className="mt-5 text-muted">Completá tus datos de envío. El precio final se valida en el servidor.</p>
       <form className="mt-10 grid gap-5 md:grid-cols-2" onSubmit={submitOrder}>
         {([
           ['recipient', 'Nombre completo'],
@@ -90,12 +90,12 @@ export default function CheckoutPage() {
         ] as const).map(([field, label]) => (
           <label className="block text-sm" key={field}>
             {label}
-            <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-gold" required={field !== 'state' && field !== 'phone'} value={form[field]} onChange={(event) => updateField(field, event.target.value)} />
+            <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-black" required={field !== 'state' && field !== 'phone'} value={form[field]} onChange={(event) => updateField(field, event.target.value)} />
           </label>
         ))}
         <div className="md:col-span-2">
-          {message && <p className="mb-4 text-sm text-black/65" role="status">{message}</p>}
-          <button className="w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
+          {message && <p className="mb-4 text-sm text-muted" role="status">{message}</p>}
+          <button className="w-full border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
             {isSubmitting ? 'Procesando...' : 'Confirmar orden'}
           </button>
         </div>

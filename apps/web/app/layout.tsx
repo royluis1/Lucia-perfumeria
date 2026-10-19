@@ -1,10 +1,18 @@
 import type { Metadata } from 'next';
+import { Archivo } from 'next/font/google';
 import { SiteFooter } from '../components/site-footer';
 import { CartProvider } from '../lib/cart';
 import { WishlistProvider } from '../lib/wishlist';
 import { CartSidebar } from '../components/cart-sidebar';
 import { SITE_URL } from '../lib/config';
 import './globals.css';
+
+const archivo = Archivo({
+  subsets: ['latin'],
+  weight: ['400', '600', '800', '900'],
+  variable: '--font-archivo',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -42,7 +50,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html className={archivo.variable} lang="es">
       <body>
         <CartProvider>
           <WishlistProvider>

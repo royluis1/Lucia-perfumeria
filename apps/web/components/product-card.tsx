@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { AddToCartButton } from './add-to-cart-button';
 import { WishlistButton } from './wishlist-button';
+import { SmartImage } from './smart-image';
 import { resolveImageUrl } from '../lib/api';
 import type { Product } from '../lib/api';
 
@@ -9,36 +10,44 @@ export function ProductCard({ product }: { product: Product }) {
   const imageUrl = resolveImageUrl(product.imageUrl);
 
   return (
-    <article className="relative">
-      <Link href={`/shop/${product.slug}`} className="group block">
-        <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden bg-white p-10 transition group-hover:bg-gold-soft">
+    <article className="card relative">
+      <div className="relative aspect-[4/5] overflow-hidden bg-white">
+        <Link className="absolute inset-0 block" href={`/shop/${product.slug}`} aria-label={`Ver ${product.name}`}>
           {imageUrl ? (
-            <img
-              className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-              src={imageUrl}
+            <SmartImage
               alt={product.name}
+              className="img object-cover"
+              sizes="(min-width: 768px) 33vw, 90vw"
+              src={imageUrl}
             />
           ) : (
-            <div className="h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl transition group-hover:-translate-y-2" />
+            <span className="flex h-full w-full items-end justify-center p-10">
+              <span className="img block h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl transition" />
+            </span>
           )}
+        </Link>
+        <div className="heart absolute right-4 top-4 z-10">
+          <WishlistButton product={product} />
         </div>
-        <div className="flex justify-between gap-4 pt-5">
-          <div>
-            <h2 className="font-semibold">{product.name}</h2>
-            <p className="mt-1 text-sm text-black/55">{product.brand}</p>
-          </div>
-          <p className="text-sm font-semibold">{priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</p>
+        <div className="add absolute inset-x-0 bottom-0 z-10">
+          <AddToCartButton
+            overlay
+            productId={product.id}
+            productName={product.name}
+            productBrand={product.brand}
+            productPrice={priceValue}
+          />
         </div>
-      </Link>
-      <div className="absolute right-4 top-4 z-10">
-        <WishlistButton product={product} />
       </div>
-      <AddToCartButton
-        productId={product.id}
-        productName={product.name}
-        productBrand={product.brand}
-        productPrice={priceValue}
-      />
+      <div className="flex justify-between gap-4 pt-5">
+        <div>
+          <h2 className="text-sm font-semibold">
+            <Link className="ul" href={`/shop/${product.slug}`}>{product.name}</Link>
+          </h2>
+          <p className="mt-1 text-sm text-muted">{product.brand}</p>
+        </div>
+        <p className="text-sm font-semibold">{priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</p>
+      </div>
     </article>
   );
 }

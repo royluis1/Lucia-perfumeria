@@ -47,9 +47,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     <main>
       <Header />
       <section className="mx-auto max-w-7xl px-6 py-16">
-        <p className="text-xs uppercase tracking-[0.3em] text-black/50">Catálogo</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">Catálogo</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
-          <h1 className="font-display text-6xl font-bold uppercase tracking-[-0.04em]">Encontrá tu aroma</h1>
+          <h1 className="font-display text-6xl font-black uppercase tracking-[-0.02em]">Encontrá tu aroma</h1>
           <form className="flex border-b border-black" action="/shop">
             <input className="w-56 bg-transparent py-3 text-sm outline-none" defaultValue={search} name="search" placeholder="Buscar por nombre, marca o aroma" />
             <button className="px-2 text-sm" type="submit" aria-label="Buscar">→</button>
@@ -60,10 +60,10 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           {categories.map((cat) => (
             <a
               key={cat}
-              className={`px-4 py-2 text-xs uppercase tracking-[0.12em] border transition ${
+              className={`border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
                 params.category === cat
-                  ? 'bg-black text-white'
-                  : 'border-black/10 hover:border-gold hover:bg-gold-soft'
+                  ? 'border-black bg-black text-white'
+                  : 'border-line hover:border-black hover:bg-sand'
               }`}
               href={`/shop?${new URLSearchParams({
                 ...(search ? { search } : {}),
@@ -78,7 +78,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </div>
 
         {products === null ? (
-          <p className="mt-16 border border-black/10 bg-white p-8 text-sm leading-6 text-black/65">
+          <p className="mt-16 border border-line bg-white p-8 text-sm leading-6 text-muted">
             No pudimos conectar con el catálogo en este momento. Intentalo de nuevo en unos minutos.
           </p>
         ) : products.data.length > 0 ? (
@@ -86,7 +86,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             {products.data.map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
         ) : (
-          <p className="mt-16 border border-black/10 bg-white p-8 text-black/65">No encontramos productos para esta búsqueda.</p>
+          <p className="mt-16 border border-line bg-white p-8 text-muted">No encontramos productos para esta búsqueda.</p>
         )}
       </section>
     </main>

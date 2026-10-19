@@ -13,12 +13,14 @@ export function AddToCartButton({
   productBrand,
   productPrice,
   disabled,
+  overlay = false,
 }: {
   productId: string;
   productName: string;
   productBrand: string;
   productPrice: number;
   disabled?: boolean;
+  overlay?: boolean;
 }) {
   const [message, setMessage] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -60,17 +62,37 @@ export function AddToCartButton({
     }
   }
 
+  if (overlay) {
+    return (
+      <div>
+        <button
+          className="w-full border border-black bg-black px-4 py-4 text-[11px] font-extrabold uppercase tracking-[0.22em] text-white transition-colors hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={disabled || isAdding}
+          onClick={handleAddToCart}
+          type="button"
+        >
+          {isAdding ? 'Agregando…' : message || 'Agregar al carrito'}
+        </button>
+        {message && (
+          <span className="sr-only" role="status">
+            {message}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <button
-        className="mt-8 w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+        className="btn-primary mt-8 w-full"
         disabled={disabled || isAdding}
         onClick={handleAddToCart}
         type="button"
       >
-        {isAdding ? 'Agregando...' : 'Agregar al carrito'}
+        {isAdding ? 'Agregando…' : 'Agregar al carrito'}
       </button>
-      {message && <p className="mt-3 text-sm text-black/65" role="status">{message}</p>}
+      {message && <p className="mt-3 text-sm text-muted" role="status">{message}</p>}
     </div>
   );
 }

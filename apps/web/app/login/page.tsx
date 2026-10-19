@@ -65,8 +65,8 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
         <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
-        <h1 className="mt-16 font-display text-6xl font-bold uppercase leading-none">Bienvenida</h1>
-        <p className="mt-5 text-black/60">
+        <h1 className="mt-16 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Bienvenida</h1>
+        <p className="mt-5 text-muted">
           {mfaToken ? 'Ingresá el código de 6 dígitos de tu aplicación de autenticación.' : 'Ingresá para ver tu carrito y tus pedidos.'}
         </p>
         {mfaToken ? (
@@ -75,7 +75,7 @@ export default function LoginPage() {
               Código de seguridad
               <input
                 autoFocus
-                className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-gold"
+                className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-black"
                 inputMode="numeric"
                 maxLength={6}
                 pattern="\d{6}"
@@ -86,11 +86,11 @@ export default function LoginPage() {
               />
             </label>
             {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-            <button className="w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
+            <button className="w-full border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
               {isSubmitting ? 'Verificando...' : 'Verificar código'}
             </button>
             <button
-              className="w-full text-center text-xs uppercase tracking-[0.16em] text-black/50 underline underline-offset-4"
+              className="w-full text-center text-xs uppercase tracking-[0.16em] text-muted underline underline-offset-4"
               type="button"
               onClick={() => { setMfaToken(null); setCode(''); setError(''); }}
             >
@@ -102,24 +102,24 @@ export default function LoginPage() {
             <form className="mt-10 space-y-5" onSubmit={handleLogin}>
               <label className="block text-sm">
                 Email
-                <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-gold" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+                <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-black" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
               </label>
               <label className="block text-sm">
                 Contraseña
-                <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-gold" minLength={8} required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-black" minLength={8} required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
               </label>
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-black/50">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-muted">
                 <Link className="underline underline-offset-4 hover:text-black" href="/forgot-password">¿Olvidaste tu contraseña?</Link>
               </div>
               {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-              <button className="w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
+              <button className="w-full border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Ingresando...' : 'Ingresar'}
               </button>
             </form>
 
             <div className="my-8 flex items-center gap-4">
               <span className="h-px flex-1 bg-black/15" />
-              <span className="text-xs uppercase tracking-[0.16em] text-black/45">o conectate con</span>
+              <span className="text-xs uppercase tracking-[0.16em] text-muted">o conectate con</span>
               <span className="h-px flex-1 bg-black/15" />
             </div>
 
@@ -128,7 +128,7 @@ export default function LoginPage() {
         )}
 
         {!mfaToken && (
-          <p className="mt-6 text-center text-sm text-black/60">
+          <p className="mt-6 text-center text-sm text-muted">
             ¿Todavía no tenés cuenta?{' '}
             <a className="font-bold underline underline-offset-4" href="/register">Crear una</a>
           </p>

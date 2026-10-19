@@ -12,6 +12,8 @@ import {
 } from '../../../lib/admin';
 import type { AdminHero, AdminProduct } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
+import { Logo } from '../../../components/logo';
+import { SmartImage } from '../../../components/smart-image';
 
 const heroTextDefaults = {
   title: 'Una esencia para cada versión de vos.',
@@ -149,28 +151,28 @@ export default function AdminHomePage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
-      <div className="flex justify-between">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/admin">LUCÍA</a>
-        <a className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Tienda</a>
+      <div className="flex items-center justify-between">
+        <a className="font-display text-xl" href="/admin" aria-label="Panel admin"><Logo className="text-xl" /></a>
+        <a className="ul text-xs font-semibold uppercase tracking-[0.22em]" href="/shop">Tienda</a>
       </div>
-      <a className="mt-10 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-black/55 transition hover:text-black" href="/admin"><span aria-hidden="true">←</span>Volver al panel</a>
-      <h1 className="mt-5 font-display text-6xl font-bold uppercase">Portada</h1>
-      <p className="mt-4 max-w-2xl text-sm leading-6 text-black/60">
+      <a className="mt-10 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-muted transition-colors hover:text-black" href="/admin"><span aria-hidden="true">←</span>Volver al panel</a>
+      <h1 className="mt-5 font-display text-6xl font-black uppercase tracking-[-0.02em]">Portada</h1>
+      <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
         Elegí el producto que protagoniza el inicio y los destacados de la sección Favoritos. Si no configurás nada, se muestran los productos más recientes.
       </p>
 
-      {message && <p className="mt-6 border border-green-700/30 bg-green-50 px-4 py-3 text-sm text-green-800" role="status">{message}</p>}
+      {message && <p className="mt-6 border border-line bg-white px-4 py-3 text-sm" role="status">{message}</p>}
       {error && <p className="mt-6 border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
 
-      <form className="mt-12 border border-black/10 bg-white p-6" onSubmit={saveHero}>
-        <h2 className="font-display text-3xl font-bold uppercase">Hero del inicio</h2>
+      <form className="mt-12 border border-line bg-white p-6" onSubmit={saveHero}>
+        <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Hero del inicio</h2>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <label className="block text-xs font-bold uppercase tracking-[0.14em]">
+            <label className="label-xs block text-muted">
               Producto destacado
               <select
-                className="mt-2 w-full border border-black/15 bg-white px-3 py-3 text-sm normal-case tracking-normal"
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
                 value={heroProductId}
                 onChange={(event) => setHeroProductId(event.target.value)}
               >
@@ -183,10 +185,10 @@ export default function AdminHomePage() {
               </select>
             </label>
 
-            <label className="block text-xs font-bold uppercase tracking-[0.14em]">
+            <label className="label-xs block text-muted">
               Imagen propia (opcional)
               <input
-                className="mt-2 w-full border border-black/15 bg-white px-3 py-3 text-sm normal-case tracking-normal"
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
                 placeholder="https://… o /uploads/…"
                 value={heroImageUrl}
                 onChange={(event) => setHeroImageUrl(event.target.value)}
@@ -194,7 +196,7 @@ export default function AdminHomePage() {
             </label>
 
             <div className="flex flex-wrap items-center gap-3">
-              <label className="inline-flex cursor-pointer items-center border border-black px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] hover:bg-gold">
+              <label className="btn-ghost cursor-pointer">
                 {uploading ? 'Subiendo…' : 'Subir imagen'}
                 <input
                   accept="image/*"
@@ -206,7 +208,7 @@ export default function AdminHomePage() {
               </label>
               {heroImageUrl && (
                 <button
-                  className="text-xs uppercase tracking-[0.14em] text-black/50 underline hover:text-black"
+                  className="ul text-xs font-semibold uppercase tracking-[0.22em] text-muted hover:text-black"
                   onClick={() => setHeroImageUrl('')}
                   type="button"
                 >
@@ -215,10 +217,10 @@ export default function AdminHomePage() {
               )}
             </div>
 
-            <label className="block text-xs font-bold uppercase tracking-[0.14em]">
+            <label className="label-xs block text-muted">
               Título
               <input
-                className="mt-2 w-full border border-black/15 bg-white px-3 py-3 text-sm normal-case tracking-normal"
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
                 maxLength={120}
                 placeholder={heroTextDefaults.title}
                 value={heroTitle}
@@ -226,10 +228,10 @@ export default function AdminHomePage() {
               />
             </label>
 
-            <label className="block text-xs font-bold uppercase tracking-[0.14em]">
+            <label className="label-xs block text-muted">
               Subtítulo
               <textarea
-                className="mt-2 w-full border border-black/15 bg-white px-3 py-3 text-sm normal-case tracking-normal"
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
                 maxLength={300}
                 placeholder={heroTextDefaults.subtitle}
                 rows={3}
@@ -238,10 +240,10 @@ export default function AdminHomePage() {
               />
             </label>
 
-            <label className="block text-xs font-bold uppercase tracking-[0.14em]">
+            <label className="label-xs block text-muted">
               Texto del botón
               <input
-                className="mt-2 w-full border border-black/15 bg-white px-3 py-3 text-sm normal-case tracking-normal"
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
                 maxLength={40}
                 placeholder={heroTextDefaults.buttonLabel}
                 value={heroButtonLabel}
@@ -250,7 +252,7 @@ export default function AdminHomePage() {
             </label>
 
             <button
-              className="border border-black bg-black px-6 py-4 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50"
+              className="btn-primary"
               disabled={savingHero}
               type="submit"
             >
@@ -259,30 +261,29 @@ export default function AdminHomePage() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em]">Vista previa</p>
-            <div className="relative mt-2 flex aspect-[4/5] items-end justify-center overflow-hidden border border-black/10 bg-gold-soft p-8">
+            <p className="label-xs text-muted">Vista previa</p>
+            <div className="relative mt-2 flex aspect-[4/5] items-end justify-center overflow-hidden border border-line bg-sand p-8">
               {heroImagePreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="absolute inset-0 h-full w-full object-cover" src={heroImagePreview} alt="" />
+                <SmartImage alt="" className="object-cover" sizes="(min-width: 1024px) 480px, 100vw" src={heroImagePreview} />
               ) : !selectedHeroProduct ? (
                 <div className="w-32 border border-black/20 bg-white/70 px-4 py-8 text-center shadow-xl">
-                  <p className="font-display text-3xl font-bold tracking-[0.12em]">L</p>
+                  <p className="font-display text-3xl font-black tracking-[0.12em]">L</p>
                   <p className="mt-2 text-[9px] uppercase tracking-[0.24em]">Lucía</p>
                 </div>
               ) : null}
               {selectedHeroProduct && (
-                <div className="relative z-10 w-full border border-black/10 bg-white/95 px-4 py-3">
-                  <p className="font-display text-xl font-bold uppercase leading-none">{selectedHeroProduct.name}</p>
-                  <div className="mt-2 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.14em] text-black/60">
+                <div className="relative z-10 w-full border border-line bg-white/95 px-4 py-3">
+                  <p className="font-display text-xl font-black uppercase leading-none">{selectedHeroProduct.name}</p>
+                  <div className="mt-2 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.14em] text-muted">
                     <span>{selectedHeroProduct.brand}</span>
-                    <span className="font-bold text-black">
+                    <span className="font-bold text-ink">
                       {Number(selectedHeroProduct.price).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}
                     </span>
                   </div>
                 </div>
               )}
             </div>
-            <p className="mt-3 text-sm leading-6 text-black/60">
+            <p className="mt-3 text-sm leading-6 text-muted">
               {hero?.product
                 ? `Hoy el inicio muestra "${hero.product.name}" de ${hero.product.brand}.`
                 : 'Hoy el inicio muestra la portada genérica de Lucía.'}
@@ -291,17 +292,17 @@ export default function AdminHomePage() {
         </div>
       </form>
 
-      <section className="mt-12 border border-black/10 bg-white p-6">
-        <h2 className="font-display text-3xl font-bold uppercase">Favoritos del inicio</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-black/60">
+      <section className="mt-12 border border-line bg-white p-6">
+        <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Favoritos del inicio</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
           Los productos destacados aparecen en la sección Favoritos, en este orden. Podés destacar hasta 6; sin destacados se muestran los últimos productos publicados.
         </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Destacados ({featured.length})</h3>
+            <h3 className="label-xs text-muted">Destacados ({featured.length})</h3>
             {featured.length === 0 ? (
-              <p className="mt-4 border border-dashed border-black/20 px-4 py-6 text-sm text-black/55">
+              <p className="mt-4 border border-dashed border-line px-4 py-6 text-sm text-muted">
                 Todavía no hay productos destacados.
               </p>
             ) : (
@@ -309,11 +310,11 @@ export default function AdminHomePage() {
                 {featured.map((product, index) => {
                   const warn = !product.isActive || product.stock <= 0;
                   return (
-                    <li className="flex items-center gap-3 border border-black/10 p-3" key={product.id}>
-                      <span className="w-6 text-center text-xs font-bold text-black/45">{index + 1}</span>
+                    <li className="flex items-center gap-3 border border-line p-3" key={product.id}>
+                      <span className="w-6 text-center text-xs font-bold text-muted">{index + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{product.name}</p>
-                        <p className="truncate text-xs text-black/55">{product.brand}</p>
+                        <p className="truncate text-xs text-muted">{product.brand}</p>
                         {warn && (
                           <p className="mt-1 text-xs font-semibold text-red-700">
                             {product.isActive ? 'Sin stock: no se muestra en el inicio.' : 'Inactivo: no se muestra en el inicio.'}
@@ -323,7 +324,7 @@ export default function AdminHomePage() {
                       <div className="flex items-center gap-1">
                         <button
                           aria-label={`Subir ${product.name}`}
-                          className="border border-black/15 px-3 py-2 text-xs hover:bg-gold-soft disabled:opacity-30"
+                          className="border border-line px-3 py-2 text-xs transition-colors hover:bg-sand disabled:opacity-30"
                           disabled={index === 0 || pendingId === product.id}
                           onClick={() => void moveFeatured(product, -1)}
                           type="button"
@@ -332,7 +333,7 @@ export default function AdminHomePage() {
                         </button>
                         <button
                           aria-label={`Bajar ${product.name}`}
-                          className="border border-black/15 px-3 py-2 text-xs hover:bg-gold-soft disabled:opacity-30"
+                          className="border border-line px-3 py-2 text-xs transition-colors hover:bg-sand disabled:opacity-30"
                           disabled={index === featured.length - 1 || pendingId === product.id}
                           onClick={() => void moveFeatured(product, 1)}
                           type="button"
@@ -340,7 +341,7 @@ export default function AdminHomePage() {
                           ↓
                         </button>
                         <button
-                          className="border border-black/15 px-3 py-2 text-xs uppercase tracking-[0.12em] hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                          className="border border-line px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] transition-colors hover:border-red-700/30 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
                           disabled={pendingId === product.id}
                           onClick={() => void toggleFeatured(product)}
                           type="button"
@@ -356,9 +357,9 @@ export default function AdminHomePage() {
           </div>
 
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-[0.14em]">Productos del catálogo</h3>
+            <h3 className="label-xs text-muted">Productos del catálogo</h3>
             {available.length === 0 ? (
-              <p className="mt-4 border border-dashed border-black/20 px-4 py-6 text-sm text-black/55">
+              <p className="mt-4 border border-dashed border-line px-4 py-6 text-sm text-muted">
                 No hay más productos para destacar.
               </p>
             ) : (
@@ -366,18 +367,18 @@ export default function AdminHomePage() {
                 {available.map((product) => {
                   const blocked = !product.isActive || product.stock <= 0;
                   return (
-                    <li className="flex items-center gap-3 border border-black/10 p-3" key={product.id}>
+                    <li className="flex items-center gap-3 border border-line p-3" key={product.id}>
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{product.name}</p>
-                        <p className="truncate text-xs text-black/55">{product.brand}</p>
+                        <p className="truncate text-xs text-muted">{product.brand}</p>
                         {blocked && (
-                          <p className="mt-1 text-xs text-black/45">
+                          <p className="mt-1 text-xs text-muted">
                             {product.isActive ? 'Sin stock: no se puede destacar.' : 'Inactivo: no se puede destacar.'}
                           </p>
                         )}
                       </div>
                       <button
-                        className="border border-black px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] hover:bg-gold disabled:opacity-40"
+                        className="btn-ghost"
                         disabled={blocked || pendingId === product.id}
                         onClick={() => void toggleFeatured(product)}
                         type="button"

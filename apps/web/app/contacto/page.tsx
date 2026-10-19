@@ -26,12 +26,12 @@ export default function ContactoPage() {
         },
       ]}
     >
-      <div className="mt-10 border border-black/15 bg-gold-soft px-6 py-8">
-        <h2 className="font-display text-2xl font-bold uppercase">¿Querés revocar una compra?</h2>
-        <p className="mt-3 text-sm leading-6 text-black/65">
+      <div className="mt-10 border border-line bg-gold-soft px-6 py-8">
+        <h2 className="font-display text-2xl font-black uppercase tracking-[-0.02em]">¿Querés revocar una compra?</h2>
+        <p className="mt-3 text-sm leading-6 text-muted">
           No hace falta que contactes a un operador: usá el botón oficial y te respondemos por mail.
         </p>
-        <a className="mt-5 inline-block border border-black bg-black px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:bg-gold hover:text-black" href={LEGAL_LINKS.arrepentimiento}>
+        <a className="mt-5 inline-block border border-black bg-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href={LEGAL_LINKS.arrepentimiento}>
           Botón de arrepentimiento
         </a>
       </div>

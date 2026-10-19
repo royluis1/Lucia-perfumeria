@@ -39,31 +39,31 @@ function ResetPasswordForm() {
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
         <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
-        <h1 className="mt-16 font-display text-6xl font-bold uppercase leading-none">Nueva contraseña</h1>
+        <h1 className="mt-16 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Nueva contraseña</h1>
         {status === 'done' ? (
           <>
-            <p className="mt-8 border border-black/10 bg-white p-6 text-black/70">
+            <p className="mt-8 border border-line bg-white p-6 text-black/70">
               Tu contraseña se actualizó correctamente. Se cerraron tus otras sesiones por seguridad.
             </p>
-            <Link className="mt-8 inline-block border border-black bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white hover:bg-gold hover:text-black" href="/login">Ingresar</Link>
+            <Link className="mt-8 inline-block border border-black bg-black px-6 py-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white hover:bg-white hover:text-black" href="/login">Ingresar</Link>
           </>
         ) : token ? (
           <form className="mt-10 space-y-5" onSubmit={handleSubmit}>
             <label className="block text-sm">
               Nueva contraseña
-              <input autoFocus className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-gold" minLength={8} required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+              <input autoFocus className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-black" minLength={8} required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
             </label>
             <label className="block text-sm">
               Repetí la contraseña
-              <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-gold" minLength={8} required type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} />
+              <input className="mt-2 w-full border-b border-black bg-transparent px-0 py-3 outline-none focus:border-black" minLength={8} required type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} />
             </label>
             {status === 'error' && <p className="text-sm text-red-700" role="alert">{error}</p>}
-            <button className="w-full border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
+            <button className="w-full border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50" disabled={isSubmitting} type="submit">
               {isSubmitting ? 'Guardando...' : 'Guardar contraseña'}
             </button>
           </form>
         ) : (
-          <p className="mt-8 border border-black/10 bg-white p-6 text-black/70">
+          <p className="mt-8 border border-line bg-white p-6 text-black/70">
             El enlace no es válido o expiró. Por favor pedí uno nuevo.
           </p>
         )}

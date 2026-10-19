@@ -48,9 +48,9 @@ export default function ArrepentimientoPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-      <p className="text-xs uppercase tracking-[0.3em] text-black/50">Derecho de arrepentimiento</p>
-      <h1 className="mt-3 font-display text-5xl font-bold uppercase tracking-[-0.03em]">Quiero revocar la compra</h1>
-      <p className="mt-6 max-w-2xl text-sm leading-7 text-black/65">
+      <p className="text-xs uppercase tracking-[0.3em] text-muted">Derecho de arrepentimiento</p>
+      <h1 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em]">Quiero revocar la compra</h1>
+      <p className="mt-6 max-w-2xl text-sm leading-7 text-muted">
         Si compraste en Lucía Perfumería y te arrepentís, podés revocar la
         operación dentro de los <strong>10 días corridos</strong> desde la compra
         o la recepción del producto (Ley de Defensa del Consumidor 24.240, art.
@@ -59,9 +59,9 @@ export default function ArrepentimientoPage() {
       </p>
 
       {status === 'success' ? (
-        <div className="mt-10 border border-black/15 bg-gold-soft px-6 py-8">
-          <h2 className="font-display text-2xl font-bold uppercase">Solicitud registrada</h2>
-          <p className="mt-3 text-sm leading-6 text-black/65">
+        <div className="mt-10 border border-line bg-gold-soft px-6 py-8">
+          <h2 className="font-display text-2xl font-black uppercase tracking-[-0.02em]">Solicitud registrada</h2>
+          <p className="mt-3 text-sm leading-6 text-muted">
             Recibimos tu pedido de revocación. Te vamos a responder por mail con
             el número de trámite y los pasos para la devolución del dinero.
           </p>
@@ -74,11 +74,11 @@ export default function ArrepentimientoPage() {
           </div>
           <Field label="Número de pedido (si lo tenés a mano)" name="orderNumber" />
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em]" htmlFor="reason">
+            <label className="mb-2 block text-xs font-extrabold uppercase tracking-[0.22em]" htmlFor="reason">
               Motivo *
             </label>
             <textarea
-              className="w-full border border-black/20 bg-transparent px-4 py-3 text-sm outline-none focus:border-black"
+              className="w-full border border-line bg-transparent px-4 py-3 text-sm outline-none focus:border-black"
               id="reason"
               maxLength={1000}
               name="reason"
@@ -88,7 +88,7 @@ export default function ArrepentimientoPage() {
             />
           </div>
           <button
-            className="inline-flex items-center gap-2 border border-black bg-black px-7 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black"
+            className="inline-flex items-center gap-2 border border-black bg-black px-7 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black"
             disabled={status === 'loading'}
             type="submit"
           >
@@ -104,11 +104,11 @@ export default function ArrepentimientoPage() {
 function Field({ label, name, type = 'text', required = false }: { label: string; name: string; type?: string; required?: boolean }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em]" htmlFor={name}>
+      <label className="mb-2 block text-xs font-extrabold uppercase tracking-[0.22em]" htmlFor={name}>
         {label}
       </label>
       <input
-        className="w-full border border-black/20 bg-transparent px-4 py-3 text-sm outline-none focus:border-black"
+        className="w-full border border-line bg-transparent px-4 py-3 text-sm outline-none focus:border-black"
         id={name}
         name={name}
         type={type}

@@ -22,15 +22,15 @@ export function InfoPage({
     <main>
       <Header />
       <section className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-        <p className="text-xs uppercase tracking-[0.3em] text-black/50">{eyebrow}</p>
-        <h1 className="mt-3 font-display text-5xl font-bold uppercase tracking-[-0.03em] md:text-6xl">{title}</h1>
-        {intro && <p className="mt-6 max-w-2xl text-sm leading-7 text-black/65">{intro}</p>}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{eyebrow}</p>
+        <h1 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em] md:text-6xl">{title}</h1>
+        {intro && <p className="mt-6 max-w-2xl text-sm leading-7 text-muted">{intro}</p>}
         {sections?.map((section) => (
-          <section className="mt-12" key={section.title}>
-            <h2 className="font-display text-2xl font-bold uppercase">{section.title}</h2>
+          <section className="mt-12 border-t border-line pt-10" key={section.title}>
+            <h2 className="font-display text-2xl font-black uppercase tracking-[-0.02em]">{section.title}</h2>
             <div className="mt-4 space-y-3">
               {section.content.map((paragraph) => (
-                <p className="text-sm leading-7 text-black/65" key={paragraph.slice(0, 40)}>{paragraph}</p>
+                <p className="text-sm leading-7 text-muted" key={paragraph.slice(0, 40)}>{paragraph}</p>
               ))}
             </div>
           </section>

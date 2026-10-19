@@ -99,19 +99,19 @@ export default function OrdersPage() {
         <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
         <a className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</a>
       </div>
-      <h1 className="mt-20 font-display text-6xl font-bold uppercase">Mis pedidos</h1>
-      {banner && <p className="mt-8 border border-gold bg-gold/10 px-6 py-4 text-sm" role="status">{banner}</p>}
-      {message && <p className="mt-8 border border-black/10 bg-white p-6 text-black/65" role="status">{message}</p>}
+      <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em]">Mis pedidos</h1>
+      {banner && <p className="mt-8 border border-line bg-gold-soft px-6 py-4 text-sm" role="status">{banner}</p>}
+      {message && <p className="mt-8 border border-line bg-white p-6 text-muted" role="status">{message}</p>}
       <div className="mt-10 space-y-4">
         {orders.map((order) => {
           const canPay = checkoutConfigured && order.paymentStatus === 'PENDING' && order.status === 'PENDING';
           return (
-            <article className="border border-black/10 bg-white p-6" key={order.id}>
+            <article className="border border-line bg-white p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
                 <p className="text-sm font-semibold">${order.total}</p>
               </div>
-              <p className="mt-3 text-sm text-black/60">
+              <p className="mt-3 text-sm text-muted">
                 {new Date(order.createdAt).toLocaleDateString('es-AR')} · {ORDER_STATUS_LABELS[order.status] ?? order.status} · Pago {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
               </p>
               <ul className="mt-4 space-y-1 text-sm">
@@ -119,7 +119,7 @@ export default function OrdersPage() {
               </ul>
               {canPay && (
                 <button
-                  className="mt-5 border border-black bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50"
+                  className="mt-5 border border-black bg-black px-6 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50"
                   disabled={payingOrderId === order.id}
                   onClick={() => payNow(order.id)}
                   type="button"
@@ -130,7 +130,7 @@ export default function OrdersPage() {
             </article>
           );
         })}
-        {!message && orders.length === 0 && <p className="text-black/60">Todavía no tenés pedidos.</p>}
+        {!message && orders.length === 0 && <p className="text-muted">Todavía no tenés pedidos.</p>}
       </div>
     </main>
   );

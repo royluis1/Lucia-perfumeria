@@ -75,25 +75,25 @@ export default function MfaPage() {
         <Link className="text-xs uppercase tracking-[0.18em] underline" href="/account">Volver a mi cuenta</Link>
       </div>
 
-      <p className="mt-20 text-xs uppercase tracking-[0.3em] text-black/50">Seguridad</p>
-      <h1 className="mt-3 font-display text-6xl font-bold uppercase leading-none">Verificación en dos pasos</h1>
-      <p className="mt-5 max-w-xl text-black/60">
+      <p className="mt-20 text-xs uppercase tracking-[0.3em] text-muted">Seguridad</p>
+      <h1 className="mt-3 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Verificación en dos pasos</h1>
+      <p className="mt-5 max-w-xl text-muted">
         Usá una app como Google Authenticator o Authy para recibir un código de 6 dígitos al iniciar sesión.
         Guardá el código QR o la clave secreta en un lugar seguro.
       </p>
 
-      {message && <p className="mt-8 border border-black/10 bg-white p-6 text-green-900">{message}</p>}
+      {message && <p className="mt-8 border border-line bg-white p-6 text-green-900">{message}</p>}
 
       {enabled === true && (
-        <section className="mt-10 border border-black/10 bg-white p-8">
-          <h2 className="font-display text-3xl font-bold uppercase">Desactivar</h2>
-          <p className="mt-3 text-sm text-black/60">Ingresá el código actual de tu aplicación para confirmar.</p>
+        <section className="mt-10 border border-line bg-white p-8">
+          <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Desactivar</h2>
+          <p className="mt-3 text-sm text-muted">Ingresá el código actual de tu aplicación para confirmar.</p>
           <div className="mt-6 flex max-w-xs items-end gap-3">
             <label className="block flex-1 text-sm">
               Código de 6 dígitos
               <input
                 autoFocus
-                className="mt-2 w-full border-b border-black bg-transparent py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-gold"
+                className="mt-2 w-full border-b border-black bg-transparent py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-black"
                 inputMode="numeric"
                 maxLength={6}
                 pattern="\d{6}"
@@ -101,7 +101,7 @@ export default function MfaPage() {
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
               />
             </label>
-            <button className="border border-black bg-black px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white hover:bg-gold hover:text-black disabled:opacity-50" disabled={busy || code.length !== 6} onClick={handleDisable} type="button">Desactivar</button>
+            <button className="border border-black bg-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white hover:bg-white hover:text-black disabled:opacity-50" disabled={busy || code.length !== 6} onClick={handleDisable} type="button">Desactivar</button>
           </div>
           {error && <p className="mt-4 text-sm text-red-700" role="alert">{error}</p>}
         </section>
@@ -109,7 +109,7 @@ export default function MfaPage() {
 
       {enabled === false && !setup && (
         <button
-          className="mt-10 border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-gold hover:text-black disabled:opacity-50"
+          className="mt-10 border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.2em] text-white transition hover:bg-white hover:text-black disabled:opacity-50"
           disabled={busy}
           onClick={handleStartSetup}
           type="button"
@@ -119,19 +119,19 @@ export default function MfaPage() {
       )}
 
       {setup && (
-        <section className="mt-10 border border-black/10 bg-white p-8">
-          <h2 className="font-display text-3xl font-bold uppercase">Escaneá el código QR</h2>
+        <section className="mt-10 border border-line bg-white p-8">
+          <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Escaneá el código QR</h2>
           <div className="mt-6 flex flex-wrap items-start gap-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="h-56 w-56 bg-white" src={setup.qrDataUrl} alt="Código QR para configurar la aplicación de autenticación" />
             <div className="min-w-[16rem] flex-1">
-              <p className="text-sm text-black/60">O ingresá esta clave manualmente en tu app:</p>
-              <code className="mt-3 block break-all border border-black/10 bg-canvas p-4 text-sm tracking-widest">{setup.secret}</code>
+              <p className="text-sm text-muted">O ingresá esta clave manualmente en tu app:</p>
+              <code className="mt-3 block break-all border border-line bg-canvas p-4 text-sm tracking-widest">{setup.secret}</code>
               <div className="mt-6 flex max-w-xs items-end gap-3">
                 <label className="block flex-1 text-sm">
                   Código de confirmación
                   <input
-                    className="mt-2 w-full border-b border-black bg-transparent py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-gold"
+                    className="mt-2 w-full border-b border-black bg-transparent py-3 text-center text-2xl tracking-[0.5em] outline-none focus:border-black"
                     inputMode="numeric"
                     maxLength={6}
                     pattern="\d{6}"
@@ -139,7 +139,7 @@ export default function MfaPage() {
                     onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
                   />
                 </label>
-                <button className="border border-black bg-black px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white hover:bg-gold hover:text-black disabled:opacity-50" disabled={busy || code.length !== 6} onClick={handleEnable} type="button">
+                <button className="border border-black bg-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white hover:bg-white hover:text-black disabled:opacity-50" disabled={busy || code.length !== 6} onClick={handleEnable} type="button">
                   {busy ? 'Verificando...' : 'Activar'}
                 </button>
               </div>

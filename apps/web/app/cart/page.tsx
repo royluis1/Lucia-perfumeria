@@ -16,11 +16,11 @@ export default function CartPage() {
       <Header />
       <div className="mt-10 space-y-4">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center text-black/50">
+          <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
             <CartIcon className="h-24 w-24 mb-6 text-black/20" />
-            <h1 className="font-display text-4xl font-bold uppercase mb-4">Tu carrito está vacío</h1>
+            <h1 className="font-display text-4xl font-black uppercase tracking-[-0.02em] mb-4">Tu carrito está vacío</h1>
             <p className="mb-8 max-w-md">Todavía no agregaste productos. ¡Explorá nuestra colección!</p>
-            <Link className="border border-black bg-black px-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black" href="/shop">
+            <Link className="border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href="/shop">
               Ir a la tienda
             </Link>
           </div>
@@ -28,19 +28,19 @@ export default function CartPage() {
           <>
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-4 border-b border-black/10 py-5">
-                  <div className="relative h-20 w-16 flex-shrink-0 bg-white border border-black/10">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white to-black/10" />
+                <div key={item.productId} className="flex gap-4 border-b border-line py-5">
+                  <div className="relative h-20 w-16 flex-shrink-0 bg-white border border-line">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white to-sand" />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <h2 className="font-semibold">{item.name}</h2>
-                      <p className="text-sm text-black/55">{item.brand}</p>
+                      <p className="text-sm text-muted">{item.brand}</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center border border-black/10">
+                      <div className="flex items-center border border-line">
                         <button
-                          className="p-2 text-black/60 hover:text-gold transition-colors"
+                          className="p-2 text-muted hover:text-black transition-colors"
                           onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                           aria-label="Disminuir cantidad"
                         >
@@ -48,7 +48,7 @@ export default function CartPage() {
                         </button>
                         <span className="px-3 text-sm font-medium">{item.quantity}</span>
                         <button
-                          className="p-2 text-black/60 hover:text-gold transition-colors"
+                          className="p-2 text-muted hover:text-black transition-colors"
                           onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                           aria-label="Aumentar cantidad"
                         >
@@ -56,7 +56,7 @@ export default function CartPage() {
                         </button>
                       </div>
                       <button
-                        className="text-xs text-black/50 hover:text-red-600 transition-colors"
+                        className="text-xs text-muted hover:text-red-600 transition-colors"
                         onClick={() => removeItem(item.productId)}
                         aria-label={`Eliminar ${item.name}`}
                       >
@@ -69,20 +69,20 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="border-t border-black/10 pt-6 space-y-4">
+            <div className="border-t border-line pt-6 space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-black/60">Subtotal</span>
+                <span className="text-muted">Subtotal</span>
                 <span className="font-semibold">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-black/60">Envío</span>
+                <span className="text-muted">Envío</span>
                 <span className="font-semibold">{shipping === 0 ? 'Gratis' : formatPrice(shipping)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold pt-2 border-t border-black/10">
+              <div className="flex justify-between text-lg font-bold pt-2 border-t border-line">
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <Link className="block w-full border border-black bg-black px-8 py-4 text-center text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black" href="/checkout">
+              <Link className="block w-full border border-black bg-black px-8 py-4 text-center text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href="/checkout">
                 Continuar al checkout
               </Link>
               <Link className="mt-4 block text-center text-xs uppercase tracking-[0.16em] underline" href="/account/orders">Ver mis pedidos</Link>

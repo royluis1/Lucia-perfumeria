@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
+import { SmartImage } from '../../../components/smart-image';
 import { getProduct, resolveImageUrl } from '../../../lib/api';
 import type { Metadata } from 'next';
 
@@ -73,20 +74,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
       <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
-        <div className="relative flex aspect-square items-end justify-center overflow-hidden bg-white p-16">
+        <div className="relative flex aspect-square items-center justify-center overflow-hidden border border-line bg-sand p-10">
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="absolute inset-0 h-full w-full object-cover" src={imageUrl} alt={product.name} />
+            <SmartImage alt={product.name} sizes="(min-width: 768px) 50vw, 100vw" src={imageUrl} />
           ) : (
-            <div className="h-72 w-40 bg-gradient-to-b from-white to-black/10 shadow-xl" />
+            <div className="float h-72 w-40 bg-gradient-to-b from-white to-line shadow-2xl" />
           )}
         </div>
         <div className="self-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-black/50">{product.brand}</p>
-          <h1 className="mt-4 font-display text-6xl font-bold uppercase leading-none">{product.name}</h1>
-          <p className="mt-6 text-2xl">{price}</p>
-          <p className="mt-8 max-w-lg leading-7 text-black/65">{product.description}</p>
-          <p className="mt-6 text-sm text-black/55">Disponible para compra</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{product.brand}</p>
+          <h1 className="mt-4 font-display text-6xl font-black uppercase leading-none tracking-[-0.02em]">{product.name}</h1>
+          <p className="mt-6 text-2xl font-semibold">{price}</p>
+          <p className="mt-8 max-w-lg leading-7 text-muted">{product.description}</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-muted">Disponible para compra</p>
           <AddToCartButton
             productId={product.id}
             productName={product.name}
