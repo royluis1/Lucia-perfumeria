@@ -1,9 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { mkdirSync } from 'fs';
-import { randomBytes } from 'crypto';
+import { memoryStorage } from 'multer';
+import { extname } from 'path';
 import { Role } from '@prisma/client';
 import { CancellationStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,10 +14,28 @@ import { UpdateFeaturedOrderDto } from './dto/update-featured-order.dto';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
+import { ReorderProductImagesDto } from './dto/reorder-product-images.dto';
 import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { CancellationService } from '../cancellation/cancellation.service';
+import { StorageService } from '../storage/storage.service';
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+const PRODUCT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+const PRODUCT_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+function productImageFileFilter(
+  _req: unknown,
+  file: Express.Multer.File,
+  callback: (error: Error | null, acceptFile: boolean) => void,
+) {
+  const ext = extname(file.originalname).toLowerCase();
+  if (!PRODUCT_IMAGE_EXTENSIONS.includes(ext) || !PRODUCT_IMAGE_MIME_TYPES.includes(file.mimetype)) {
+    callback(new BadRequestException('Formato no permitido: usá JPG, PNG o WebP'), false);
+    return;
+  }
+  callback(null, true);
+}
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,23 +44,14 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly cancellationService: CancellationService,
+    private readonly storage: StorageService,
   ) {}
 
   @Post('products/upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (_req, _file, callback) => {
-          const dir = join(process.cwd(), process.env.UPLOADS_DIR?.trim() || 'public', 'products');
-          mkdirSync(dir, { recursive: true });
-          callback(null, dir);
-        },
-        filename: (_req, file, callback) => {
-          const ext = extname(file.originalname).toLowerCase();
-          callback(null, `${randomBytes(16).toString('hex')}${ext}`);
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
       fileFilter: (_req, file, callback) => {
         const ext = extname(file.originalname).toLowerCase();
         if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
@@ -55,10 +62,44 @@ export class AdminController {
       },
     }),
   )
-  uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
+  async uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new BadRequestException('Enviá un archivo de imagen');
-    const prefix = process.env.UPLOADS_PREFIX?.trim() || '/uploads';
-    return { url: `${prefix}/products/${file.filename}` };
+    const url = await this.storage.uploadImage(file.buffer, file.originalname, file.mimetype);
+    return { url };
+  }
+
+  @Post('products/:id/images')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
+      fileFilter: productImageFileFilter,
+    }),
+  )
+  addProductImage(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.adminService.addProductImage(request.userId, id, file);
+  }
+
+  @Delete('products/:id/images/:imageId')
+  deleteProductImage(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Param('imageId') imageId: string,
+  ) {
+    return this.adminService.deleteProductImage(request.userId, id, imageId);
+  }
+
+  @Put('products/:id/images/order')
+  reorderProductImages(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: ReorderProductImagesDto,
+  ) {
+    return this.adminService.reorderProductImages(request.userId, id, body.imageIds);
   }
 
   @Get('products')

@@ -3,6 +3,13 @@ import { API_URL } from './config';
 
 const apiUrl = API_URL;
 
+export type AdminProductImage = {
+  id: string;
+  url: string;
+  alt: string | null;
+  position: number;
+};
+
 export type AdminProduct = {
   id: string;
   slug: string;
@@ -16,6 +23,7 @@ export type AdminProduct = {
   isActive: boolean;
   category: string;
   imageUrl: string | null;
+  images: AdminProductImage[];
   featured: boolean;
   featuredOrder: number;
 };
@@ -133,6 +141,64 @@ export async function uploadImage(file: File): Promise<string> {
   }
   const result = (await response.json()) as { url: string };
   return result.url;
+}
+
+function parseJsonBody(text: string) {
+  try {
+    return text ? (JSON.parse(text) as unknown) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function uploadProductImage(
+  productId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<AdminProductImage> {
+  const token = getAccessToken();
+  if (!token) return Promise.reject(new Error('Iniciá sesión con una cuenta administradora.'));
+
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', `${apiUrl}/admin/products/${productId}/images`);
+    request.setRequestHeader('Authorization', `Bearer ${token}`);
+    request.upload.onprogress = (event) => {
+      if (onProgress && event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    request.onload = () => {
+      const body = parseJsonBody(request.responseText) as
+        | { message?: string }
+        | AdminProductImage
+        | null;
+      if (request.status >= 200 && request.status < 300) {
+        resolve(body as AdminProductImage);
+        return;
+      }
+      reject(new Error((body as { message?: string } | null)?.message ?? 'No se pudo subir la foto'));
+    };
+    request.onerror = () => reject(new Error('No se pudo subir la foto'));
+    const form = new FormData();
+    form.append('file', file);
+    request.send(form);
+  });
+}
+
+export async function deleteProductImage(productId: string, imageId: string) {
+  const response = await adminFetch(`/admin/products/${productId}/images/${imageId}`, {
+    method: 'DELETE',
+  });
+  return response.json() as Promise<{ id: string; deleted: boolean; images: AdminProductImage[] }>;
+}
+
+export async function reorderProductImages(productId: string, imageIds: string[]) {
+  const response = await adminFetch(`/admin/products/${productId}/images/order`, {
+    method: 'PUT',
+    body: JSON.stringify({ imageIds }),
+  });
+  return response.json() as Promise<AdminProductImage[]>;
 }
 
 export async function listAdminOrders(page = 1) {

@@ -1,5 +1,12 @@
 import { API_URL } from './config';
 
+export type ProductImage = {
+  id: string;
+  url: string;
+  alt: string | null;
+  position: number;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -11,6 +18,7 @@ export type Product = {
   weightGrams: number;
   category: string;
   imageUrl: string | null;
+  images: ProductImage[];
   createdAt: string;
   updatedAt: string;
 };

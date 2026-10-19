@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ProductImage, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -12,12 +12,21 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { AuditLogService } from '../audit-log/audit-log.service';
+import { StorageService } from '../storage/storage.service';
+
+const MAX_PRODUCT_IMAGES = 8;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const PRODUCT_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const adminProductSelect = {
   id: true, slug: true, name: true, brand: true, description: true,
   price: true, stock: true, sku: true, isActive: true, weightGrams: true,
   category: true, imageUrl: true, featured: true, featuredOrder: true,
   createdAt: true, updatedAt: true,
+  images: {
+    select: { id: true, url: true, alt: true, position: true },
+    orderBy: { position: 'asc' as const },
+  },
 } satisfies Prisma.ProductSelect;
 
 const orderInclude = {
@@ -33,6 +42,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
+    private readonly storage: StorageService,
   ) {}
 
   listProducts() {
@@ -41,7 +51,19 @@ export class AdminService {
 
   async createProduct(actorId: string, dto: CreateProductDto) {
     try {
-      const product = await this.prisma.product.create({ data: dto, select: adminProductSelect });
+      const product = await this.prisma.product.create({
+        data: {
+          ...dto,
+          ...(dto.imageUrl
+            ? {
+                images: {
+                  create: { url: dto.imageUrl, position: 0, alt: `${dto.name} — ${dto.brand}` },
+                },
+              }
+            : {}),
+        },
+        select: adminProductSelect,
+      });
       await this.auditLog.record(actorId, 'CREATE_PRODUCT', 'Product', product.id, {
         slug: product.slug,
         sku: product.sku,
@@ -85,6 +107,14 @@ export class AdminService {
 
     try {
       const product = await this.prisma.product.update({ where: { id }, data, select: adminProductSelect });
+      if (dto.imageUrl !== undefined) {
+        const imageCount = await this.prisma.productImage.count({ where: { productId: id } });
+        if (imageCount === 0 && dto.imageUrl) {
+          await this.prisma.productImage.create({
+            data: { productId: id, url: dto.imageUrl, position: 0, alt: `${product.name} — ${product.brand}` },
+          });
+        }
+      }
       const action =
         dto.featured === true ? 'FEATURE_PRODUCT' : dto.featured === false ? 'UNFEATURE_PRODUCT' : 'UPDATE_PRODUCT';
       await this.auditLog.record(actorId, action, 'Product', id, {
@@ -114,6 +144,125 @@ export class AdminService {
       existing.featured ? { unfeatured: true } : {},
     );
     return product;
+  }
+
+  async addProductImage(actorId: string, productId: string, file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Enviá un archivo de imagen');
+    if (!PRODUCT_IMAGE_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Formato no permitido: usá JPG, PNG o WebP');
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      throw new BadRequestException('La imagen no puede superar los 5 MB');
+    }
+
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, name: true, brand: true, imageUrl: true },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const count = await this.prisma.productImage.count({ where: { productId } });
+    if (count >= MAX_PRODUCT_IMAGES) {
+      throw new BadRequestException(`Cada producto puede tener hasta ${MAX_PRODUCT_IMAGES} fotos`);
+    }
+
+    const url = await this.storage.uploadImage(file.buffer, file.originalname, file.mimetype);
+    const image = await this.prisma.productImage.create({
+      data: { productId, url, position: count, alt: `${product.name} — ${product.brand}` },
+    });
+    if (!product.imageUrl) {
+      await this.prisma.product.update({ where: { id: productId }, data: { imageUrl: url } });
+    }
+
+    await this.auditLog.record(actorId, 'UPLOAD_PRODUCT_IMAGE', 'Product', productId, {
+      imageId: image.id,
+      position: image.position,
+      url,
+    });
+    return this.serializeImage(image);
+  }
+
+  async deleteProductImage(actorId: string, productId: string, imageId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, isActive: true },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const image = await this.prisma.productImage.findUnique({ where: { id: imageId } });
+    if (!image || image.productId !== productId) throw new NotFoundException('Image not found');
+
+    const count = await this.prisma.productImage.count({ where: { productId } });
+    if (count <= 1 && product.isActive) {
+      throw new BadRequestException('Un producto publicado no puede quedarse sin fotos');
+    }
+
+    await this.prisma.productImage.delete({ where: { id: imageId } });
+    await this.storage.deleteImage(image.url);
+    const remaining = await this.resequenceProductImages(productId);
+    await this.syncMainImageUrl(productId, remaining);
+    await this.auditLog.record(actorId, 'DELETE_PRODUCT_IMAGE', 'Product', productId, {
+      imageId,
+      url: image.url,
+    });
+    return { id: imageId, deleted: true, images: remaining.map((item) => this.serializeImage(item)) };
+  }
+
+  async reorderProductImages(actorId: string, productId: string, imageIds: string[]) {
+    const uniqueIds = [...new Set(imageIds)];
+    if (uniqueIds.length !== imageIds.length) {
+      throw new BadRequestException('La lista de fotos tiene elementos repetidos');
+    }
+
+    const product = await this.prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const images = await this.prisma.productImage.findMany({ where: { productId } });
+    if (images.length !== uniqueIds.length) {
+      throw new BadRequestException('La lista debe incluir todas las fotos del producto');
+    }
+    const byId = new Map(images.map((image) => [image.id, image]));
+    if (!uniqueIds.every((id) => byId.has(id))) {
+      throw new BadRequestException('Alguna foto no pertenece a este producto');
+    }
+
+    if (uniqueIds.length > 0) {
+      await this.prisma.$transaction(
+        uniqueIds.map((id, index) =>
+          this.prisma.productImage.update({ where: { id }, data: { position: index } }),
+        ),
+      );
+    }
+    const ordered = uniqueIds.map((id) => byId.get(id) as ProductImage);
+    await this.syncMainImageUrl(productId, ordered);
+    await this.auditLog.record(actorId, 'REORDER_PRODUCT_IMAGES', 'Product', productId, { imageIds: uniqueIds });
+    return ordered.map((image, index) => this.serializeImage({ ...image, position: index }));
+  }
+
+  private async resequenceProductImages(productId: string): Promise<ProductImage[]> {
+    const remaining = await this.prisma.productImage.findMany({
+      where: { productId },
+      orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+    });
+    if (remaining.length > 0) {
+      await this.prisma.$transaction(
+        remaining.map((image, index) =>
+          this.prisma.productImage.update({ where: { id: image.id }, data: { position: index } }),
+        ),
+      );
+    }
+    return remaining.map((image, index) => ({ ...image, position: index }));
+  }
+
+  private async syncMainImageUrl(productId: string, images: ProductImage[]) {
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { imageUrl: images[0]?.url ?? null },
+    });
+  }
+
+  private serializeImage(image: ProductImage) {
+    return { id: image.id, url: image.url, alt: image.alt, position: image.position };
   }
 
   async reorderFeaturedProducts(actorId: string, ids: string[]) {

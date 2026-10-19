@@ -7,19 +7,35 @@ import type { Product } from '../lib/api';
 
 export function ProductCard({ product }: { product: Product }) {
   const priceValue = Number(product.price);
-  const imageUrl = resolveImageUrl(product.imageUrl);
+  const galleryImages = (product.images ?? [])
+    .map((image) => resolveImageUrl(image.url))
+    .filter((url): url is string => Boolean(url));
+  const primaryImage = galleryImages[0] ?? resolveImageUrl(product.imageUrl);
+  const secondaryImage = galleryImages[1] ?? null;
 
   return (
     <article className="card relative">
       <div className="relative aspect-[4/5] overflow-hidden bg-white">
-        <Link className="absolute inset-0 block" href={`/shop/${product.slug}`} aria-label={`Ver ${product.name}`}>
-          {imageUrl ? (
-            <SmartImage
-              alt={product.name}
-              className="img object-cover"
-              sizes="(min-width: 768px) 33vw, 90vw"
-              src={imageUrl}
-            />
+        <Link className="group absolute inset-0 block" href={`/shop/${product.slug}`} aria-label={`Ver ${product.name}`}>
+          {primaryImage ? (
+            <>
+              <SmartImage
+                alt={product.name}
+                className="img object-cover"
+                sizes="(min-width: 768px) 33vw, 90vw"
+                src={primaryImage}
+              />
+              {secondaryImage && (
+                <span className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                  <SmartImage
+                    alt={`${product.name} · segunda vista`}
+                    className="img object-cover"
+                    sizes="(min-width: 768px) 33vw, 90vw"
+                    src={secondaryImage}
+                  />
+                </span>
+              )}
+            </>
           ) : (
             <span className="flex h-full w-full items-end justify-center p-10">
               <span className="img block h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl transition" />

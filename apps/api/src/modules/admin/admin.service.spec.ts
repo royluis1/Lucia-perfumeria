@@ -34,10 +34,20 @@ describe('AdminService destacados y hero', () => {
     findMany: jest.fn(),
     updateMany: jest.fn(),
   };
+  const productImage = {
+    count: jest.fn(),
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
   const homeHero = { findUnique: jest.fn(), upsert: jest.fn() };
   const auditLog = { record: jest.fn() };
+  const storage = { uploadImage: jest.fn(), deleteImage: jest.fn(), remoteEnabled: false };
   const prisma = {
     product,
+    productImage,
     homeHero,
     $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
   };
@@ -48,7 +58,7 @@ describe('AdminService destacados y hero', () => {
       ...baseProduct(),
       ...data,
     }));
-    service = new AdminService(prisma as never, auditLog as never);
+    service = new AdminService(prisma as never, auditLog as never, storage as never);
   });
 
   it('rechaza destacar un producto inactivo', async () => {
@@ -195,5 +205,99 @@ describe('AdminService destacados y hero', () => {
       }),
     );
     expect(auditLog.record).toHaveBeenCalledWith('admin1', 'UPDATE_HOME_HERO', 'HomeHero', 'home', expect.anything());
+  });
+
+  function fakeImageFile(overrides: Partial<Express.Multer.File> = {}) {
+    return {
+      buffer: Buffer.from('fake'),
+      originalname: 'foto.jpg',
+      mimetype: 'image/jpeg',
+      size: 1024,
+      ...overrides,
+    } as Express.Multer.File;
+  }
+
+  it('rechaza imágenes que no sean JPG, PNG o WebP', async () => {
+    await expect(
+      service.addProductImage('admin1', 'p1', fakeImageFile({ mimetype: 'image/gif' })),
+    ).rejects.toThrow(BadRequestException);
+    expect(storage.uploadImage).not.toHaveBeenCalled();
+  });
+
+  it('rechaza subir cuando el producto ya tiene 8 fotos', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1', name: 'X', brand: 'Y', imageUrl: null });
+    productImage.count.mockResolvedValue(8);
+
+    await expect(service.addProductImage('admin1', 'p1', fakeImageFile())).rejects.toThrow(BadRequestException);
+    expect(storage.uploadImage).not.toHaveBeenCalled();
+  });
+
+  it('sube la foto al final y audita UPLOAD_PRODUCT_IMAGE', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1', name: 'N', brand: 'B', imageUrl: null });
+    productImage.count.mockResolvedValue(2);
+    storage.uploadImage.mockResolvedValue('https://cdn.test/foto.jpg');
+    productImage.create.mockResolvedValue({ id: 'i3', url: 'https://cdn.test/foto.jpg', alt: 'N — B', position: 2 });
+
+    const result = await service.addProductImage('admin1', 'p1', fakeImageFile());
+
+    expect(productImage.create).toHaveBeenCalledWith({
+      data: { productId: 'p1', url: 'https://cdn.test/foto.jpg', position: 2, alt: 'N — B' },
+    });
+    expect(product.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { imageUrl: 'https://cdn.test/foto.jpg' } });
+    expect(auditLog.record).toHaveBeenCalledWith('admin1', 'UPLOAD_PRODUCT_IMAGE', 'Product', 'p1', expect.anything());
+    expect(result).toEqual({ id: 'i3', url: 'https://cdn.test/foto.jpg', alt: 'N — B', position: 2 });
+  });
+
+  it('no permite dejar sin fotos a un producto publicado', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1', isActive: true });
+    productImage.findUnique.mockResolvedValue({ id: 'i1', productId: 'p1', url: 'u1' });
+    productImage.count.mockResolvedValue(1);
+
+    await expect(service.deleteProductImage('admin1', 'p1', 'i1')).rejects.toThrow(BadRequestException);
+    expect(productImage.delete).not.toHaveBeenCalled();
+  });
+
+  it('borra la foto, reordena posiciones y audita', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1', isActive: true });
+    productImage.findUnique.mockResolvedValue({ id: 'i1', productId: 'p1', url: 'u1' });
+    productImage.count.mockResolvedValue(2);
+    productImage.findMany.mockResolvedValue([{ id: 'i2', productId: 'p1', url: 'u2', position: 1, alt: null }]);
+
+    const result = await service.deleteProductImage('admin1', 'p1', 'i1');
+
+    expect(productImage.delete).toHaveBeenCalledWith({ where: { id: 'i1' } });
+    expect(storage.deleteImage).toHaveBeenCalledWith('u1');
+    expect(product.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { imageUrl: 'u2' } });
+    expect(auditLog.record).toHaveBeenCalledWith('admin1', 'DELETE_PRODUCT_IMAGE', 'Product', 'p1', expect.anything());
+    expect(result).toEqual({ id: 'i1', deleted: true, images: [{ id: 'i2', url: 'u2', alt: null, position: 0 }] });
+  });
+
+  it('rechaza reordenar con fotos ajenas al producto', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1' });
+    productImage.findMany.mockResolvedValue([
+      { id: 'i1', productId: 'p1', url: 'u1', position: 0, alt: null },
+      { id: 'i2', productId: 'p1', url: 'u2', position: 1, alt: null },
+    ]);
+
+    await expect(service.reorderProductImages('admin1', 'p1', ['i1', 'iX'])).rejects.toThrow(BadRequestException);
+  });
+
+  it('reordena todas las fotos, sincroniza la principal y audita', async () => {
+    product.findUnique.mockResolvedValue({ id: 'p1' });
+    productImage.findMany.mockResolvedValue([
+      { id: 'i1', productId: 'p1', url: 'u1', position: 0, alt: null },
+      { id: 'i2', productId: 'p1', url: 'u2', position: 1, alt: null },
+    ]);
+    productImage.update.mockResolvedValue({});
+
+    const result = await service.reorderProductImages('admin1', 'p1', ['i2', 'i1']);
+
+    expect(productImage.update).toHaveBeenCalledWith({ where: { id: 'i2' }, data: { position: 0 } });
+    expect(productImage.update).toHaveBeenCalledWith({ where: { id: 'i1' }, data: { position: 1 } });
+    expect(product.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { imageUrl: 'u2' } });
+    expect(auditLog.record).toHaveBeenCalledWith('admin1', 'REORDER_PRODUCT_IMAGES', 'Product', 'p1', {
+      imageIds: ['i2', 'i1'],
+    });
+    expect(result.map((image) => image.id)).toEqual(['i2', 'i1']);
   });
 });

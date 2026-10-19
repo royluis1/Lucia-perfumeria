@@ -1,19 +1,32 @@
 import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
-import { SmartImage } from '../../../components/smart-image';
+import { ProductGallery } from '../../../components/product-gallery';
+import type { GalleryImage } from '../../../components/product-gallery';
 import { getProduct, resolveImageUrl } from '../../../lib/api';
+import type { Product } from '../../../lib/api';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
 
+function buildGallery(product: Product): GalleryImage[] {
+  const images = (product.images ?? [])
+    .map((image) => ({ id: image.id, url: resolveImageUrl(image.url), alt: image.alt }))
+    .filter((image): image is GalleryImage => Boolean(image.url));
+  if (images.length === 0) {
+    const fallback = resolveImageUrl(product.imageUrl);
+    if (fallback) images.push({ id: 'legacy', url: fallback, alt: product.name });
+  }
+  return images;
+}
+
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   try {
     const product = await getProduct(slug);
-    const imageUrl = resolveImageUrl(product.imageUrl);
+    const gallery = buildGallery(product);
     return {
       title: product.name,
       description: product.description.slice(0, 155),
@@ -23,7 +36,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         description: product.description.slice(0, 155),
         type: 'website',
         url: `/shop/${product.slug}`,
-        ...(imageUrl ? { images: [imageUrl] } : {}),
+        ...(gallery.length > 0 ? { images: gallery.map((image) => image.url) } : {}),
       },
     };
   } catch {
@@ -46,7 +59,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     currency: 'ARS',
     maximumFractionDigits: 0,
   });
-  const imageUrl = resolveImageUrl(product.imageUrl);
+  const gallery = buildGallery(product);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -54,7 +67,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     name: product.name,
     brand: { '@type': 'Brand', name: product.brand },
     description: product.description,
-    ...(imageUrl ? { image: [imageUrl] } : {}),
+    ...(gallery.length > 0 ? { image: gallery.map((image) => image.url) } : {}),
     sku: product.slug,
     category: product.category,
     offers: {
@@ -74,13 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
       <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
-        <div className="relative flex aspect-square items-center justify-center overflow-hidden border border-line bg-sand p-10">
-          {imageUrl ? (
-            <SmartImage alt={product.name} sizes="(min-width: 768px) 50vw, 100vw" src={imageUrl} />
-          ) : (
-            <div className="float h-72 w-40 bg-gradient-to-b from-white to-line shadow-2xl" />
-          )}
-        </div>
+        <ProductGallery images={gallery} name={product.name} />
         <div className="self-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{product.brand}</p>
           <h1 className="mt-4 font-display text-6xl font-black uppercase leading-none tracking-[-0.02em]">{product.name}</h1>

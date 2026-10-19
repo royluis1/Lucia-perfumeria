@@ -9,10 +9,11 @@ import {
   uploadImage,
   revalidateHome,
 } from '../../../lib/admin';
-import type { AdminProduct } from '../../../lib/admin';
+import type { AdminProduct, AdminProductImage } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
 import { Logo } from '../../../components/logo';
 import { SmartImage } from '../../../components/smart-image';
+import { ProductImagesManager } from '../../../components/admin/product-images';
 
 const categories = ['Florales', 'Cítricos', 'Amaderados', 'Uncategorized'];
 const emptyForm = {
@@ -78,6 +79,20 @@ export default function AdminProductsPage() {
     setForm(emptyForm);
   }
 
+  const editingProduct = products.find((product) => product.id === editingId) ?? null;
+
+  function handleImagesChanged(nextImages: AdminProductImage[]) {
+    if (!editingId) return;
+    setProducts((previous) =>
+      previous.map((product) =>
+        product.id === editingId
+          ? { ...product, images: nextImages, imageUrl: nextImages[0]?.url ?? null }
+          : product,
+      ),
+    );
+    void revalidateHome();
+  }
+
   async function handleImageUpload(file: File | undefined) {
     if (!file) return;
     setUploading(true);
@@ -107,7 +122,7 @@ export default function AdminProductsPage() {
       sku: form.sku.trim(),
       weightGrams: Number(form.weightGrams),
       category: form.category,
-      ...(form.imageUrl ? { imageUrl: form.imageUrl } : {}),
+      ...(form.imageUrl && !editingId ? { imageUrl: form.imageUrl } : {}),
     };
     try {
       if (editingId) {
@@ -172,18 +187,34 @@ export default function AdminProductsPage() {
         <label className="label-xs block text-muted">Stock<input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" min="0" required type="number" value={form.stock} onChange={(event) => setField('stock', event.target.value)} /></label>
         <label className="label-xs block text-muted">SKU<input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" required value={form.sku} onChange={(event) => setField('sku', event.target.value)} /></label>
         <label className="label-xs block text-muted">Peso (g)<input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" min="0" required type="number" value={form.weightGrams} onChange={(event) => setField('weightGrams', event.target.value)} /></label>
-        <label className="label-xs block text-muted">Imagen (URL)
-          <input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" value={form.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} placeholder="/uploads/products/xxx.png" />
-        </label>
-        <label className="label-xs block text-muted">O subir archivo
-          <input accept="image/*" className="mt-2 w-full cursor-pointer border-b border-black/30 bg-transparent py-2 text-sm normal-case tracking-normal text-muted transition-colors file:mr-3 file:border-0 file:bg-black file:px-3 file:py-2 file:text-[11px] file:font-extrabold file:uppercase file:tracking-[0.18em] file:text-white" disabled={uploading} type="file" onChange={(event) => void handleImageUpload(event.target.files?.[0])} />
-        </label>
-        {form.imageUrl && (
-          <div className="md:col-span-3">
-            <span className="relative block h-20 w-20 border border-line">
-              <SmartImage alt="Vista previa" className="object-cover" sizes="80px" src={resolveImageUrl(form.imageUrl) ?? form.imageUrl} />
-            </span>
-          </div>
+        {editingId ? (
+          editingProduct && (
+            <div className="md:col-span-3">
+              <ProductImagesManager
+                initialImages={editingProduct.images ?? []}
+                onChange={handleImagesChanged}
+                onError={setError}
+                onMessage={setMessage}
+                productId={editingId}
+              />
+            </div>
+          )
+        ) : (
+          <>
+            <label className="label-xs block text-muted">Imagen (URL)
+              <input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" value={form.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} placeholder="/uploads/products/xxx.png" />
+            </label>
+            <label className="label-xs block text-muted">O subir archivo
+              <input accept="image/*" className="mt-2 w-full cursor-pointer border-b border-black/30 bg-transparent py-2 text-sm normal-case tracking-normal text-muted transition-colors file:mr-3 file:border-0 file:bg-black file:px-3 file:py-2 file:text-[11px] file:font-extrabold file:uppercase file:tracking-[0.18em] file:text-white" disabled={uploading} type="file" onChange={(event) => void handleImageUpload(event.target.files?.[0])} />
+            </label>
+            {form.imageUrl && (
+              <div className="md:col-span-3">
+                <span className="relative block h-20 w-20 border border-line">
+                  <SmartImage alt="Vista previa" className="object-cover" sizes="80px" src={resolveImageUrl(form.imageUrl) ?? form.imageUrl} />
+                </span>
+              </div>
+            )}
+          </>
         )}
         <div className="flex gap-3 md:col-span-3">
           <button className="btn-primary" disabled={uploading} type="submit">

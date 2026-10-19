@@ -5,9 +5,10 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { CancellationService } from '../cancellation/cancellation.service';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, AuditLogModule],
+  imports: [PrismaModule, AuthModule, AuditLogModule, StorageModule],
   controllers: [AdminController],
   providers: [AdminService, CancellationService],
 })

@@ -11,7 +11,8 @@ services:
     plan: free
     rootDir: apps/api
     buildCommand: pnpm install && npx prisma generate && pnpm build
-    preDeployCommand: npx prisma db push
+    # db push crea la tabla ProductImage; el backfill es idempotente (migra Product.imageUrl -> posición 0).
+    preDeployCommand: npx prisma db push && node prisma/backfill-product-images.cjs
     startCommand: node dist/main.js
     envVars:
       - key: NODE_VERSION
@@ -50,3 +51,7 @@ services:
         value: https://lucia-perfumeria-609t.onrender.com/auth/google/callback
       - key: GOOGLE_OAUTH_CLIENT_REDIRECT
         value: https://lucia-perfumeria-royluis1.vercel.app/auth/oauth
+      # Vercel Blob: almacenamiento externo de fotos de producto (el disco de Render es efímero).
+      # Crear un store Blob público en el dashboard de Vercel y pegar el token acá (sync: false).
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
