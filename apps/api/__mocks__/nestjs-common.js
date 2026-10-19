@@ -8,6 +8,14 @@ class BadRequestException extends Error {}
 class NotFoundException extends Error {}
 class ServiceUnavailableException extends Error {}
 
+class Logger {
+  constructor() {}
+  log() {}
+  warn() {}
+  error() {}
+  debug() {}
+}
+
 function Injectable() {
   return (value) => value;
 }
@@ -17,6 +25,9 @@ function OnModuleInit() {
 function OnModuleDestroy() {
   return (value) => value;
 }
+function HttpCode() {
+  return (value) => value;
+}
 
 module.exports = {
   ConflictException,
@@ -24,7 +35,9 @@ module.exports = {
   BadRequestException,
   NotFoundException,
   ServiceUnavailableException,
+  Logger,
   Injectable,
   OnModuleInit,
   OnModuleDestroy,
+  HttpCode,
 };

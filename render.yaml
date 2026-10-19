@@ -1,15 +1,8 @@
 # Blueprint de Render para deploy de Lucía Perfumería (plan gratuito).
 # En la UI de Render: New -> Blueprint -> conectar este repo.
-# Si nombrás los servicios distinto, ajustá los valores de API_CORS_ORIGIN, WEB_APP_URL
-# y NEXT_PUBLIC_API_URL (los .onrender.com abajo).
-# IMPORTANTE: la API de Render se duerme tras inactividad; la web también puede dormirse
-# (elige plan "starter" o un ping externo si querés 24/7).
-
-databases:
-  - name: lucia-postgres
-    plan: free
-    databaseName: lucia_perfumeria
-    user: lucia
+# La base de datos de producción vive en Neon: DATABASE_URL se carga a mano en el
+# dashboard (sync: false) y debe incluir sslmode=require.
+# IMPORTANTE: la API de Render se duerme tras inactividad; la web va en Vercel.
 
 services:
   - type: web
@@ -27,44 +20,32 @@ services:
         value: 0.0.0.0
       - key: JWT_EXPIRES_IN
         value: 7d
+      # Cadena de conexión de Neon terminada en ?sslmode=require. Se carga en el dashboard.
       - key: DATABASE_URL
-        fromDatabase:
-          name: lucia-postgres
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: PAYMENTS_WEBHOOK_SECRET
         generateValue: true
-      # Cambiar si el servicio web se llama distinto o se usa un dominio propio:
+      # Front en Vercel: orígenes permitidos por CORS y links de emails.
       - key: API_CORS_ORIGIN
-        value: https://lucia-web.onrender.com
+        value: https://lucia-perfumeria.vercel.app
       - key: WEB_APP_URL
-        value: https://lucia-web.onrender.com
+        value: https://lucia-perfumeria.vercel.app
+      # URL pública HTTPS de esta API; Mercado Pago envía las notificaciones acá.
       - key: API_PUBLIC_URL
-        value: https://lucia-api.onrender.com
-      # Configurarlas en Render antes de vender. No guardar credenciales reales en Git.
+        value: https://lucia-perfumeria-609t.onrender.com
+      # Mercado Pago Checkout Pro: cargar en el dashboard (no versionar credenciales).
+      # TEST-... para pruebas; APP_USR-... para producción.
       - key: MERCADOPAGO_ACCESS_TOKEN
-        value: ""
+        sync: false
       - key: MERCADOPAGO_WEBHOOK_SECRET
-        value: ""
+        sync: false
       - key: GOOGLE_CLIENT_ID
-        value: ""
+        sync: false
       - key: GOOGLE_CLIENT_SECRET
-        value: ""
+        sync: false
       - key: GOOGLE_REDIRECT_URI
-        value: https://lucia-api.onrender.com/auth/google/callback
+        value: https://lucia-perfumeria-609t.onrender.com/auth/google/callback
       - key: GOOGLE_OAUTH_CLIENT_REDIRECT
-        value: https://lucia-web.onrender.com/auth/oauth
-
-  - type: web
-    name: lucia-web
-    runtime: node
-    plan: free
-    rootDir: apps/web
-    buildCommand: pnpm install && pnpm build
-    startCommand: pnpm start
-    envVars:
-      - key: NODE_VERSION
-        value: 22
-      - key: NEXT_PUBLIC_API_URL
-        value: https://lucia-api.onrender.com
+        value: https://lucia-perfumeria.vercel.app/auth/oauth
