@@ -24,6 +24,7 @@ import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 
 export const REFRESH_COOKIE_NAME = 'lucia_refresh_token';
+export const ACCESS_COOKIE_NAME = 'lucia_access_token';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MFA_CHALLENGE_TTL = '5m';
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
