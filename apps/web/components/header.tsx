@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '../lib/cart';
 import { useWishlist } from '../lib/wishlist';
+import { AUTH_CHANGE_EVENT } from '../lib/auth';
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -18,7 +19,10 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    setLoggedIn(Boolean(window.localStorage.getItem('lucia_access_token')));
+    const syncLoggedIn = () => setLoggedIn(Boolean(window.localStorage.getItem('lucia_access_token')));
+    syncLoggedIn();
+    window.addEventListener(AUTH_CHANGE_EVENT, syncLoggedIn);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, syncLoggedIn);
   }, []);
 
   return (

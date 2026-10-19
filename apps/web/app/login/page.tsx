@@ -1,9 +1,9 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { login, saveSession } from '../../lib/auth';
+import { getAccessToken, login, saveSession } from '../../lib/auth';
 import { verifyMfa } from '../../lib/account';
 import { GoogleLoginButton } from '../../components/google-login-button';
 
@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash.includes('token=')) {
+      window.location.replace(`/auth/oauth${window.location.hash}`);
+      return;
+    }
+    if (getAccessToken()) {
+      router.replace('/shop');
+    }
+  }, [router]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

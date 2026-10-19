@@ -114,9 +114,7 @@ export class AuthController {
       response.cookie(GOOGLE_STATE_COOKIE, state, this.googleStateCookieOptions());
       response.redirect(this.authService.getGoogleAuthUrl(state));
     } catch {
-      const clientRedirect =
-        process.env.GOOGLE_OAUTH_CLIENT_REDIRECT?.trim() || 'http://localhost:3000/login';
-      response.redirect(`${clientRedirect}?error=google_not_configured`);
+      response.redirect(`${this.getClientRedirect()}?error=google_not_configured`);
     }
   }
 
@@ -127,8 +125,7 @@ export class AuthController {
     @Req() request: Request,
     @Res() response: Response,
   ) {
-    const clientRedirect =
-      process.env.GOOGLE_OAUTH_CLIENT_REDIRECT?.trim() || 'http://localhost:3000/login';
+    const clientRedirect = this.getClientRedirect();
     const clearState = () => response.clearCookie(GOOGLE_STATE_COOKIE, this.googleStateCookieOptions());
 
     try {
@@ -144,6 +141,14 @@ export class AuthController {
       clearState();
       response.redirect(`${clientRedirect}?error=google_login_failed`);
     }
+  }
+
+  private getClientRedirect() {
+    const configured = process.env.GOOGLE_OAUTH_CLIENT_REDIRECT?.trim();
+    if (configured) return configured;
+    const webAppUrl = process.env.WEB_APP_URL?.trim().replace(/\/+$/, '');
+    if (webAppUrl) return `${webAppUrl}/auth/oauth`;
+    return 'http://localhost:3000/auth/oauth';
   }
 
   private getRefreshToken(request: Request) {

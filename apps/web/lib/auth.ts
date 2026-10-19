@@ -24,6 +24,13 @@ export type UserProfile = {
 
 const apiUrl = API_URL;
 
+export const AUTH_CHANGE_EVENT = 'lucia-auth-changed';
+
+function notifyAuthChange() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+}
+
 export async function login(email: string, password: string): Promise<LoginResult> {
   const response = await fetch(`${apiUrl}/auth/login`, {
     method: 'POST',
@@ -75,10 +82,12 @@ export function googleAuthUrl(): string {
 export function saveSession(session: AuthResponse) {
   window.localStorage.setItem('lucia_access_token', session.accessToken);
   window.localStorage.setItem('lucia_user', JSON.stringify(session.user));
+  notifyAuthChange();
 }
 
 export function saveAccessToken(accessToken: string) {
   window.localStorage.setItem('lucia_access_token', accessToken);
+  notifyAuthChange();
 }
 
 export function getAccessToken() {
@@ -88,4 +97,5 @@ export function getAccessToken() {
 export function clearSession() {
   window.localStorage.removeItem('lucia_access_token');
   window.localStorage.removeItem('lucia_user');
+  notifyAuthChange();
 }
