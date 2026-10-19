@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -12,6 +12,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { AdminService } from './admin.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateFeaturedOrderDto } from './dto/update-featured-order.dto';
+import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
 import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
@@ -75,6 +77,21 @@ export class AdminController {
   @Delete('products/:id')
   deactivateProduct(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
     return this.adminService.deactivateProduct(request.userId, id);
+  }
+
+  @Put('products/featured-order')
+  reorderFeaturedProducts(@Req() request: AuthenticatedRequest, @Body() body: UpdateFeaturedOrderDto) {
+    return this.adminService.reorderFeaturedProducts(request.userId, body.ids);
+  }
+
+  @Get('home/hero')
+  getHomeHero() {
+    return this.adminService.getHomeHero();
+  }
+
+  @Put('home/hero')
+  updateHomeHero(@Req() request: AuthenticatedRequest, @Body() body: UpdateHomeHeroDto) {
+    return this.adminService.updateHomeHero(request.userId, body);
   }
 
   @Get('orders')

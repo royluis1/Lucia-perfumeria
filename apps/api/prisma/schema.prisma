@@ -71,12 +71,30 @@ model Product {
   weightGrams Int
   category    String      @default("Uncategorized")
   imageUrl    String?
+  featured    Boolean     @default(false)
+  featuredOrder Int       @default(0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   cartItems   CartItem[]
   orderItems  OrderItem[]
   reviews     Review[]
   wishlistItems WishlistItem[]
+  heroHome    HomeHero[]
+
+  @@index([featured, featuredOrder])
+}
+
+model HomeHero {
+  id          String   @id @default("home")
+  productId   String?
+  imageUrl    String?
+  title       String?
+  subtitle    String?
+  buttonLabel String?
+  updatedAt   DateTime @updatedAt
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
 }
 
 model Cart {

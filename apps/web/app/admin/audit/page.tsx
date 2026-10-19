@@ -8,7 +8,7 @@ type AuditEntry = {
   id: string;
   actor: { email: string } | null;
   action: string;
-  entityType: string;
+  entity: string;
   entityId: string;
   metadata: unknown;
   createdAt: string;
@@ -60,7 +60,7 @@ export default function AdminAuditPage() {
                 <td className="p-4 whitespace-nowrap">{new Date(entry.createdAt).toLocaleString('es-AR')}</td>
                 <td className="p-4">{entry.actor?.email ?? '—'}</td>
                 <td className="p-4 font-semibold">{entry.action}</td>
-                <td className="p-4">{entry.entityType} {entry.entityId.slice(0, 8)}</td>
+                <td className="p-4">{entry.entity} {entry.entityId.slice(0, 8)}</td>
               </tr>
             ))}
           </tbody>

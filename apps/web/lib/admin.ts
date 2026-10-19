@@ -16,6 +16,25 @@ export type AdminProduct = {
   isActive: boolean;
   category: string;
   imageUrl: string | null;
+  featured: boolean;
+  featuredOrder: number;
+};
+
+export type AdminHero = {
+  productId: string | null;
+  imageUrl: string | null;
+  title: string | null;
+  subtitle: string | null;
+  buttonLabel: string | null;
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    brand: string;
+    imageUrl: string | null;
+    isActive: boolean;
+    stock: number;
+  } | null;
 };
 
 export type AdminOrder = {
@@ -72,6 +91,30 @@ export async function updateAdminProduct(id: string, input: Record<string, unkno
 
 export async function deactivateAdminProduct(id: string) {
   await adminFetch(`/admin/products/${id}`, { method: 'DELETE' });
+}
+
+export async function getAdminHero() {
+  const response = await adminFetch('/admin/home/hero');
+  return response.json() as Promise<AdminHero>;
+}
+
+export async function updateAdminHero(input: Record<string, unknown>) {
+  const response = await adminFetch('/admin/home/hero', { method: 'PUT', body: JSON.stringify(input) });
+  return response.json() as Promise<AdminHero>;
+}
+
+export async function reorderFeaturedProducts(ids: string[]) {
+  await adminFetch('/admin/products/featured-order', { method: 'PUT', body: JSON.stringify({ ids }) });
+}
+
+export async function revalidateHome() {
+  const token = getAccessToken();
+  if (!token) return;
+  try {
+    await fetch('/api/revalidate', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+  } catch {
+    return;
+  }
 }
 
 export async function uploadImage(file: File): Promise<string> {

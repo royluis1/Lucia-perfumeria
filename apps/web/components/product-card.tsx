@@ -1,19 +1,21 @@
 import Link from 'next/link';
 import { AddToCartButton } from './add-to-cart-button';
 import { WishlistButton } from './wishlist-button';
+import { resolveImageUrl } from '../lib/api';
 import type { Product } from '../lib/api';
 
 export function ProductCard({ product }: { product: Product }) {
   const priceValue = Number(product.price);
+  const imageUrl = resolveImageUrl(product.imageUrl);
 
   return (
     <article className="relative">
       <Link href={`/shop/${product.slug}`} className="group block">
         <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden bg-white p-10 transition group-hover:bg-gold-soft">
-          {product.imageUrl ? (
+          {imageUrl ? (
             <img
               className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-              src={product.imageUrl}
+              src={imageUrl}
               alt={product.name}
             />
           ) : (

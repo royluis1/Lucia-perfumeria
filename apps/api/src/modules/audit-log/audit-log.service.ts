@@ -36,6 +36,7 @@ export class AuditLogService {
           entityId: true,
           metadata: true,
           createdAt: true,
+          actor: { select: { email: true } },
         },
       }),
       this.prisma.auditLog.count(),

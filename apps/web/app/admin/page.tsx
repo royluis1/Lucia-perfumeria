@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 const modules: Array<{ title: string; description: string; href: string }> = [
+  { title: 'Portada', description: 'Elegí el hero y los productos favoritos del inicio.', href: '/admin/home' },
   { title: 'Productos', description: 'Catálogo, precios, stock, categorías e imágenes.', href: '/admin/products' },
   { title: 'Pedidos', description: 'Revisá órdenes y actualizá estados.', href: '/admin/orders' },
   { title: 'Usuarios', description: 'Gestioná roles de la tienda.', href: '/admin/users' },

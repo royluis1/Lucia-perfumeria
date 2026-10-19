@@ -7,8 +7,10 @@ import {
   updateAdminProduct,
   deactivateAdminProduct,
   uploadImage,
+  revalidateHome,
 } from '../../../lib/admin';
 import type { AdminProduct } from '../../../lib/admin';
+import { resolveImageUrl } from '../../../lib/api';
 
 const categories = ['Florales', 'Cítricos', 'Amaderados', 'Uncategorized'];
 const emptyForm = {
@@ -115,6 +117,7 @@ export default function AdminProductsPage() {
       }
       resetForm();
       await loadProducts();
+      await revalidateHome();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'No se pudo guardar el producto');
     }
@@ -124,6 +127,7 @@ export default function AdminProductsPage() {
     try {
       await updateAdminProduct(product.id, { isActive: !product.isActive });
       await loadProducts();
+      await revalidateHome();
     } catch (toggleError) {
       setError(toggleError instanceof Error ? toggleError.message : 'No se pudo actualizar el estado');
     }
@@ -134,6 +138,7 @@ export default function AdminProductsPage() {
     try {
       await deactivateAdminProduct(product.id);
       await loadProducts();
+      await revalidateHome();
       setMessage('Producto desactivado.');
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'No se pudo desactivar el producto');
@@ -171,7 +176,7 @@ export default function AdminProductsPage() {
         <label className="text-sm">O subir archivo
           <input accept="image/*" className="mt-2 w-full border-b border-black bg-transparent py-2 text-sm" disabled={uploading} type="file" onChange={(event) => void handleImageUpload(event.target.files?.[0])} />
         </label>
-        {form.imageUrl && <div className="md:col-span-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img className="h-20 w-20 object-cover border border-black/10" src={form.imageUrl} alt="Vista previa" /></div>}
+        {form.imageUrl && <div className="md:col-span-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img className="h-20 w-20 object-cover border border-black/10" src={resolveImageUrl(form.imageUrl) ?? form.imageUrl} alt="Vista previa" /></div>}
         <div className="flex gap-3 md:col-span-3">
           <button className="border border-black bg-black px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white hover:bg-gold hover:text-black disabled:opacity-50" disabled={uploading} type="submit">
             {editingId ? 'Guardar cambios' : 'Crear producto'}
@@ -193,7 +198,7 @@ export default function AdminProductsPage() {
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     {product.imageUrl
-                      ? /* eslint-disable-next-line @next/next/no-img-element */ <img className="h-12 w-12 object-cover" src={product.imageUrl} alt="" />
+                      ? /* eslint-disable-next-line @next/next/no-img-element */ <img className="h-12 w-12 object-cover" src={resolveImageUrl(product.imageUrl) ?? product.imageUrl} alt="" />
                       : <div className="h-12 w-12 bg-gradient-to-b from-white to-black/10" />}
                     <div>
                       <span className="font-semibold">{product.name}</span>

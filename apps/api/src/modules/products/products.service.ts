@@ -2,22 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductQueryDto } from './dto/product-query.dto';
-import { PaginatedProducts, PublicProduct } from './product.types';
-
-const publicProductSelect = {
-  id: true,
-  slug: true,
-  name: true,
-  brand: true,
-  description: true,
-  price: true,
-  weightGrams: true,
-  category: true,
-  imageUrl: true,
-  isActive: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.ProductSelect;
+import { PaginatedProducts, PublicProduct, publicProductSelect, toPublicProduct } from './product.types';
 
 @Injectable()
 export class ProductsService {
@@ -70,7 +55,7 @@ export class ProductsService {
     ]);
 
     return {
-      data: products.map((product) => this.toPublicProduct(product)),
+      data: products.map((product) => toPublicProduct(product)),
       page,
       limit,
       total,
@@ -86,7 +71,7 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    return this.toPublicProduct(product);
+    return toPublicProduct(product);
   }
 
   private parsePositiveInteger(value: string | undefined, fallback: number, field: string): number {
@@ -98,9 +83,5 @@ export class ProductsService {
       throw new BadRequestException(`${field} must be a positive integer`);
     }
     return parsed;
-  }
-
-  private toPublicProduct(product: Prisma.ProductGetPayload<{ select: typeof publicProductSelect }>): PublicProduct {
-    return { ...product, price: product.price.toString() };
   }
 }

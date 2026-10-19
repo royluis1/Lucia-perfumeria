@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Header } from '../../components/header';
 import { useWishlist } from '../../lib/wishlist';
 import { getAccessToken } from '../../lib/auth';
+import { resolveImageUrl } from '../../lib/api';
 
 export default function WishlistPage() {
   const { items, remove } = useWishlist();
@@ -61,7 +62,7 @@ export default function WishlistPage() {
                   <div key={item.product.id} className="flex gap-4 border-b border-black/10 py-5">
                     <Link href={`/shop/${item.product.slug}`} className="relative h-24 w-20 flex-shrink-0 bg-white border border-black/10 overflow-hidden">
                       {item.product.imageUrl ? (
-                        <img className="h-full w-full object-cover" src={item.product.imageUrl} alt={item.product.name} />
+                        <img className="h-full w-full object-cover" src={resolveImageUrl(item.product.imageUrl) ?? item.product.imageUrl} alt={item.product.name} />
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-b from-white to-black/10" />
                       )}

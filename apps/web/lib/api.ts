@@ -17,6 +17,20 @@ export type Product = {
 
 export type ProductSort = 'recent' | 'price_asc' | 'price_desc' | 'name';
 
+export type HomeHero = {
+  product: Product | null;
+  imageUrl: string | null;
+  title: string | null;
+  subtitle: string | null;
+  buttonLabel: string | null;
+};
+
+export type HomeData = {
+  hero: HomeHero;
+  featured: Product[];
+  categories: string[];
+};
+
 export type ProductList = {
   data: Product[];
   total: number;
@@ -26,6 +40,12 @@ export type ProductList = {
 };
 
 const apiUrl = API_URL;
+
+export function resolveImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  return `${apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 export async function getProducts(searchParams?: URLSearchParams): Promise<ProductList> {
   const query = searchParams?.toString();
@@ -50,4 +70,17 @@ export async function getProduct(slug: string): Promise<Product> {
   }
 
   return response.json() as Promise<Product>;
+}
+
+export async function getHome(): Promise<HomeData> {
+  const response = await fetch(`${apiUrl}/home`, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 120, tags: ['home'] },
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudo cargar la portada');
+  }
+
+  return response.json() as Promise<HomeData>;
 }

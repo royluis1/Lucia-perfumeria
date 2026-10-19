@@ -1,3 +1,26 @@
+import { Prisma } from '@prisma/client';
+
+export const publicProductSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  brand: true,
+  description: true,
+  price: true,
+  weightGrams: true,
+  category: true,
+  imageUrl: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ProductSelect;
+
+export type PublicProductRow = Prisma.ProductGetPayload<{ select: typeof publicProductSelect }>;
+
+export function toPublicProduct(product: PublicProductRow): PublicProduct {
+  return { ...product, price: product.price.toString() };
+}
+
 export interface PublicProduct {
   id: string;
   slug: string;

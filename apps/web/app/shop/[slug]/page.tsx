@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
-import { getProduct } from '../../../lib/api';
+import { getProduct, resolveImageUrl } from '../../../lib/api';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +12,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { slug } = await params;
   try {
     const product = await getProduct(slug);
+    const imageUrl = resolveImageUrl(product.imageUrl);
     return {
       title: product.name,
       description: product.description.slice(0, 155),
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         description: product.description.slice(0, 155),
         type: 'website',
         url: `/shop/${product.slug}`,
-        ...(product.imageUrl ? { images: [product.imageUrl] } : {}),
+        ...(imageUrl ? { images: [imageUrl] } : {}),
       },
     };
   } catch {
@@ -44,6 +45,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     currency: 'ARS',
     maximumFractionDigits: 0,
   });
+  const imageUrl = resolveImageUrl(product.imageUrl);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -51,7 +53,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     name: product.name,
     brand: { '@type': 'Brand', name: product.brand },
     description: product.description,
-    ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
+    ...(imageUrl ? { image: [imageUrl] } : {}),
     sku: product.slug,
     category: product.category,
     offers: {
@@ -72,9 +74,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
         <div className="relative flex aspect-square items-end justify-center overflow-hidden bg-white p-16">
-          {product.imageUrl ? (
+          {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="absolute inset-0 h-full w-full object-cover" src={product.imageUrl} alt={product.name} />
+            <img className="absolute inset-0 h-full w-full object-cover" src={imageUrl} alt={product.name} />
           ) : (
             <div className="h-72 w-40 bg-gradient-to-b from-white to-black/10 shadow-xl" />
           )}

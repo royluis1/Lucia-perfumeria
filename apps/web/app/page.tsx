@@ -1,58 +1,52 @@
 import { Header } from '../components/header';
+import { ProductCard } from '../components/product-card';
 import { COMPANY, LEGAL_LINKS } from '../lib/brand';
-import { getProducts } from '../lib/api';
-import type { Product } from '../lib/api';
+import { getHome, resolveImageUrl } from '../lib/api';
+import type { HomeData } from '../lib/api';
 
-const categories = ['Mujer', 'Hombre', 'Niños', 'Nicho'];
+const fallbackCategoryNames = ['Mujer', 'Hombre', 'Niños', 'Nicho'];
 
-const featuredProductFallback = [
+const heroDefaults = {
+  title: 'Una esencia para cada versión de vos.',
+  subtitle: 'Fragancias y cosmética seleccionadas para acompañar tus rituales cotidianos.',
+  buttonLabel: 'Explorar colección',
+};
+
+const featuredFallback = [
   { name: 'Eau de Parfum No. 01', brand: 'Floral amaderado', price: '$ 89.900' },
   { name: 'Eau de Parfum No. 02', brand: 'Ámbar especiado', price: '$ 94.500' },
   { name: 'Eau de Parfum No. 03', brand: 'Cítrico fresco', price: '$ 76.200' },
 ];
 
 type Category = { name: string; href: string };
-type FeaturedProduct = { slug?: string; name: string; brand: string; price: string };
 
 function formatPrice(value: string | number): string {
   return Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 }
 
-async function getHomeData(): Promise<{ categories: Category[]; featured: FeaturedProduct[] }> {
+async function loadHome(): Promise<HomeData | null> {
   try {
-    const [featuredList, catalog] = await Promise.all([
-      getProducts(new URLSearchParams({ limit: '3', sort: 'recent' })),
-      getProducts(new URLSearchParams({ limit: '100', sort: 'recent' })),
-    ]);
-
-    const seen = new Map<string, string>();
-    for (const product of catalog.data) {
-      if (product.category && !seen.has(product.category)) {
-        seen.set(product.category, product.category);
-      }
-    }
-    const fallbackCategories: Category[] = categories.map((name) => ({ name, href: `#${name}` }));
-    const realCategories: Category[] = [...seen.values()].map((name) => ({ name, href: `/shop?category=${encodeURIComponent(name)}` }));
-    const productCategories = realCategories.length >= 2 ? realCategories : fallbackCategories;
-
-    const featured: FeaturedProduct[] = featuredList.data.map((product: Product) => ({
-      slug: product.slug,
-      name: product.name,
-      brand: product.brand,
-      price: formatPrice(product.price),
-    }));
-
-    return { categories: productCategories, featured };
+    return await getHome();
   } catch {
-    return {
-      categories: categories.map((name) => ({ name, href: `#${name}` })),
-      featured: featuredProductFallback,
-    };
+    return null;
   }
 }
 
 export default async function HomePage() {
-  const { categories: homeCategories, featured } = await getHomeData();
+  const home = await loadHome();
+  const heroProduct = home?.hero.product ?? null;
+  const heroImage = resolveImageUrl(home?.hero.imageUrl ?? null);
+  const heroTitle = home?.hero.title?.trim() || heroDefaults.title;
+  const heroSubtitle =
+    home?.hero.subtitle?.trim() ||
+    heroDefaults.subtitle;
+  const heroButtonLabel = home?.hero.buttonLabel?.trim() || heroDefaults.buttonLabel;
+  const heroButtonHref = heroProduct ? `/shop/${heroProduct.slug}` : '/shop';
+  const homeCategories: Category[] =
+    home && home.categories.length >= 2
+      ? home.categories.map((name) => ({ name, href: `/shop?category=${encodeURIComponent(name)}` }))
+      : fallbackCategoryNames.map((name) => ({ name, href: `#${name}` }));
+  const featured = home?.featured ?? [];
   return (
     <main>
       <Header />
@@ -60,25 +54,43 @@ export default async function HomePage() {
         <div>
           <p className="mb-6 text-xs uppercase tracking-[0.3em] text-black/60">Nueva colección / 2026</p>
           <h1 className="max-w-3xl font-display text-6xl font-black uppercase leading-[0.88] tracking-[-0.04em] md:text-8xl">
-            Una esencia para cada versión de vos.
+            {heroTitle}
           </h1>
-          <p className="mt-8 max-w-md text-base leading-7 text-black/65">
-            Fragancias y cosmética seleccionadas para acompañar tus rituales
-            cotidianos.
-          </p>
+          <p className="mt-8 max-w-md text-base leading-7 text-black/65">{heroSubtitle}</p>
           <a
             className="mt-10 inline-flex border border-black bg-black px-7 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-gold hover:text-black"
-            href="/shop"
+            href={heroButtonHref}
           >
-            Explorar colección
+            {heroButtonLabel}
           </a>
         </div>
-        <div className="flex aspect-[4/5] items-end justify-center bg-gold-soft p-10">
-          <div className="w-44 border border-black/20 bg-white/70 px-6 py-12 text-center shadow-xl">
-            <p className="font-display text-4xl font-bold tracking-[0.12em]">L</p>
-            <p className="mt-3 text-[10px] uppercase tracking-[0.28em]">Lucía</p>
-            <p className="mt-10 text-[9px] uppercase tracking-[0.2em]">Parfum</p>
-          </div>
+        <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden bg-gold-soft p-10">
+          {heroImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="absolute inset-0 h-full w-full object-cover"
+              src={heroImage}
+              alt={heroProduct?.name ?? 'Lucía Perfumería'}
+            />
+          ) : !heroProduct ? (
+            <div className="w-44 border border-black/20 bg-white/70 px-6 py-12 text-center shadow-xl">
+              <p className="font-display text-4xl font-bold tracking-[0.12em]">L</p>
+              <p className="mt-3 text-[10px] uppercase tracking-[0.28em]">Lucía</p>
+              <p className="mt-10 text-[9px] uppercase tracking-[0.2em]">Parfum</p>
+            </div>
+          ) : null}
+          {heroProduct ? (
+            <a
+              className="relative z-10 w-full border border-black/10 bg-white/95 px-6 py-4 backdrop-blur transition hover:border-gold"
+              href={`/shop/${heroProduct.slug}`}
+            >
+              <p className="font-display text-2xl font-bold uppercase leading-none">{heroProduct.name}</p>
+              <div className="mt-3 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.14em] text-black/60">
+                <span>{heroProduct.brand}</span>
+                <span className="font-bold text-black">{formatPrice(heroProduct.price)}</span>
+              </div>
+            </a>
+          ) : null}
         </div>
       </section>
 
@@ -104,22 +116,24 @@ export default async function HomePage() {
           <a className="hidden text-xs font-bold uppercase tracking-[0.18em] underline md:block" href="/shop">Ver todo</a>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {featured.map((product) => (
-            <article key={product.slug ?? product.name}>
-              <a className="block" href={product.slug ? `/shop/${product.slug}` : '/shop'}>
-                <div className="flex aspect-[4/5] items-end justify-center bg-white p-10">
-                  <div className="h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl" />
-                </div>
-                <div className="flex justify-between gap-4 pt-5">
-                  <div>
-                    <h3 className="font-semibold">{product.name}</h3>
-                    <p className="mt-1 text-sm text-black/55">{product.brand}</p>
-                  </div>
-                  <p className="text-sm font-semibold">{product.price}</p>
-                </div>
-              </a>
-            </article>
-          ))}
+          {featured.length > 0
+            ? featured.map((product) => <ProductCard key={product.id} product={product} />)
+            : featuredFallback.map((product) => (
+                <article key={product.name}>
+                  <a className="block" href="/shop">
+                    <div className="flex aspect-[4/5] items-end justify-center bg-white p-10">
+                      <div className="h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl" />
+                    </div>
+                    <div className="flex justify-between gap-4 pt-5">
+                      <div>
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <p className="mt-1 text-sm text-black/55">{product.brand}</p>
+                      </div>
+                      <p className="text-sm font-semibold">{product.price}</p>
+                    </div>
+                  </a>
+                </article>
+              ))}
         </div>
       </section>
 

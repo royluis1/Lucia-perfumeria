@@ -10,12 +10,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
+import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { AuditLogService } from '../audit-log/audit-log.service';
 
 const adminProductSelect = {
   id: true, slug: true, name: true, brand: true, description: true,
   price: true, stock: true, sku: true, isActive: true, weightGrams: true,
-  category: true, imageUrl: true, createdAt: true, updatedAt: true,
+  category: true, imageUrl: true, featured: true, featuredOrder: true,
+  createdAt: true, updatedAt: true,
 } satisfies Prisma.ProductSelect;
 
 const orderInclude = {
@@ -52,11 +54,42 @@ export class AdminService {
   }
 
   async updateProduct(actorId: string, id: string, dto: UpdateProductDto) {
-    await this.ensureProduct(id);
+    const existing = await this.prisma.product.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Product not found');
+
+    const data: Prisma.ProductUpdateInput = { ...dto };
+    let unfeaturedByDeactivation = false;
+
+    if (dto.featured === true) {
+      const willBeActive = dto.isActive ?? existing.isActive;
+      const willHaveStock = dto.stock ?? existing.stock;
+      if (!willBeActive) {
+        throw new BadRequestException('No se puede destacar un producto inactivo');
+      }
+      if (willHaveStock <= 0) {
+        throw new BadRequestException('No se puede destacar un producto sin stock');
+      }
+      if (!existing.featured) {
+        const highest = await this.prisma.product.aggregate({
+          where: { featured: true },
+          _max: { featuredOrder: true },
+        });
+        data.featuredOrder = (highest._max.featuredOrder ?? 0) + 1;
+      }
+    }
+
+    if (dto.isActive === false && existing.featured && dto.featured !== true) {
+      data.featured = false;
+      unfeaturedByDeactivation = true;
+    }
+
     try {
-      const product = await this.prisma.product.update({ where: { id }, data: dto, select: adminProductSelect });
-      await this.auditLog.record(actorId, 'UPDATE_PRODUCT', 'Product', id, {
+      const product = await this.prisma.product.update({ where: { id }, data, select: adminProductSelect });
+      const action =
+        dto.featured === true ? 'FEATURE_PRODUCT' : dto.featured === false ? 'UNFEATURE_PRODUCT' : 'UPDATE_PRODUCT';
+      await this.auditLog.record(actorId, action, 'Product', id, {
         fields: Object.keys(dto),
+        ...(unfeaturedByDeactivation ? { unfeaturedByDeactivation: true } : {}),
       });
       return product;
     } catch (error) {
@@ -66,14 +99,115 @@ export class AdminService {
   }
 
   async deactivateProduct(actorId: string, id: string) {
-    await this.ensureProduct(id);
+    const existing = await this.prisma.product.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Product not found');
     const product = await this.prisma.product.update({
       where: { id },
-      data: { isActive: false },
+      data: { isActive: false, ...(existing.featured ? { featured: false } : {}) },
       select: adminProductSelect,
     });
-    await this.auditLog.record(actorId, 'DEACTIVATE_PRODUCT', 'Product', id);
+    await this.auditLog.record(
+      actorId,
+      'DEACTIVATE_PRODUCT',
+      'Product',
+      id,
+      existing.featured ? { unfeatured: true } : {},
+    );
     return product;
+  }
+
+  async reorderFeaturedProducts(actorId: string, ids: string[]) {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length !== ids.length) {
+      throw new BadRequestException('La lista de destacados tiene productos repetidos');
+    }
+    if (uniqueIds.length > 0) {
+      const products = await this.prisma.product.findMany({ where: { id: { in: uniqueIds } } });
+      if (products.length !== uniqueIds.length) {
+        throw new BadRequestException('Algún producto de la lista no existe');
+      }
+      const invalid = products.find((product) => !product.isActive || product.stock <= 0);
+      if (invalid) {
+        throw new BadRequestException(
+          `No se puede destacar "${invalid.name}" porque está inactivo o sin stock`,
+        );
+      }
+    }
+    await this.prisma.$transaction([
+      this.prisma.product.updateMany({
+        where: { featured: true, id: { notIn: uniqueIds } },
+        data: { featured: false },
+      }),
+      ...uniqueIds.map((productId, index) =>
+        this.prisma.product.update({
+          where: { id: productId },
+          data: { featured: true, featuredOrder: index + 1 },
+        }),
+      ),
+    ]);
+    await this.auditLog.record(actorId, 'REORDER_FEATURED_PRODUCTS', 'Product', 'featured', { ids: uniqueIds });
+    return { featured: uniqueIds };
+  }
+
+  async getHomeHero() {
+    const hero = await this.prisma.homeHero.findUnique({
+      where: { id: 'home' },
+      include: {
+        product: {
+          select: {
+            id: true, slug: true, name: true, brand: true, price: true,
+            imageUrl: true, isActive: true, stock: true,
+          },
+        },
+      },
+    });
+    return {
+      productId: hero?.productId ?? null,
+      imageUrl: hero?.imageUrl ?? null,
+      title: hero?.title ?? null,
+      subtitle: hero?.subtitle ?? null,
+      buttonLabel: hero?.buttonLabel ?? null,
+      product: hero?.product ? { ...hero.product, price: hero.product.price.toString() } : null,
+    };
+  }
+
+  async updateHomeHero(actorId: string, dto: UpdateHomeHeroDto) {
+    if (dto.productId) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: dto.productId },
+        select: { id: true, isActive: true },
+      });
+      if (!product || !product.isActive) {
+        throw new BadRequestException('El producto elegido no existe o está inactivo');
+      }
+    }
+
+    const cleanText = (value: string | null | undefined) => {
+      const trimmed = (value ?? '').trim();
+      return trimmed === '' ? null : trimmed;
+    };
+
+    const changes: Prisma.HomeHeroUncheckedUpdateInput = {};
+    if (dto.productId !== undefined) changes.productId = dto.productId || null;
+    if (dto.imageUrl !== undefined) changes.imageUrl = cleanText(dto.imageUrl);
+    if (dto.title !== undefined) changes.title = cleanText(dto.title);
+    if (dto.subtitle !== undefined) changes.subtitle = cleanText(dto.subtitle);
+    if (dto.buttonLabel !== undefined) changes.buttonLabel = cleanText(dto.buttonLabel);
+
+    await this.prisma.homeHero.upsert({
+      where: { id: 'home' },
+      create: {
+        id: 'home',
+        productId: (changes.productId as string | null) ?? null,
+        imageUrl: (changes.imageUrl as string | null) ?? null,
+        title: (changes.title as string | null) ?? null,
+        subtitle: (changes.subtitle as string | null) ?? null,
+        buttonLabel: (changes.buttonLabel as string | null) ?? null,
+      },
+      update: changes,
+    });
+    await this.auditLog.record(actorId, 'UPDATE_HOME_HERO', 'HomeHero', 'home', { fields: Object.keys(changes) });
+    return this.getHomeHero();
   }
 
   async listOrders(page?: number, limit?: number) {
@@ -190,11 +324,6 @@ export class AdminService {
 
   listAuditLogs(page?: number, limit?: number) {
     return this.auditLog.list(page, limit);
-  }
-
-  private async ensureProduct(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id }, select: { id: true } });
-    if (!product) throw new NotFoundException('Product not found');
   }
 
   private async ensureReview(id: string) {

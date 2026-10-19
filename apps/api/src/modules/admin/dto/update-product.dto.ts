@@ -42,6 +42,9 @@ export class UpdateProductDto {
   @IsBoolean()
   isActive?: boolean;
   @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
+  @IsOptional()
   @IsString()
   category?: string;
   @IsOptional()
