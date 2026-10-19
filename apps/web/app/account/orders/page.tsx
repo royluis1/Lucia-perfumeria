@@ -7,6 +7,8 @@ import { API_URL } from '../../../lib/config';
 type Order = {
   id: string;
   total: string;
+  subtotal: string;
+  shippingCost: string;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -14,6 +16,16 @@ type Order = {
 };
 
 const apiUrl = API_URL;
+
+const NON_PAYABLE_PAYMENT_STATUSES = ['APPROVED', 'REFUNDED', 'CHARGED_BACK'];
+
+function formatArs(value: string) {
+  return Number(value).toLocaleString('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 2,
+  });
+}
 
 const PAYMENT_BANNERS: Record<string, string> = {
   success: '¡Pago exitoso! Estamos confirmando la acreditación con Mercado Pago; el estado del pedido se actualiza automáticamente.',
@@ -44,7 +56,6 @@ export default function OrdersPage() {
   const [message, setMessage] = useState('');
   const [banner, setBanner] = useState('');
   const [payingOrderId, setPayingOrderId] = useState('');
-  const [checkoutConfigured, setCheckoutConfigured] = useState(false);
 
   useEffect(() => {
     const payment = new URLSearchParams(window.location.search).get('payment');
@@ -55,10 +66,6 @@ export default function OrdersPage() {
       setMessage('Iniciá sesión para consultar tus pedidos.');
       return;
     }
-    fetch(`${apiUrl}/payments/status`)
-      .then(async (response) => (response.ok ? ((await response.json()) as { configured?: boolean }) : null))
-      .then((status) => setCheckoutConfigured(Boolean(status?.configured)))
-      .catch(() => setCheckoutConfigured(false));
     fetch(`${apiUrl}/orders`, { headers: { Authorization: `Bearer ${token}` } })
       .then(async (response) => {
         if (!response.ok) throw new Error('No se pudieron cargar tus pedidos');
@@ -104,12 +111,13 @@ export default function OrdersPage() {
       {message && <p className="mt-8 border border-line bg-white p-6 text-muted" role="status">{message}</p>}
       <div className="mt-10 space-y-4">
         {orders.map((order) => {
-          const canPay = checkoutConfigured && order.paymentStatus === 'PENDING' && order.status === 'PENDING';
+          const canPay =
+            order.status === 'PENDING' && !NON_PAYABLE_PAYMENT_STATUSES.includes(order.paymentStatus);
           return (
             <article className="border border-line bg-white p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
-                <p className="text-sm font-semibold">${order.total}</p>
+                <p className="text-sm font-semibold">{formatArs(order.total)}</p>
               </div>
               <p className="mt-3 text-sm text-muted">
                 {new Date(order.createdAt).toLocaleDateString('es-AR')} · {ORDER_STATUS_LABELS[order.status] ?? order.status} · Pago {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
@@ -117,6 +125,9 @@ export default function OrdersPage() {
               <ul className="mt-4 space-y-1 text-sm">
                 {order.items.map((item, index) => <li key={`${order.id}-${index}`}>{item.quantity} × {item.product.name} ({item.product.brand})</li>)}
               </ul>
+              <p className="mt-3 text-xs text-muted">
+                Productos {formatArs(order.subtotal)} + Envío {formatArs(order.shippingCost)} = {formatArs(order.total)} (pesos argentinos)
+              </p>
               {canPay && (
                 <button
                   className="mt-5 border border-black bg-black px-6 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black disabled:opacity-50"

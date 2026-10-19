@@ -13,6 +13,14 @@ export class OrdersController {
     return this.ordersService.create(request.userId, parseShippingAddress(body?.shippingAddress));
   }
 
+  @Post('pay')
+  createWithPayment(@Req() request: AuthenticatedRequest, @Body() body: CreateOrderDto) {
+    return this.ordersService.createWithPayment(
+      request.userId,
+      parseShippingAddress(body?.shippingAddress),
+    );
+  }
+
   @Get()
   findMine(@Req() request: AuthenticatedRequest) {
     return this.ordersService.findMine(request.userId);

@@ -1,10 +1,11 @@
 jest.mock('@nestjs/common', () => jest.requireActual('../../../__mocks__/nestjs-common'));
 
 import {
+  ConflictException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, Prisma } from '@prisma/client';
 import { createHmac } from 'crypto';
 import { PaymentsService } from './payments.service';
 
@@ -33,9 +34,9 @@ describe('PaymentsService', () => {
     order: { update: jest.fn() },
   };
   const prisma = {
-    paymentPreference: { findUnique: jest.fn() },
+    paymentPreference: { findUnique: jest.fn(), upsert: jest.fn() },
     paymentEvent: { findUnique: jest.fn(), create: jest.fn() },
-    order: { findUnique: jest.fn(), update: jest.fn() },
+    order: { findUnique: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(),
   };
   const mailService = { send: jest.fn().mockResolvedValue(undefined) };
@@ -93,6 +94,80 @@ describe('PaymentsService', () => {
     it('reporta configurado con todas las variables', () => {
       configuredEnv();
       expect(service.getCheckoutStatus()).toEqual({ configured: true, provider: 'mercadopago' });
+    });
+  });
+
+  describe('createPreference', () => {
+    function buildOrder(overrides: Record<string, unknown> = {}) {
+      return {
+        id: ORDER_ID,
+        subtotal: new Prisma.Decimal('95.00'),
+        shippingCost: new Prisma.Decimal('7500.95'),
+        total: new Prisma.Decimal('7595.95'),
+        paymentStatus: PaymentStatus.PENDING,
+        user: { email: 'cliente@example.com', name: 'Cliente Test' },
+        items: [
+          {
+            quantity: 1,
+            unitPrice: new Prisma.Decimal('95.00'),
+            subtotal: new Prisma.Decimal('95.00'),
+            product: { name: 'Black Opium', brand: 'Yves Saint Laurent', sku: 'BO-1' },
+          },
+        ],
+        ...overrides,
+      };
+    }
+
+    it('permite reintentar una orden rechazada creando una preferencia nueva', async () => {
+      configuredEnv();
+      prisma.order.findFirst.mockResolvedValue(buildOrder({ paymentStatus: PaymentStatus.REJECTED }));
+      prisma.paymentPreference.upsert.mockResolvedValue(preference);
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'mp-pref-1',
+          init_point: 'https://mp/init',
+          sandbox_init_point: 'https://mp/sandbox',
+        }),
+      });
+
+      const result = await service.createPreference('user-1', ORDER_ID);
+
+      expect(result.checkoutUrl).toBe('https://mp/sandbox');
+      expect(prisma.paymentPreference.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { orderId: ORDER_ID } }),
+      );
+    });
+
+    it('bloquea un pago nuevo si la orden ya está acreditada', async () => {
+      configuredEnv();
+      prisma.order.findFirst.mockResolvedValue(buildOrder({ paymentStatus: PaymentStatus.APPROVED }));
+
+      await expect(service.createPreference('user-1', ORDER_ID)).rejects.toThrow(ConflictException);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('registra status y cuerpo del error de Mercado Pago sin exponer el token', async () => {
+      configuredEnv();
+      prisma.order.findFirst.mockResolvedValue(buildOrder());
+      prisma.paymentPreference.upsert.mockResolvedValue(preference);
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: async () =>
+          '{"message":"invalid access token","cause":"APP_USR-1234567890-secreto"}',
+      });
+      const loggerSpy = jest.spyOn((service as unknown as { logger: { error: () => void } }).logger, 'error');
+
+      await expect(service.createPreference('user-1', ORDER_ID)).rejects.toThrow(
+        ServiceUnavailableException,
+      );
+
+      expect(loggerSpy).toHaveBeenCalledTimes(1);
+      const logged = String(loggerSpy.mock.calls[0][0]);
+      expect(logged).toContain('status 401');
+      expect(logged).toContain('invalid access token');
+      expect(logged).not.toContain('APP_USR-1234567890-secreto');
     });
   });
 

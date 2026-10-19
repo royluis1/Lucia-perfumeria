@@ -67,8 +67,8 @@ export class PaymentsService {
     if (!order.total.equals(total)) {
       throw new ConflictException('El total de la orden no coincide con sus items');
     }
-    if (order.paymentStatus !== PaymentStatus.PENDING) {
-      throw new ConflictException('La orden ya tiene un estado de pago no pendiente');
+    if (isTerminalPaymentStatus(order.paymentStatus)) {
+      throw new ConflictException('La orden ya está pagada o reembolsada; no se puede generar otro pago');
     }
 
     const { accessToken } = readMercadoPagoConfig();
@@ -346,34 +346,43 @@ export class PaymentsService {
       });
     }
     const [firstName, ...restOfName] = order.user.name.trim().split(/\s+/);
+    const preferencePayload: Record<string, unknown> = {
+      items,
+      payer: {
+        email: order.user.email,
+        name: firstName || undefined,
+        surname: restOfName.join(' ') || undefined,
+      },
+      external_reference: order.id,
+      statement_descriptor: 'LUCIA PERFUMERIA',
+      back_urls: {
+        success: `${webAppUrl}/account/orders?payment=success`,
+        failure: `${webAppUrl}/account/orders?payment=failure`,
+        pending: `${webAppUrl}/account/orders?payment=pending`,
+      },
+      notification_url: `${apiPublicUrl}/payments/mercadopago/webhook`,
+    };
+    if (webAppUrl.startsWith('https://')) {
+      preferencePayload.auto_return = 'approved';
+    }
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        items,
-        payer: {
-          email: order.user.email,
-          name: firstName || undefined,
-          surname: restOfName.join(' ') || undefined,
-        },
-        external_reference: order.id,
-        statement_descriptor: 'LUCIA PERFUMERIA',
-        auto_return: 'approved',
-        back_urls: {
-          success: `${webAppUrl}/account/orders?payment=success`,
-          failure: `${webAppUrl}/account/orders?payment=failure`,
-          pending: `${webAppUrl}/account/orders?payment=pending`,
-        },
-        notification_url: `${apiPublicUrl}/payments/mercadopago/webhook`,
-      }),
+      body: JSON.stringify(preferencePayload),
     });
     if (!response.ok) {
+      const rawDetail = await response.text().catch(() => '');
+      const detail = this.sanitizeMercadoPagoDetail(rawDetail);
+      this.logger.error(
+        `Mercado Pago rechazó la preferencia de la orden ${order.id}: status ${response.status}${detail ? ` · ${detail}` : ''}`,
+      );
       throw new ServiceUnavailableException('No se pudo iniciar el checkout de Mercado Pago');
     }
     const preference = (await response.json()) as {
+      id?: string;
       init_point?: string;
       sandbox_init_point?: string;
     };
@@ -381,9 +390,22 @@ export class PaymentsService {
       ? (preference.sandbox_init_point ?? preference.init_point)
       : preference.init_point;
     if (!checkoutUrl) {
+      this.logger.error(
+        `Mercado Pago respondió sin URL de pago para la orden ${order.id} (preferencia ${preference.id ?? 's/n'})`,
+      );
       throw new ServiceUnavailableException('Mercado Pago no devolvió una URL de pago');
     }
     return checkoutUrl;
+  }
+
+  private sanitizeMercadoPagoDetail(detail: string): string {
+    return detail
+      .replace(/(access[_-]?token"?\s*[:=]\s*"?)[^"\s,}]+/gi, '$1[redactado]')
+      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redactado]')
+      .replace(/APP_USR-[A-Za-z0-9-]+/g, '[redactado]')
+      .replace(/TEST-[A-Za-z0-9-]+/g, '[redactado]')
+      .replace(/\s+/g, ' ')
+      .slice(0, 500);
   }
 
   private async sendPaymentApprovedEmail(orderId: string) {

@@ -1,9 +1,16 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ShippingAddress } from './dto/create-order.dto';
 import { ShippingService } from '../shipping/shipping.service';
 import { MailService } from '../mail/mail.service';
+import { PaymentsService } from '../payments/payments.service';
 
 const orderInclude = {
   items: {
@@ -18,70 +25,134 @@ type OrderWithItems = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly shippingService: ShippingService,
     private readonly mailService: MailService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async create(userId: string, shippingAddress: ShippingAddress) {
+    const order = await this.buildPendingOrder(userId, shippingAddress, true);
+    void this.sendOrderConfirmation(userId, order);
+    return this.toResponse(order);
+  }
+
+  async createWithPayment(userId: string, shippingAddress: ShippingAddress) {
+    const order = await this.buildPendingOrder(userId, shippingAddress, false);
     try {
-      const order = await this.prisma.$transaction(async (tx) => {
-        const cart = await tx.cart.findUnique({
-          where: { userId },
-          include: { items: { include: { product: true }, orderBy: { id: 'asc' } } },
-        });
-        if (!cart || cart.items.length === 0) throw new BadRequestException('El carrito está vacío');
-
-        const lines = cart.items.map((item) => {
-          if (!item.product.isActive) throw new BadRequestException(`Producto no disponible: ${item.product.name}`);
-          if (item.quantity < 1) throw new BadRequestException('Cantidad inválida en el carrito');
-          return {
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.product.price,
-            subtotal: item.product.price.mul(item.quantity),
-          };
-        });
-        const subtotal = lines.reduce((sum, line) => sum.add(line.subtotal), new Prisma.Decimal(0));
-        const weightGrams = cart.items.reduce(
-          (sum, item) => sum + item.product.weightGrams * item.quantity,
-          0,
-        );
-        const shippingQuote = this.shippingService.quote({
-          postalCode: shippingAddress.postalCode,
-          weightGrams,
-          declaredValue: Number(subtotal.toString()),
-        });
-        const shippingCost = new Prisma.Decimal(shippingQuote.cost);
-
-        for (const line of lines) {
-          const updated = await tx.product.updateMany({
-            where: { id: line.productId, isActive: true, stock: { gte: line.quantity } },
-            data: { stock: { decrement: line.quantity } },
-          });
-          if (updated.count !== 1) throw new BadRequestException('Stock insuficiente');
-        }
-
-        const created = await tx.order.create({
-          data: {
-            userId,
-            subtotal,
-            shippingCost,
-            total: subtotal.add(shippingCost),
-            shippingAddress: shippingAddress as unknown as Prisma.InputJsonValue,
-            items: { create: lines },
-          },
-          include: orderInclude,
-        });
-        await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-        return created;
-      });
+      const preference = await this.paymentsService.createPreference(userId, order.id);
+      if (!preference.checkoutUrl) {
+        throw new ServiceUnavailableException('Los pagos online todavía no están configurados');
+      }
+      await this.clearUserCart(userId);
       void this.sendOrderConfirmation(userId, order);
-      return this.toResponse(order);
+      return {
+        order: this.toResponse(order),
+        preferenceId: preference.id,
+        checkoutUrl: preference.checkoutUrl,
+        sandbox: preference.sandbox,
+      };
     } catch (error) {
-      if (error instanceof BadRequestException) throw error;
-      throw error;
+      const rolledBack = await this.rollbackPendingOrder(order);
+      this.logger.error(
+        `No se pudo iniciar el pago de la orden ${order.id}: ${error instanceof Error ? error.message : 'error desconocido'}`,
+      );
+      if (!rolledBack) {
+        throw new ServiceUnavailableException(
+          'No se pudo iniciar el pago. Tu pedido quedó pendiente en "Mis pedidos"; podés reintentar el pago desde ahí.',
+        );
+      }
+      const reason =
+        error instanceof Error && error.message ? error.message : 'intentá de nuevo en unos minutos';
+      throw new ServiceUnavailableException(
+        `${reason}. El pedido no se creó y tu carrito quedó intacto.`,
+      );
+    }
+  }
+
+  private async buildPendingOrder(
+    userId: string,
+    shippingAddress: ShippingAddress,
+    clearCart: boolean,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const cart = await tx.cart.findUnique({
+        where: { userId },
+        include: { items: { include: { product: true }, orderBy: { id: 'asc' } } },
+      });
+      if (!cart || cart.items.length === 0) throw new BadRequestException('El carrito está vacío');
+
+      const lines = cart.items.map((item) => {
+        if (!item.product.isActive) throw new BadRequestException(`Producto no disponible: ${item.product.name}`);
+        if (item.quantity < 1) throw new BadRequestException('Cantidad inválida en el carrito');
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.product.price,
+          subtotal: item.product.price.mul(item.quantity),
+        };
+      });
+      const subtotal = lines.reduce((sum, line) => sum.add(line.subtotal), new Prisma.Decimal(0));
+      const weightGrams = cart.items.reduce(
+        (sum, item) => sum + item.product.weightGrams * item.quantity,
+        0,
+      );
+      const shippingQuote = this.shippingService.quote({
+        postalCode: shippingAddress.postalCode,
+        weightGrams,
+        declaredValue: Number(subtotal.toString()),
+      });
+      const shippingCost = new Prisma.Decimal(shippingQuote.cost);
+
+      for (const line of lines) {
+        const updated = await tx.product.updateMany({
+          where: { id: line.productId, isActive: true, stock: { gte: line.quantity } },
+          data: { stock: { decrement: line.quantity } },
+        });
+        if (updated.count !== 1) throw new BadRequestException('Stock insuficiente');
+      }
+
+      const created = await tx.order.create({
+        data: {
+          userId,
+          subtotal,
+          shippingCost,
+          total: subtotal.add(shippingCost),
+          shippingAddress: shippingAddress as unknown as Prisma.InputJsonValue,
+          items: { create: lines },
+        },
+        include: orderInclude,
+      });
+      if (clearCart) await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      return created;
+    });
+  }
+
+  private async clearUserCart(userId: string) {
+    const cart = await this.prisma.cart.findUnique({ where: { userId }, select: { id: true } });
+    if (cart) await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+  }
+
+  private async rollbackPendingOrder(order: OrderWithItems): Promise<boolean> {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        for (const item of order.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+        await tx.order.delete({ where: { id: order.id } });
+      });
+      return true;
+    } catch (rollbackError) {
+      this.logger.error(
+        `No se pudo revertir la orden ${order.id} tras un pago fallido: ${rollbackError instanceof Error ? rollbackError.message : 'error desconocido'}`,
+      );
+      return false;
     }
   }
 

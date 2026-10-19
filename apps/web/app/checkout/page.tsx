@@ -2,11 +2,13 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { getAccessToken } from '../../lib/auth';
+import { useCart } from '../../lib/cart';
 import { API_URL } from '../../lib/config';
 
 const apiUrl = API_URL;
 
 export default function CheckoutPage() {
+  const { clearCart } = useCart();
   const [form, setForm] = useState({
     recipient: '',
     street: '',
@@ -33,12 +35,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setMessage('');
     try {
-      const statusResponse = await fetch(`${apiUrl}/payments/status`);
-      const checkoutStatus = (await statusResponse.json().catch(() => null)) as { configured?: boolean } | null;
-      if (!statusResponse.ok || !checkoutStatus?.configured) {
-        throw new Error('Los pagos online todavía no están configurados. No se realizó ningún cobro ni se creó una orden.');
-      }
-      const response = await fetch(`${apiUrl}/orders`, {
+      const response = await fetch(`${apiUrl}/orders/pay`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -48,20 +45,15 @@ export default function CheckoutPage() {
           shippingAddress: { ...form, country: 'Argentina' },
         }),
       });
-      const body = (await response.json().catch(() => null)) as { message?: string; id?: string } | null;
-      if (!response.ok) throw new Error(body?.message ?? 'No se pudo crear la orden');
-      if (!body?.id) throw new Error('No se pudo identificar la orden creada');
-      const paymentResponse = await fetch(`${apiUrl}/payments/preference`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: body.id }),
-      });
-      const payment = (await paymentResponse.json().catch(() => null)) as { checkoutUrl?: string; message?: string } | null;
-      if (!paymentResponse.ok) throw new Error(payment?.message ?? 'No se pudo iniciar el pago');
-      if (!payment?.checkoutUrl) throw new Error('Los pagos online todavía no están configurados. No se realizó ningún cobro.');
-      window.location.assign(payment.checkoutUrl);
+      const body = (await response.json().catch(() => null)) as
+        | { message?: string; checkoutUrl?: string }
+        | null;
+      if (!response.ok) throw new Error(body?.message ?? 'No se pudo iniciar el pago');
+      if (!body?.checkoutUrl) throw new Error('No se pudo iniciar el pago. Tu carrito quedó intacto.');
+      clearCart();
+      window.location.assign(body.checkoutUrl);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo crear la orden');
+      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar el pago');
     } finally {
       setIsSubmitting(false);
     }
