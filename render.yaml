@@ -40,8 +40,12 @@ services:
         value: https://lucia-web.onrender.com
       - key: WEB_APP_URL
         value: https://lucia-web.onrender.com
-      # Token sandbox de Mercado Pago; si está vacío, checkout local sin pagos reales.
+      - key: API_PUBLIC_URL
+        value: https://lucia-api.onrender.com
+      # Configurarlas en Render antes de vender. No guardar credenciales reales en Git.
       - key: MERCADOPAGO_ACCESS_TOKEN
+        value: ""
+      - key: MERCADOPAGO_WEBHOOK_SECRET
         value: ""
       - key: GOOGLE_CLIENT_ID
         value: ""

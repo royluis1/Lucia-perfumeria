@@ -33,6 +33,11 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setMessage('');
     try {
+      const statusResponse = await fetch(`${apiUrl}/payments/status`);
+      const checkoutStatus = (await statusResponse.json().catch(() => null)) as { configured?: boolean } | null;
+      if (!statusResponse.ok || !checkoutStatus?.configured) {
+        throw new Error('Los pagos online todavía no están configurados. No se realizó ningún cobro ni se creó una orden.');
+      }
       const response = await fetch(`${apiUrl}/orders`, {
         method: 'POST',
         headers: {
@@ -45,7 +50,16 @@ export default function CheckoutPage() {
       });
       const body = (await response.json().catch(() => null)) as { message?: string; id?: string } | null;
       if (!response.ok) throw new Error(body?.message ?? 'No se pudo crear la orden');
-      setMessage(`Orden creada correctamente${body?.id ? `: ${body.id}` : ''}`);
+      if (!body?.id) throw new Error('No se pudo identificar la orden creada');
+      const paymentResponse = await fetch(`${apiUrl}/payments/preference`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: body.id }),
+      });
+      const payment = (await paymentResponse.json().catch(() => null)) as { checkoutUrl?: string; message?: string } | null;
+      if (!paymentResponse.ok) throw new Error(payment?.message ?? 'No se pudo iniciar el pago');
+      if (!payment?.checkoutUrl) throw new Error('Los pagos online todavía no están configurados. No se realizó ningún cobro.');
+      window.location.assign(payment.checkoutUrl);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No se pudo crear la orden');
     } finally {
