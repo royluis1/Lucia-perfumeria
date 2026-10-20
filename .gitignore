@@ -1,4 +1,10 @@
 **/node_modules
 **/dist
 **/.env
+**/.env.*
+**/*.local
+!**/.env.example
 **/.next
+**/*.tsbuildinfo
+**/*.log
+apps/api/public/

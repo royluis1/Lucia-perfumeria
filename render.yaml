@@ -1,0 +1,57 @@
+# Blueprint de Render para deploy de Lucía Perfumería (plan gratuito).
+# En la UI de Render: New -> Blueprint -> conectar este repo.
+# La base de datos de producción vive en Neon: DATABASE_URL se carga a mano en el
+# dashboard (sync: false) y debe incluir sslmode=require.
+# IMPORTANTE: la API de Render se duerme tras inactividad; la web va en Vercel.
+
+services:
+  - type: web
+    name: lucia-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    buildCommand: pnpm install && npx prisma generate && pnpm build
+    # db push crea la tabla ProductImage; el backfill es idempotente (migra Product.imageUrl -> posición 0).
+    preDeployCommand: npx prisma db push && node prisma/backfill-product-images.cjs
+    startCommand: node dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Cadena de conexión de Neon terminada en ?sslmode=require. Se carga en el dashboard.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYMENTS_WEBHOOK_SECRET
+        generateValue: true
+      # Front en Vercel: orígenes permitidos por CORS y links de emails.
+      # El proyecto real vive en lucia-perfumeria-royluis1.vercel.app.
+      - key: API_CORS_ORIGIN
+        value: https://lucia-perfumeria-royluis1.vercel.app,https://lucia-perfumeria.vercel.app
+      - key: WEB_APP_URL
+        value: https://lucia-perfumeria-royluis1.vercel.app
+      # URL pública HTTPS de esta API; Mercado Pago envía las notificaciones acá.
+      - key: API_PUBLIC_URL
+        value: https://lucia-perfumeria-609t.onrender.com
+      # Mercado Pago Checkout Pro: cargar en el dashboard (no versionar credenciales).
+      # TEST-... para pruebas; APP_USR-... para producción.
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://lucia-perfumeria-609t.onrender.com/auth/google/callback
+      - key: GOOGLE_OAUTH_CLIENT_REDIRECT
+        value: https://lucia-perfumeria-royluis1.vercel.app/auth/oauth
+      # Vercel Blob: almacenamiento externo de fotos de producto (el disco de Render es efímero).
+      # Crear un store Blob público en el dashboard de Vercel y pegar el token acá (sync: false).
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
