@@ -10,6 +10,9 @@ import { RolesGuard } from '../auth/roles.guard';
 import { AdminService } from './admin.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateBrandDto } from './dto/create-brand.dto';
+import { UpdateBrandDto } from './dto/update-brand.dto';
+import { MergeBrandDto } from './dto/merge-brand.dto';
 import { UpdateFeaturedOrderDto } from './dto/update-featured-order.dto';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -62,9 +65,10 @@ export class AdminController {
       },
     }),
   )
-  async uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
+  async uploadProductImage(@Req() request: AuthenticatedRequest, @UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new BadRequestException('Enviá un archivo de imagen');
     const url = await this.storage.uploadImage(file.buffer, file.originalname, file.mimetype);
+    await this.adminService.recordUpload(request.userId, file.originalname);
     return { url };
   }
 
@@ -123,6 +127,31 @@ export class AdminController {
   @Put('products/featured-order')
   reorderFeaturedProducts(@Req() request: AuthenticatedRequest, @Body() body: UpdateFeaturedOrderDto) {
     return this.adminService.reorderFeaturedProducts(request.userId, body.ids);
+  }
+
+  @Get('brands')
+  listBrands() {
+    return this.adminService.listBrands();
+  }
+
+  @Post('brands')
+  createBrand(@Req() request: AuthenticatedRequest, @Body() body: CreateBrandDto) {
+    return this.adminService.createBrand(request.userId, body);
+  }
+
+  @Patch('brands/:id')
+  updateBrand(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: UpdateBrandDto) {
+    return this.adminService.updateBrand(request.userId, id, body);
+  }
+
+  @Post('brands/:id/merge')
+  mergeBrands(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: MergeBrandDto) {
+    return this.adminService.mergeBrands(request.userId, id, body.targetId);
+  }
+
+  @Get('categories')
+  listCategories() {
+    return this.adminService.listCategories();
   }
 
   @Get('home/hero')

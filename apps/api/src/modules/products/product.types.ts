@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, ProductGender } from '@prisma/client';
 
 export const publicProductSelect = {
   id: true,
@@ -9,10 +9,16 @@ export const publicProductSelect = {
   price: true,
   weightGrams: true,
   category: true,
+  gender: true,
   imageUrl: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
+  brandRef: { select: { name: true, slug: true } },
+  categories: {
+    select: { category: { select: { name: true, slug: true } } },
+    orderBy: { position: 'asc' as const },
+  },
   images: {
     select: { id: true, url: true, alt: true, position: true },
     orderBy: { position: 'asc' as const },
@@ -27,7 +33,9 @@ export const publicProductListSelect = {
   name: true,
   brand: true,
   price: true,
+  gender: true,
   imageUrl: true,
+  brandRef: { select: { slug: true } },
   images: {
     select: { id: true, url: true, alt: true },
     orderBy: { position: 'asc' as const },
@@ -36,12 +44,25 @@ export const publicProductListSelect = {
 
 export type PublicProductListRow = Prisma.ProductGetPayload<{ select: typeof publicProductListSelect }>;
 
-export function toPublicProduct(product: PublicProductRow): PublicProduct {
-  return { ...product, price: product.price.toString() };
+export function toPublicProduct(row: PublicProductRow): PublicProduct {
+  const { brandRef, categories, ...product } = row;
+  return {
+    ...product,
+    price: product.price.toString(),
+    gender: product.gender ?? null,
+    brandSlug: brandRef?.slug ?? null,
+    categories: (categories ?? []).map((item) => item.category),
+  };
 }
 
-export function toPublicProductList(product: PublicProductListRow): PublicProductSummary {
-  return { ...product, price: product.price.toString() };
+export function toPublicProductList(row: PublicProductListRow): PublicProductSummary {
+  const { brandRef, ...product } = row;
+  return {
+    ...product,
+    price: product.price.toString(),
+    gender: product.gender ?? null,
+    brandSlug: brandRef?.slug ?? null,
+  };
 }
 
 export interface PublicProductImage {
@@ -49,6 +70,11 @@ export interface PublicProductImage {
   url: string;
   alt: string | null;
   position: number;
+}
+
+export interface PublicProductCategory {
+  name: string;
+  slug: string;
 }
 
 export interface PublicProduct {
@@ -60,6 +86,9 @@ export interface PublicProduct {
   price: string;
   weightGrams: number;
   category: string;
+  gender: ProductGender | null;
+  brandSlug: string | null;
+  categories: PublicProductCategory[];
   imageUrl: string | null;
   isActive: boolean;
   createdAt: Date;
@@ -73,6 +102,8 @@ export interface PublicProductSummary {
   name: string;
   brand: string;
   price: string;
+  gender: ProductGender | null;
+  brandSlug: string | null;
   imageUrl: string | null;
   images: Array<{ id: string; url: string; alt: string | null }>;
 }

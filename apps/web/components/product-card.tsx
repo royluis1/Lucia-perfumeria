@@ -60,7 +60,13 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           <h2 className="text-sm font-semibold">
             <Link className="ul" href={`/shop/${product.slug}`}>{product.name}</Link>
           </h2>
-          <p className="mt-1 text-sm text-muted">{product.brand}</p>
+          {product.brandSlug ? (
+            <p className="mt-1 text-sm text-muted">
+              <Link className="ul" href={`/marcas/${product.brandSlug}`}>{product.brand}</Link>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-muted">{product.brand}</p>
+          )}
         </div>
         <p className="text-sm font-semibold">{priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</p>
       </div>

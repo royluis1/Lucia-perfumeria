@@ -10,6 +10,8 @@ export type AdminProductImage = {
   position: number;
 };
 
+export type AdminProductGender = 'FEMENINO' | 'MASCULINO' | 'UNISEX';
+
 export type AdminProduct = {
   id: string;
   slug: string;
@@ -22,10 +24,27 @@ export type AdminProduct = {
   weightGrams: number;
   isActive: boolean;
   category: string;
+  gender: AdminProductGender | null;
+  brandRef: { id: string; name: string; slug: string } | null;
+  categories: Array<{ category: { id: string; name: string; slug: string } }>;
   imageUrl: string | null;
   images: AdminProductImage[];
   featured: boolean;
   featuredOrder: number;
+};
+
+export type AdminBrand = {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
+};
+
+export type AdminCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  productCount: number;
 };
 
 export type AdminHero = {
@@ -99,6 +118,34 @@ export async function updateAdminProduct(id: string, input: Record<string, unkno
 
 export async function deactivateAdminProduct(id: string) {
   await adminFetch(`/admin/products/${id}`, { method: 'DELETE' });
+}
+
+export async function listAdminBrands() {
+  const response = await adminFetch('/admin/brands');
+  return response.json() as Promise<AdminBrand[]>;
+}
+
+export async function createAdminBrand(name: string) {
+  const response = await adminFetch('/admin/brands', { method: 'POST', body: JSON.stringify({ name }) });
+  return response.json() as Promise<AdminBrand>;
+}
+
+export async function updateAdminBrand(id: string, name: string) {
+  const response = await adminFetch(`/admin/brands/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+  return response.json() as Promise<AdminBrand>;
+}
+
+export async function mergeAdminBrand(id: string, targetId: string) {
+  const response = await adminFetch(`/admin/brands/${id}/merge`, {
+    method: 'POST',
+    body: JSON.stringify({ targetId }),
+  });
+  return response.json() as Promise<{ merged: string; into: string; productsMoved: number }>;
+}
+
+export async function listAdminCategories() {
+  const response = await adminFetch('/admin/categories');
+  return response.json() as Promise<AdminCategory[]>;
 }
 
 export async function getAdminHero() {

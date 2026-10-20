@@ -38,13 +38,39 @@ describe('ProductsService', () => {
     expect(result.data[0].price).toBe('12500.00');
   });
 
-  it('filtra por categoria pasandola al where', async () => {
+  it('filtra por categoria por slug/nombre en la tabla de categorias', async () => {
     await service.findAll({ category: 'Citricos' });
     expect(prisma.product.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ category: 'Citricos', isActive: true }),
+        where: expect.objectContaining({
+          isActive: true,
+          categories: {
+            some: {
+              category: {
+                OR: [
+                  { slug: 'Citricos' },
+                  { normalizedName: 'citricos' },
+                  { name: { equals: 'Citricos', mode: 'insensitive' } },
+                ],
+              },
+            },
+          },
+        }),
       }),
     );
+  });
+
+  it('filtra por genero mapeando a la enum de Prisma', async () => {
+    await service.findAll({ gender: 'femenino' });
+    expect(prisma.product.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isActive: true, gender: 'FEMENINO' }),
+      }),
+    );
+  });
+
+  it('rechaza un genero invalido', async () => {
+    await expect(service.findAll({ gender: 'otro' })).rejects.toThrow(BadRequestException);
   });
 
   it('ordena por precio ascendente con sort=price_asc', async () => {

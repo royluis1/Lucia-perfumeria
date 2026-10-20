@@ -21,11 +21,9 @@ export class HomeService {
         take: FEATURED_LIMIT,
         select: publicProductSelect,
       }),
-      this.prisma.product.findMany({
-        where: { isActive: true },
-        distinct: ['category'],
-        orderBy: { category: 'asc' },
-        select: { category: true },
+      this.prisma.category.findMany({
+        select: { name: true },
+        orderBy: [{ position: 'asc' }, { name: 'asc' }],
       }),
     ]);
 
@@ -50,7 +48,7 @@ export class HomeService {
         buttonLabel: heroRow?.buttonLabel ?? null,
       },
       featured: featured.map((product) => toPublicProduct(product)),
-      categories: categoryRows.map((row) => row.category),
+      categories: categoryRows.map((row) => row.name),
     };
   }
 }

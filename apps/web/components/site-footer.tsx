@@ -6,6 +6,7 @@ import { FacebookIcon, InstagramIcon, MessageCircleIcon, YoutubeIcon } from './i
 const links = {
   about: [
     { label: 'Colección completa', href: '/shop' },
+    { label: 'Marcas', href: '/marcas' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Catálogo mayorista', href: '/contacto' },
     { label: 'Trabajá con nosotros', href: '/contacto' },

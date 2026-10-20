@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { normalizeName, parseProductGender } from '../../common/catalog.util';
 import { ProductQueryDto } from './dto/product-query.dto';
 import {
   PaginatedProducts,
@@ -25,10 +26,26 @@ export class ProductsService {
     const search = query.search?.trim();
     const category = query.category?.trim();
     const brand = query.brand?.trim();
+    const gender = query.gender?.trim();
     const where: Prisma.ProductWhereInput = {
       isActive: true,
-      ...(category ? { category } : {}),
+      ...(category
+        ? {
+            categories: {
+              some: {
+                category: {
+                  OR: [
+                    { slug: category },
+                    { normalizedName: normalizeName(category) },
+                    { name: { equals: category, mode: 'insensitive' as const } },
+                  ],
+                },
+              },
+            },
+          }
+        : {}),
       ...(brand ? { brand: { equals: brand, mode: 'insensitive' } } : {}),
+      ...(gender ? { gender: parseProductGender(gender) } : {}),
       ...(search
         ? {
             OR: [
@@ -36,6 +53,7 @@ export class ProductsService {
               { brand: { contains: search, mode: 'insensitive' } },
               { category: { contains: search, mode: 'insensitive' } },
               { slug: { contains: search, mode: 'insensitive' } },
+              { categories: { some: { category: { name: { contains: search, mode: 'insensitive' } } } } },
             ],
           }
         : {}),
@@ -79,6 +97,25 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
     return toPublicProduct(product);
+  }
+
+  async listCategories() {
+    const categories = await this.prisma.category.findMany({
+      where: { products: { some: { product: { isActive: true } } } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: { select: { products: { where: { product: { isActive: true } } } } },
+      },
+      orderBy: [{ position: 'asc' }, { name: 'asc' }],
+    });
+    return categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      productCount: category._count.products,
+    }));
   }
 
   private parsePositiveInteger(value: string | undefined, fallback: number, field: string): number {

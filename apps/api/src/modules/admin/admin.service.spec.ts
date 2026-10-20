@@ -1,6 +1,6 @@
 jest.mock('@nestjs/common', () => jest.requireActual('../../../__mocks__/nestjs-common'));
 
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 
 function baseProduct(overrides: Record<string, unknown> = {}) {
@@ -299,5 +299,219 @@ describe('AdminService destacados y hero', () => {
       imageIds: ['i2', 'i1'],
     });
     expect(result.map((image) => image.id)).toEqual(['i2', 'i1']);
+  });
+});
+
+describe('AdminService marcas y categorias', () => {
+  let service: AdminService;
+  const product = {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    aggregate: jest.fn(),
+  };
+  const brand = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+  const category = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    aggregate: jest.fn(),
+  };
+  const productCategory = { deleteMany: jest.fn(), createMany: jest.fn() };
+  const auditLog = { record: jest.fn() };
+  const storage = { uploadImage: jest.fn(), deleteImage: jest.fn(), remoteEnabled: false };
+  const prisma = {
+    product,
+    brand,
+    category,
+    productCategory,
+    $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
+  };
+
+  const categoryRow = (id: string, name: string) => ({
+    id,
+    name,
+    slug: name.toLowerCase(),
+    normalizedName: name.toLowerCase(),
+    position: 0,
+  });
+
+  function createDto(overrides: Record<string, unknown> = {}) {
+    return {
+      slug: 'black-opium',
+      name: 'Black Opium',
+      brand: 'YSL',
+      description: 'desc',
+      price: 100,
+      stock: 5,
+      sku: 'SKU1',
+      weightGrams: 100,
+      gender: 'FEMENINO',
+      categoryIds: ['c1'],
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    product.update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      ...baseProduct(),
+      ...data,
+    }));
+    product.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ ...baseProduct(), ...data }));
+    service = new AdminService(prisma as never, auditLog as never, storage as never);
+  });
+
+  it('createProduct reutiliza una marca existente sin importar mayúsculas y audita brandId', async () => {
+    brand.findUnique.mockResolvedValue({ id: 'b1', name: 'YSL', slug: 'ysl', normalizedName: 'ysl' });
+    category.findMany.mockResolvedValue([categoryRow('c1', 'Florales')]);
+
+    await service.createProduct('admin1', createDto({ brand: 'ysl' }) as never);
+
+    expect(brand.findUnique).toHaveBeenCalledWith({ where: { normalizedName: 'ysl' } });
+    expect(brand.create).not.toHaveBeenCalled();
+    expect(product.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          brand: 'YSL',
+          brandId: 'b1',
+          category: 'Florales',
+          gender: 'FEMENINO',
+          categories: { create: [{ categoryId: 'c1', position: 0 }] },
+        }),
+      }),
+    );
+    expect(auditLog.record).toHaveBeenCalledWith(
+      'admin1',
+      'CREATE_PRODUCT',
+      'Product',
+      'p1',
+      expect.objectContaining({ brandId: 'b1', categoryIds: ['c1'] }),
+    );
+  });
+
+  it('createProduct crea la marca nueva con nombre normalizado (sin tildes ni espacios extra)', async () => {
+    brand.findUnique.mockResolvedValueOnce(null);
+    brand.create.mockResolvedValue({ id: 'b2', name: 'Nueva Marca', slug: 'nueva-marca', normalizedName: 'nueva marca' });
+    category.findMany.mockResolvedValue([categoryRow('c1', 'Florales')]);
+
+    await service.createProduct('admin1', createDto({ brand: '  Nueva   Marca ', brandId: undefined }) as never);
+
+    expect(brand.create).toHaveBeenCalledWith({
+      data: { name: 'Nueva Marca', slug: 'nueva-marca', normalizedName: 'nueva marca' },
+    });
+  });
+
+  it('createProduct rechaza mas de dos categorias y sin categorias', async () => {
+    brand.findUnique.mockResolvedValue({ id: 'b1', name: 'YSL', slug: 'ysl', normalizedName: 'ysl' });
+
+    await expect(
+      service.createProduct('admin1', createDto({ categoryIds: ['c1', 'c2', 'c3'] }) as never),
+    ).rejects.toThrow(BadRequestException);
+
+    await expect(
+      service.createProduct('admin1', createDto({ categoryIds: undefined, category: undefined }) as never),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('updateProduct con categoryIds reemplaza la tabla pivote y sincroniza el string legado', async () => {
+    product.findUnique.mockResolvedValue(baseProduct());
+    category.findMany.mockResolvedValue([categoryRow('c2', 'Amaderados'), categoryRow('c3', 'Citricos')]);
+    productCategory.deleteMany.mockResolvedValue({ count: 1 });
+    productCategory.createMany.mockResolvedValue({ count: 2 });
+
+    await service.updateProduct('admin1', 'p1', { categoryIds: ['c2', 'c3'] });
+
+    expect(product.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ category: 'Amaderados' }) }),
+    );
+    expect(productCategory.deleteMany).toHaveBeenCalledWith({ where: { productId: 'p1' } });
+    expect(productCategory.createMany).toHaveBeenCalledWith({
+      data: [
+        { productId: 'p1', categoryId: 'c2', position: 0 },
+        { productId: 'p1', categoryId: 'c3', position: 1 },
+      ],
+    });
+  });
+
+  it('updateProduct con brandId conecta la marca y sincroniza el string', async () => {
+    product.findUnique.mockResolvedValue(baseProduct());
+    brand.findUnique.mockResolvedValue({ id: 'b9', name: 'Dior', slug: 'dior', normalizedName: 'dior' });
+
+    await service.updateProduct('admin1', 'p1', { brandId: 'b9' });
+
+    expect(product.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ brand: 'Dior', brandRef: { connect: { id: 'b9' } } }),
+      }),
+    );
+  });
+
+  it('createBrand rechaza duplicados normalizados', async () => {
+    brand.findUnique.mockResolvedValue({ id: 'b1', name: 'YSL', slug: 'ysl', normalizedName: 'ysl' });
+
+    await expect(service.createBrand('admin1', { name: 'ysl' })).rejects.toThrow(ConflictException);
+  });
+
+  it('updateBrand renombra la marca, actualiza los productos vinculados y audita', async () => {
+    brand.findUnique
+      .mockResolvedValueOnce({ id: 'b1', name: 'YSL', slug: 'ysl', normalizedName: 'ysl' })
+      .mockResolvedValueOnce(null);
+    brand.update.mockResolvedValue({ id: 'b1', name: 'Yves Saint Laurent', slug: 'yves-saint-laurent' });
+    product.updateMany.mockResolvedValue({ count: 3 });
+
+    const result = await service.updateBrand('admin1', 'b1', { name: 'Yves Saint Laurent' });
+
+    expect(brand.update).toHaveBeenCalledWith({
+      where: { id: 'b1' },
+      data: { name: 'Yves Saint Laurent', slug: 'yves-saint-laurent', normalizedName: 'yves saint laurent' },
+    });
+    expect(product.updateMany).toHaveBeenCalledWith({
+      where: { brandId: 'b1' },
+      data: { brand: 'Yves Saint Laurent' },
+    });
+    expect(auditLog.record).toHaveBeenCalledWith(
+      'admin1',
+      'UPDATE_BRAND',
+      'Brand',
+      'b1',
+      expect.objectContaining({ from: 'YSL', to: 'Yves Saint Laurent', productsUpdated: 3 }),
+    );
+    expect(result).toMatchObject({ id: 'b1' });
+  });
+
+  it('mergeBrands mueve los productos al destino, borra el origen y audita', async () => {
+    brand.findUnique
+      .mockResolvedValueOnce({ id: 'b1', name: 'Ysl', slug: 'ysl' })
+      .mockResolvedValueOnce({ id: 'b2', name: 'YSL', slug: 'ysl-2' });
+    product.updateMany.mockResolvedValue({ count: 2 });
+    brand.delete.mockResolvedValue({ id: 'b1' });
+
+    const result = await service.mergeBrands('admin1', 'b1', 'b2');
+
+    expect(product.updateMany).toHaveBeenCalledWith({
+      where: { brandId: 'b1' },
+      data: { brandId: 'b2', brand: 'YSL' },
+    });
+    expect(brand.delete).toHaveBeenCalledWith({ where: { id: 'b1' } });
+    expect(auditLog.record).toHaveBeenCalledWith(
+      'admin1',
+      'MERGE_BRAND',
+      'Brand',
+      'b1',
+      expect.objectContaining({ targetId: 'b2', productsMoved: 2 }),
+    );
+    expect(result).toEqual({ merged: 'b1', into: 'b2', productsMoved: 2 });
+  });
+
+  it('mergeBrands rechaza fusionar una marca consigo misma', async () => {
+    await expect(service.mergeBrands('admin1', 'b1', 'b1')).rejects.toThrow(BadRequestException);
   });
 });

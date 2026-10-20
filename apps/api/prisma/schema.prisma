@@ -58,6 +58,12 @@ enum Role {
   SUPERADMIN
 }
 
+enum ProductGender {
+  FEMENINO
+  MASCULINO
+  UNISEX
+}
+
 model Product {
   id          String      @id @default(uuid())
   slug        String      @unique
@@ -73,6 +79,8 @@ model Product {
   imageUrl    String?
   featured    Boolean     @default(false)
   featuredOrder Int       @default(0)
+  gender      ProductGender?
+  brandId     String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   cartItems   CartItem[]
@@ -81,8 +89,46 @@ model Product {
   wishlistItems WishlistItem[]
   heroHome    HomeHero[]
   images      ProductImage[]
+  brandRef    Brand?      @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  categories  ProductCategory[]
 
   @@index([featured, featuredOrder])
+  @@index([gender])
+  @@index([brandId])
+}
+
+model Brand {
+  id             String    @id @default(uuid())
+  name           String
+  slug           String    @unique
+  normalizedName String    @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  products       Product[]
+
+  @@index([name])
+}
+
+model Category {
+  id             String    @id @default(uuid())
+  name           String
+  slug           String    @unique
+  normalizedName String    @unique
+  position       Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  products       ProductCategory[]
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  position   Int      @default(0)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
 }
 
 model ProductImage {

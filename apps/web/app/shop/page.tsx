@@ -1,7 +1,8 @@
+import { CatalogFilters } from '../../components/catalog-filters';
 import { ProductCard } from '../../components/product-card';
 import { Header } from '../../components/header';
 import { SortSelect } from '../../components/sort-select';
-import { getProducts } from '../../lib/api';
+import { getCategories, getProducts } from '../../lib/api';
 import type { Metadata } from 'next';
 import type { ProductList, ProductSort } from '../../lib/api';
 
@@ -13,25 +14,29 @@ export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
 };
 
-const categories = ['Florales', 'Cítricos', 'Amaderados'];
-
-const sortOptions: Array<{ value: ProductSort; label: string }> = [
-  { value: 'recent', label: 'Novedades' },
-  { value: 'name', label: 'Nombre A-Z' },
-  { value: 'price_asc', label: 'Menor precio' },
-  { value: 'price_desc', label: 'Mayor precio' },
-];
+const sortOptions: ProductSort[] = ['recent', 'name', 'price_asc', 'price_desc'];
 
 type ShopPageProps = {
-  searchParams: Promise<{ q?: string; search?: string; category?: string; sort?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    search?: string;
+    category?: string;
+    categoria?: string;
+    genero?: string;
+    sort?: string;
+    page?: string;
+  }>;
 };
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = await searchParams;
-  const query = new URLSearchParams();
   const search = params.search ?? params.q;
+  const categoria = params.categoria ?? params.category;
+  const genero = params.genero;
+  const query = new URLSearchParams();
   if (search) query.set('search', search);
-  if (params.category) query.set('category', params.category);
+  if (categoria) query.set('category', categoria);
+  if (genero) query.set('gender', genero);
   if (params.sort) query.set('sort', params.sort);
   if (params.page) query.set('page', params.page);
 
@@ -41,7 +46,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   } catch {
     products = null;
   }
-  const currentSort = sortOptions.some((option) => option.value === params.sort) ? (params.sort as ProductSort) : 'recent';
+  const categories = await getCategories();
+  const currentSort = sortOptions.includes(params.sort as ProductSort) ? (params.sort as ProductSort) : 'recent';
 
   return (
     <main>
@@ -51,30 +57,17 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
           <h1 className="font-display text-6xl font-black uppercase tracking-[-0.02em]">Encontrá tu aroma</h1>
           <form className="flex border-b border-black" action="/shop">
+            {categoria ? <input name="categoria" type="hidden" value={categoria} /> : null}
+            {genero ? <input name="genero" type="hidden" value={genero} /> : null}
+            {params.sort ? <input name="sort" type="hidden" value={params.sort} /> : null}
             <input className="w-56 bg-transparent py-3 text-sm outline-none" defaultValue={search} name="search" placeholder="Buscar por nombre, marca o aroma" />
             <button className="px-2 text-sm" type="submit" aria-label="Buscar">→</button>
           </form>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-2">
-          {categories.map((cat) => (
-            <a
-              key={cat}
-              className={`border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
-                params.category === cat
-                  ? 'border-black bg-black text-white'
-                  : 'border-line hover:border-black hover:bg-sand'
-              }`}
-              href={`/shop?${new URLSearchParams({
-                ...(search ? { search } : {}),
-                ...(params.sort ? { sort: params.sort } : {}),
-                category: cat,
-              }).toString()}`}
-            >
-              {cat}
-            </a>
-          ))}
-          <SortSelect value={currentSort} search={search} category={params.category} />
+        <div className="mt-8 space-y-5">
+          <CatalogFilters basePath="/shop" categories={categories} current={{ genero, categoria, search, sort: params.sort }} />
+          <SortSelect action="/shop" hidden={{ search, categoria, genero }} value={currentSort} />
         </div>
 
         {products === null ? (

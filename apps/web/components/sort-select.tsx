@@ -9,17 +9,18 @@ const sortOptions: Array<{ value: string; label: string }> = [
 
 export function SortSelect({
   value,
-  search,
-  category,
+  action = '/shop',
+  hidden = {},
 }: {
   value: string;
-  search?: string;
-  category?: string;
+  action?: string;
+  hidden?: Record<string, string | undefined>;
 }) {
   return (
-    <form className="ml-auto flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-muted" action="/shop">
-      {search ? <input name="search" type="hidden" value={search} /> : null}
-      {category ? <input name="category" type="hidden" value={category} /> : null}
+    <form className="ml-auto flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-muted" action={action}>
+      {Object.entries(hidden).map(([name, hiddenValue]) =>
+        hiddenValue ? <input key={name} name={name} type="hidden" value={hiddenValue} /> : null,
+      )}
       <label htmlFor="sort">Ordenar por</label>
       <select
         className="border border-line bg-transparent py-2 pl-3 pr-8 outline-none focus:border-black"

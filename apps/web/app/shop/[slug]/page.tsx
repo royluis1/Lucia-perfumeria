@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { Header } from '../../../components/header';
 import { AddToCartButton } from '../../../components/add-to-cart-button';
 import { ProductGallery } from '../../../components/product-gallery';
@@ -89,11 +90,28 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
         <ProductGallery images={gallery} name={product.name} />
         <div className="self-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{product.brand}</p>
+          {product.brandSlug ? (
+            <Link className="ul text-[11px] font-semibold uppercase tracking-[0.3em] text-muted" href={`/marcas/${product.brandSlug}`}>
+              {product.brand}
+            </Link>
+          ) : (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{product.brand}</p>
+          )}
           <h1 className="mt-4 font-display text-6xl font-black uppercase leading-none tracking-[-0.02em]">{product.name}</h1>
           <p className="mt-6 text-2xl font-semibold">{price}</p>
           <p className="mt-8 max-w-lg leading-7 text-muted">{product.description}</p>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-muted">Disponible para compra</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+            <span>Disponible para compra</span>
+            {product.categories.map((category) => (
+              <Link
+                key={category.slug}
+                className="ul border border-line px-3 py-1.5 text-[10px]"
+                href={`/shop?categoria=${category.slug}`}
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
           <AddToCartButton
             productId={product.id}
             productName={product.name}

@@ -4,10 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ProductImage, Prisma } from '@prisma/client';
+import { Brand, Category, ProductImage, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { cleanDisplayName, normalizeName, slugifyName } from '../../common/catalog.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateBrandDto } from './dto/create-brand.dto';
+import { UpdateBrandDto } from './dto/update-brand.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
@@ -21,8 +24,13 @@ const PRODUCT_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const adminProductSelect = {
   id: true, slug: true, name: true, brand: true, description: true,
   price: true, stock: true, sku: true, isActive: true, weightGrams: true,
-  category: true, imageUrl: true, featured: true, featuredOrder: true,
+  category: true, gender: true, imageUrl: true, featured: true, featuredOrder: true,
   createdAt: true, updatedAt: true,
+  brandRef: { select: { id: true, name: true, slug: true } },
+  categories: {
+    select: { category: { select: { id: true, name: true, slug: true } } },
+    orderBy: { position: 'asc' as const },
+  },
   images: {
     select: { id: true, url: true, alt: true, position: true },
     orderBy: { position: 'asc' as const },
@@ -50,14 +58,27 @@ export class AdminService {
   }
 
   async createProduct(actorId: string, dto: CreateProductDto) {
+    const { brandId, categoryIds, category: legacyCategory, ...rest } = dto;
+    const brand = await this.resolveBrand(brandId, dto.brand);
+    if (!brand) throw new BadRequestException('Marca inválida');
+    const categories = await this.resolveCategories(categoryIds, legacyCategory);
+    if (categories.length === 0) {
+      throw new BadRequestException('Cada producto necesita al menos una categoría');
+    }
     try {
       const product = await this.prisma.product.create({
         data: {
-          ...dto,
+          ...rest,
+          brand: brand.name,
+          brandId: brand.id,
+          category: categories[0].name,
+          categories: {
+            create: categories.map((category, index) => ({ categoryId: category.id, position: index })),
+          },
           ...(dto.imageUrl
             ? {
                 images: {
-                  create: { url: dto.imageUrl, position: 0, alt: `${dto.name} — ${dto.brand}` },
+                  create: { url: dto.imageUrl, position: 0, alt: `${dto.name} — ${brand.name}` },
                 },
               }
             : {}),
@@ -67,6 +88,8 @@ export class AdminService {
       await this.auditLog.record(actorId, 'CREATE_PRODUCT', 'Product', product.id, {
         slug: product.slug,
         sku: product.sku,
+        brandId: brand.id,
+        categoryIds: categories.map((category) => category.id),
       });
       return product;
     } catch (error) {
@@ -79,8 +102,24 @@ export class AdminService {
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Product not found');
 
-    const data: Prisma.ProductUpdateInput = { ...dto };
+    const { brandId, categoryIds, category: legacyCategory, ...rest } = dto;
+    const data: Prisma.ProductUpdateInput = { ...rest };
     let unfeaturedByDeactivation = false;
+    let newCategories: Category[] | null = null;
+
+    const brand = await this.resolveBrand(brandId, dto.brand);
+    if (brand) {
+      data.brand = brand.name;
+      data.brandRef = { connect: { id: brand.id } };
+    }
+
+    if (categoryIds !== undefined || legacyCategory !== undefined) {
+      newCategories = await this.resolveCategories(categoryIds, legacyCategory);
+      if (newCategories.length === 0) {
+        throw new BadRequestException('Cada producto necesita al menos una categoría');
+      }
+      data.category = newCategories[0].name;
+    }
 
     if (dto.featured === true) {
       const willBeActive = dto.isActive ?? existing.isActive;
@@ -107,6 +146,16 @@ export class AdminService {
 
     try {
       const product = await this.prisma.product.update({ where: { id }, data, select: adminProductSelect });
+      if (newCategories) {
+        await this.prisma.productCategory.deleteMany({ where: { productId: id } });
+        await this.prisma.productCategory.createMany({
+          data: newCategories.map((category, index) => ({
+            productId: id,
+            categoryId: category.id,
+            position: index,
+          })),
+        });
+      }
       if (dto.imageUrl !== undefined) {
         const imageCount = await this.prisma.productImage.count({ where: { productId: id } });
         if (imageCount === 0 && dto.imageUrl) {
@@ -144,6 +193,171 @@ export class AdminService {
       existing.featured ? { unfeatured: true } : {},
     );
     return product;
+  }
+
+  async listBrands() {
+    const brands = await this.prisma.brand.findMany({
+      select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
+      orderBy: { name: 'asc' },
+    });
+    return brands.map((brand) => ({
+      id: brand.id,
+      name: brand.name,
+      slug: brand.slug,
+      productCount: brand._count.products,
+    }));
+  }
+
+  async createBrand(actorId: string, dto: CreateBrandDto) {
+    const name = cleanDisplayName(dto.name);
+    const normalizedName = normalizeName(name);
+    if (!normalizedName) throw new BadRequestException('Nombre de marca inválido');
+    const existing = await this.prisma.brand.findUnique({ where: { normalizedName } });
+    if (existing) throw new ConflictException('Ya existe una marca con ese nombre');
+    const brand = await this.createBrandRow(name, normalizedName);
+    await this.auditLog.record(actorId, 'CREATE_BRAND', 'Brand', brand.id, {
+      name: brand.name,
+      slug: brand.slug,
+    });
+    return brand;
+  }
+
+  async updateBrand(actorId: string, id: string, dto: UpdateBrandDto) {
+    const existing = await this.prisma.brand.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Brand not found');
+    const name = cleanDisplayName(dto.name);
+    const normalizedName = normalizeName(name);
+    if (!normalizedName) throw new BadRequestException('Nombre de marca inválido');
+    const duplicate = await this.prisma.brand.findUnique({ where: { normalizedName } });
+    if (duplicate && duplicate.id !== id) {
+      throw new ConflictException('Ya existe otra marca con ese nombre');
+    }
+    const [brand, products] = await this.prisma.$transaction([
+      this.prisma.brand.update({ where: { id }, data: { name, slug: slugifyName(name), normalizedName } }),
+      this.prisma.product.updateMany({ where: { brandId: id }, data: { brand: name } }),
+    ]);
+    await this.auditLog.record(actorId, 'UPDATE_BRAND', 'Brand', id, {
+      from: existing.name,
+      to: name,
+      productsUpdated: products.count,
+    });
+    return brand;
+  }
+
+  async mergeBrands(actorId: string, sourceId: string, targetId: string) {
+    if (sourceId === targetId) throw new BadRequestException('Elegí dos marcas distintas');
+    const [source, target] = await Promise.all([
+      this.prisma.brand.findUnique({ where: { id: sourceId } }),
+      this.prisma.brand.findUnique({ where: { id: targetId } }),
+    ]);
+    if (!source || !target) throw new NotFoundException('Brand not found');
+    const moved = await this.prisma.product.updateMany({
+      where: { brandId: sourceId },
+      data: { brandId: targetId, brand: target.name },
+    });
+    await this.prisma.brand.delete({ where: { id: sourceId } });
+    await this.auditLog.record(actorId, 'MERGE_BRAND', 'Brand', sourceId, {
+      source: source.name,
+      target: target.name,
+      targetId: target.id,
+      productsMoved: moved.count,
+    });
+    return { merged: source.id, into: target.id, productsMoved: moved.count };
+  }
+
+  async listCategories() {
+    const categories = await this.prisma.category.findMany({
+      select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
+      orderBy: [{ position: 'asc' }, { name: 'asc' }],
+    });
+    return categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      productCount: category._count.products,
+    }));
+  }
+
+  recordUpload(actorId: string, originalName: string) {
+    return this.auditLog.record(actorId, 'UPLOAD_IMAGE', 'Storage', originalName, {
+      originalName,
+    });
+  }
+
+  private async createBrandRow(name: string, normalizedName: string): Promise<Brand> {
+    try {
+      return await this.prisma.brand.create({
+        data: { name, slug: slugifyName(name), normalizedName },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const raced = await this.prisma.brand.findUnique({ where: { normalizedName } });
+        if (raced) return raced;
+      }
+      throw error;
+    }
+  }
+
+  private async createCategoryRow(name: string, normalizedName: string): Promise<Category> {
+    try {
+      const highest = await this.prisma.category.aggregate({ _max: { position: true } });
+      return await this.prisma.category.create({
+        data: {
+          name,
+          slug: slugifyName(name),
+          normalizedName,
+          position: (highest._max.position ?? 0) + 1,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const raced = await this.prisma.category.findUnique({ where: { normalizedName } });
+        if (raced) return raced;
+      }
+      throw error;
+    }
+  }
+
+  private async resolveBrand(brandId?: string, brandName?: string): Promise<Brand | null> {
+    if (brandId) {
+      const brand = await this.prisma.brand.findUnique({ where: { id: brandId } });
+      if (!brand) throw new BadRequestException('La marca indicada no existe');
+      return brand;
+    }
+    const trimmed = cleanDisplayName(brandName ?? '');
+    const normalizedName = normalizeName(trimmed);
+    if (!normalizedName) return null;
+    const existing = await this.prisma.brand.findUnique({ where: { normalizedName } });
+    if (existing) return existing;
+    return this.createBrandRow(trimmed, normalizedName);
+  }
+
+  private async resolveCategories(
+    categoryIds?: string[],
+    legacyName?: string,
+  ): Promise<Category[]> {
+    if (categoryIds !== undefined) {
+      const unique = [...new Set(categoryIds)];
+      if (unique.length !== categoryIds.length) {
+        throw new BadRequestException('Las categorías tienen elementos repetidos');
+      }
+      if (unique.length > 2) {
+        throw new BadRequestException('Cada producto puede tener hasta 2 categorías');
+      }
+      if (unique.length === 0) return [];
+      const categories = await this.prisma.category.findMany({ where: { id: { in: unique } } });
+      if (categories.length !== unique.length) {
+        throw new BadRequestException('Alguna de las categorías elegidas no existe');
+      }
+      const byId = new Map(categories.map((category) => [category.id, category]));
+      return unique.map((categoryId) => byId.get(categoryId) as Category);
+    }
+    const trimmed = cleanDisplayName(legacyName ?? '');
+    const normalizedName = normalizeName(trimmed);
+    if (!normalizedName || normalizedName === 'uncategorized') return [];
+    const existing = await this.prisma.category.findUnique({ where: { normalizedName } });
+    if (existing) return [existing];
+    return [await this.createCategoryRow(trimmed, normalizedName)];
   }
 
   async addProductImage(actorId: string, productId: string, file?: Express.Multer.File) {
@@ -513,3 +727,5 @@ export class AdminService {
     }
   }
 }
+
+

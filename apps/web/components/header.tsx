@@ -11,6 +11,7 @@ import { CartIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from '
 const navLinks = [
   { label: 'Colección completa', href: '/shop' },
   { label: 'Categorías', href: '/shop' },
+  { label: 'Marcas', href: '/marcas' },
   { label: 'Nuestra historia', href: '/nosotros' },
 ];
 

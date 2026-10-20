@@ -11,10 +11,12 @@ const publicProductSelect = {
   price: true,
   weightGrams: true,
   category: true,
+  gender: true,
   imageUrl: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
+  brandRef: { select: { slug: true } },
 } satisfies Prisma.ProductSelect;
 
 @Injectable()
@@ -27,10 +29,18 @@ export class WishlistService {
       orderBy: { createdAt: 'desc' },
       select: { product: { select: publicProductSelect }, createdAt: true },
     });
-    return items.map((item) => ({
-      product: { ...item.product, price: item.product.price.toString() },
-      addedAt: item.createdAt,
-    }));
+    return items.map((item) => {
+      const { brandRef, ...product } = item.product;
+      return {
+        product: {
+          ...product,
+          price: product.price.toString(),
+          gender: product.gender ?? null,
+          brandSlug: brandRef?.slug ?? null,
+        },
+        addedAt: item.createdAt,
+      };
+    });
   }
 
   async add(userId: string, productId: string) {

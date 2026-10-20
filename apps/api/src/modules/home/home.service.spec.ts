@@ -23,26 +23,28 @@ function productRow(overrides: Record<string, unknown> = {}) {
 describe('HomeService', () => {
   const homeHero = { findUnique: jest.fn() };
   const product = { findMany: jest.fn() };
-  const prisma = { homeHero, product } as unknown as import('../../prisma/prisma.service').PrismaService;
+  const category = { findMany: jest.fn() };
+  const prisma = { homeHero, product, category } as unknown as import('../../prisma/prisma.service').PrismaService;
   let service: HomeService;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    category.findMany.mockResolvedValue([]);
     service = new HomeService(prisma);
   });
 
   it('devuelve destacados con price string y categorías del catálogo', async () => {
     homeHero.findUnique.mockResolvedValue(null);
-    product.findMany
-      .mockResolvedValueOnce([productRow()])
-      .mockResolvedValueOnce([{ category: 'Florales' }, { category: 'Citricos' }]);
+    product.findMany.mockResolvedValueOnce([productRow()]);
+    category.findMany.mockResolvedValue([{ name: 'Florales' }, { name: 'Citricos' }]);
 
     const result = await service.getHome();
 
     expect(result.featured).toHaveLength(1);
     expect(result.featured[0].price).toBe('12500.00');
     expect(result.categories).toEqual(['Florales', 'Citricos']);
-    expect(product.findMany).toHaveBeenCalledTimes(2);
+    expect(category.findMany).toHaveBeenCalledTimes(1);
+    expect(product.findMany).toHaveBeenCalledTimes(1);
   });
 
   it('consulta destacados activos con stock ordenados por featuredOrder', async () => {
@@ -60,13 +62,12 @@ describe('HomeService', () => {
     homeHero.findUnique.mockResolvedValue(null);
     product.findMany
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([productRow({ id: 'p2', name: 'Nuevo' })]);
 
     const result = await service.getHome();
 
-    expect(product.findMany).toHaveBeenCalledTimes(3);
-    const fallbackCall = product.findMany.mock.calls[2][0];
+    expect(product.findMany).toHaveBeenCalledTimes(2);
+    const fallbackCall = product.findMany.mock.calls[1][0];
     expect(fallbackCall.take).toBe(3);
     expect(fallbackCall.orderBy).toEqual({ createdAt: 'desc' });
     expect(result.featured[0]).toMatchObject({ id: 'p2', name: 'Nuevo' });

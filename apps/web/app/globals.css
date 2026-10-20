@@ -81,6 +81,19 @@ textarea {
   animation: fadeIn 250ms ease-out both;
 }
 
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-sheet-up {
+  animation: sheetUp 280ms ease-out both;
+}
+
 @keyframes logoFade {
   from {
     opacity: 0;
