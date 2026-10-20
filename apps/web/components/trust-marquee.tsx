@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
 const items = [
   'Envíos a todo el país',
   'Pago con Mercado Pago',
@@ -6,9 +10,27 @@ const items = [
 ];
 
 export function TrustMarquee() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(true);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => setInView(entries[0]?.isIntersecting ?? true),
+      { rootMargin: '120px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section aria-label="Beneficios de compra" className="overflow-hidden border-y border-black/20 bg-black py-4 text-white">
-      <div className="mq flex w-max items-center whitespace-nowrap">
+    <section
+      aria-label="Beneficios de compra"
+      className="overflow-hidden border-y border-black/20 bg-black py-4 text-white"
+      ref={sectionRef}
+    >
+      <div className={`mq flex w-max items-center whitespace-nowrap ${inView ? '' : 'mq-paused'}`}>
         {[0, 1].map((copy) => (
           <div aria-hidden={copy === 1} className="flex items-center" key={copy}>
             {items.map((item) => (

@@ -8,7 +8,7 @@ import type { ProductList, ProductSort } from '../../lib/api';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Catálogo',
+  title: 'Colección completa',
   description: 'Explorá la colección completa de fragancias de Lucía Perfumería: mujer, hombre y nicho.',
   alternates: { canonical: '/shop' },
 };
@@ -47,7 +47,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     <main>
       <Header />
       <section className="mx-auto max-w-7xl px-6 py-16">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">Catálogo</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">Colección completa</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
           <h1 className="font-display text-6xl font-black uppercase tracking-[-0.02em]">Encontrá tu aroma</h1>
           <form className="flex border-b border-black" action="/shop">

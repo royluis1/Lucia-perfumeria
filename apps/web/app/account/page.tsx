@@ -6,6 +6,7 @@ import { me, getAccessToken, clearSession } from '../../lib/auth';
 import type { UserProfile } from '../../lib/auth';
 import { getMyOrders, updateProfile, changePassword } from '../../lib/account';
 import type { Order } from '../../lib/account';
+import { Logo } from '../../components/logo';
 
 export default function AccountPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -73,7 +74,7 @@ export default function AccountPage() {
   if (!profile) {
     return (
       <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">
-        <Link className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</Link>
+        <Link className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></Link>
         <p className="mt-20 border border-line bg-white p-8 text-black/70">{profileMessage}</p>
         <Link className="mt-6 inline-block border border-black bg-black px-6 py-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white" href="/login">Ingresar</Link>
       </main>
@@ -83,7 +84,7 @@ export default function AccountPage() {
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
       <div className="flex items-center justify-between">
-        <Link className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</Link>
+        <Link className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></Link>
         <Link className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</Link>
       </div>
 

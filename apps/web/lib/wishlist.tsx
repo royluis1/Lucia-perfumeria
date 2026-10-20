@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAccessToken } from './auth';
-import type { Product } from './api';
+import type { ProductSummary } from './api';
 import { API_URL } from './config';
 
 type WishlistItem = {
-  product: Product;
+  product: ProductSummary;
   addedAt: string;
 };
 
@@ -14,7 +14,7 @@ type WishlistContextType = {
   items: WishlistItem[];
   count: number;
   isSaved: (productId: string) => boolean;
-  toggle: (product: Product) => Promise<void>;
+  toggle: (product: ProductSummary) => Promise<void>;
   remove: (productId: string) => Promise<void>;
 };
 
@@ -50,7 +50,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const isSaved = (productId: string) =>
     items.some((item) => item.product.id === productId);
 
-  const toggle = async (product: Product) => {
+  const toggle = async (product: ProductSummary) => {
     const token = getAccessToken();
     if (!token) {
       throw new Error('Necesitás iniciar sesión');

@@ -28,15 +28,15 @@ export function CartSidebar() {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/40 transition-opacity"
+        className="animate-fade-in fixed inset-0 z-40 bg-black/40"
         onClick={closeCart}
         aria-hidden="true"
       />
       <aside className="animate-slide-in fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+        <div className="flex items-center justify-between border-b border-line px-6 py-3">
           <h2 className="font-display text-xl font-black uppercase tracking-[0.2em]">Carrito</h2>
           <button
-            className="p-1 text-muted transition-colors hover:text-black"
+            className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
             onClick={closeCart}
             aria-label="Cerrar carrito"
           >
@@ -68,15 +68,15 @@ export function CartSidebar() {
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center border border-line">
                       <button
-                        className="p-2 text-muted transition-colors hover:text-black"
+                        className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
                         onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                         aria-label="Disminuir cantidad"
                       >
                         <MinusIcon className="h-4 w-4" />
                       </button>
-                      <span className="px-3 text-sm font-medium">{item.quantity}</span>
+                      <span className="px-2 text-sm font-medium">{item.quantity}</span>
                       <button
-                        className="p-2 text-muted transition-colors hover:text-black"
+                        className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         aria-label="Aumentar cantidad"
                       >
@@ -84,7 +84,7 @@ export function CartSidebar() {
                       </button>
                     </div>
                     <button
-                      className="text-xs text-muted transition-colors hover:text-red-600"
+                      className="inline-flex min-h-11 items-center px-1 text-xs text-muted transition-colors hover:text-red-600"
                       onClick={() => removeItem(item.productId)}
                       aria-label={`Eliminar ${item.name}`}
                     >

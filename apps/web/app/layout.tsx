@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Archivo } from 'next/font/google';
+import localFont from 'next/font/local';
 import { SiteFooter } from '../components/site-footer';
 import { CartProvider } from '../lib/cart';
 import { WishlistProvider } from '../lib/wishlist';
@@ -12,6 +13,23 @@ const archivo = Archivo({
   weight: ['400', '600', '800', '900'],
   variable: '--font-archivo',
   display: 'swap',
+});
+
+const bodoni = localFont({
+  src: '../assets/fonts/lucia-name.woff2',
+  variable: '--font-bodoni',
+  display: 'swap',
+  weight: '600',
+  style: 'italic',
+  preload: false,
+});
+
+const cormorant = localFont({
+  src: '../assets/fonts/lucia-sub.woff2',
+  variable: '--font-cormorant',
+  display: 'swap',
+  weight: '300',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -50,7 +68,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html className={archivo.variable} lang="es">
+    <html className={`${archivo.variable} ${bodoni.variable} ${cormorant.variable}`} lang="es">
       <body>
         <CartProvider>
           <WishlistProvider>

@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, register, saveSession } from '../../lib/auth';
 import { GoogleLoginButton } from '../../components/google-login-button';
+import { Logo } from '../../components/logo';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <p className="mt-16 text-xs uppercase tracking-[0.3em] text-muted">Nueva cuenta</p>
         <h1 className="mt-3 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Creá tu cuenta</h1>
         <p className="mt-5 text-muted">Sumate a Lucía para guardar tu carrito y seguir tus pedidos.</p>

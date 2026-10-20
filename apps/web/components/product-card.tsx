@@ -3,9 +3,9 @@ import { AddToCartButton } from './add-to-cart-button';
 import { WishlistButton } from './wishlist-button';
 import { SmartImage } from './smart-image';
 import { resolveImageUrl } from '../lib/api';
-import type { Product } from '../lib/api';
+import type { ProductSummary } from '../lib/api';
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product }: { product: ProductSummary }) {
   const priceValue = Number(product.price);
   const galleryImages = (product.images ?? [])
     .map((image) => resolveImageUrl(image.url))

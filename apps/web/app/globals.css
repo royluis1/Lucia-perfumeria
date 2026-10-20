@@ -12,6 +12,8 @@
   --color-muted: #5e5e5e;
   --font-body: var(--font-archivo), 'Archivo', Arial, sans-serif;
   --font-display: var(--font-archivo), 'Archivo', 'Arial Narrow', sans-serif;
+  --font-brand: var(--font-bodoni), 'Bodoni Moda', Georgia, serif;
+  --font-brand-sub: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
 }
 
 * {
@@ -56,16 +58,66 @@ textarea {
 @keyframes slideIn {
   from {
     transform: translateX(100%);
-    opacity: 0;
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
 .animate-slide-in {
-  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideIn 300ms ease-out both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 250ms ease-out both;
+}
+
+@keyframes logoFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.brand-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  color: inherit;
+  line-height: 1;
+  opacity: 0;
+  animation: logoFade 500ms ease-out forwards;
+}
+
+.brand-logo-name {
+  font-family: var(--font-brand);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.brand-logo-sub {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.42em;
+  font-family: var(--font-brand-sub);
+  font-size: max(8px, 0.26em);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 @keyframes fadeSwap {
@@ -85,11 +137,9 @@ textarea {
 
 @keyframes rise {
   from {
-    opacity: 0;
     transform: translateY(18px);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -143,16 +193,7 @@ textarea {
     transform: scale(1);
   }
   40% {
-    transform: scale(1.3);
-  }
-}
-
-@keyframes shine {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
+    transform: scale(1.15);
   }
 }
 
@@ -164,8 +205,7 @@ textarea {
 
 .lt {
   display: inline-block;
-  opacity: 0;
-  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .lt:nth-child(2) {
@@ -185,8 +225,7 @@ textarea {
 }
 
 .rv {
-  opacity: 0;
-  animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .d1 {
@@ -229,21 +268,21 @@ textarea {
   animation: marquee 28s linear infinite;
 }
 
-.mq:hover {
+.mq-paused {
   animation-play-state: paused;
 }
 
-.pulse {
-  animation: bump 2.6s ease-in-out infinite;
+.bump {
+  animation: bump 260ms ease-out;
 }
 
 .shine {
   background: linear-gradient(100deg, #111 40%, #a8863f 50%, #111 60%);
+  background-position: 50% 0;
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shine 5s linear infinite;
 }
 
 .ul {
@@ -253,24 +292,15 @@ textarea {
   transition: background-size 0.3s;
 }
 
-.ul:hover {
-  background-size: 100% 1px;
-}
-
 .card .img {
   transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.card:hover .img {
-  transform: scale(1.07);
-}
-
 .card .add {
   transform: translateY(101%);
-  transition: transform 0.35s;
+  transition: transform 300ms ease-out;
 }
 
-.card:hover .add,
 .card:focus-within .add {
   transform: none;
 }
@@ -279,27 +309,55 @@ textarea {
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.card:hover .heart,
-.card:focus-within .heart {
-  transform: scale(1.15);
-}
-
 .tr {
   transition: transform 0.3s;
 }
 
-.tr:hover {
-  transform: translateY(-6px);
+@media (hover: hover) {
+  .ul:hover {
+    background-size: 100% 1px;
+  }
+
+  .mq:hover {
+    animation-play-state: paused;
+  }
+
+  .card:hover .img {
+    transform: scale(1.07);
+  }
+
+  .card:hover .add {
+    transform: none;
+  }
+
+  .card:hover .heart {
+    transform: scale(1.15);
+  }
+
+  .tr:hover {
+    transform: translateY(-6px);
+  }
+}
+
+@media (hover: none) {
+  .card .add {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   * {
     animation: none !important;
     transition: none !important;
   }
 
   .lt,
-  .rv {
+  .rv,
+  .brand-logo {
     opacity: 1;
   }
 
@@ -310,11 +368,7 @@ textarea {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center border border-black bg-black px-7 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition;
-  }
-
-  .btn-primary:hover {
-    @apply bg-white text-black;
+    @apply inline-flex min-h-11 items-center justify-center border border-black bg-black px-7 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition;
   }
 
   .btn-primary:disabled {
@@ -322,11 +376,7 @@ textarea {
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center border border-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] transition;
-  }
-
-  .btn-ghost:hover {
-    @apply bg-black text-white;
+    @apply inline-flex min-h-11 items-center justify-center border border-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] transition;
   }
 
   .btn-ghost:disabled {
@@ -343,5 +393,17 @@ textarea {
 
   .badge-flat {
     @apply inline-flex items-center border border-line bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em];
+  }
+}
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    background-color: #fff;
+    color: #111;
+  }
+
+  .btn-ghost:hover {
+    background-color: #111;
+    color: #fff;
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { API_URL } from '../../lib/config';
 
 const apiUrl = API_URL;
@@ -48,6 +49,12 @@ export default function ArrepentimientoPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+      <Link
+        className="mb-10 inline-flex min-h-11 items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-muted transition-colors hover:text-black"
+        href="/"
+      >
+        <span aria-hidden="true">←</span> Volver al inicio
+      </Link>
       <p className="text-xs uppercase tracking-[0.3em] text-muted">Derecho de arrepentimiento</p>
       <h1 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em]">Quiero revocar la compra</h1>
       <p className="mt-6 max-w-2xl text-sm leading-7 text-muted">
@@ -65,6 +72,7 @@ export default function ArrepentimientoPage() {
             Recibimos tu pedido de revocación. Te vamos a responder por mail con
             el número de trámite y los pasos para la devolución del dinero.
           </p>
+          <Link className="btn-primary mt-6" href="/">← Volver al inicio</Link>
         </div>
       ) : (
         <form className="mt-10 space-y-6" onSubmit={handleSubmit}>

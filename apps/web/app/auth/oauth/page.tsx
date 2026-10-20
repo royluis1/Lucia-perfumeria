@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { clearSession, me, saveAccessToken, saveSession } from '../../../lib/auth';
+import { Logo } from '../../../components/logo';
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function OAuthCallbackPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md text-center">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <p className="mt-10 text-sm text-muted">{message}</p>
         {hasError && (
           <a className="mt-8 inline-block border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href="/login">

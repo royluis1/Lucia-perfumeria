@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { requestPasswordReset } from '../../lib/account';
+import { Logo } from '../../components/logo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <h1 className="mt-16 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Restablecer contraseña</h1>
         {status === 'sent' ? (
           <>

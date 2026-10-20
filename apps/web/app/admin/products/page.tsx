@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   listAdminProducts,
   createAdminProduct,
@@ -13,7 +14,11 @@ import type { AdminProduct, AdminProductImage } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
 import { Logo } from '../../../components/logo';
 import { SmartImage } from '../../../components/smart-image';
-import { ProductImagesManager } from '../../../components/admin/product-images';
+
+const ProductImagesManager = dynamic(
+  () => import('../../../components/admin/product-images').then((mod) => mod.ProductImagesManager),
+  { ssr: false, loading: () => <p className="text-xs text-muted">Cargando gestor de fotos…</p> },
+);
 
 const categories = ['Florales', 'Cítricos', 'Amaderados', 'Uncategorized'];
 const emptyForm = {

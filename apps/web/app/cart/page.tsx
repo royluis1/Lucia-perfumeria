@@ -40,15 +40,15 @@ export default function CartPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center border border-line">
                         <button
-                          className="p-2 text-muted hover:text-black transition-colors"
+                          className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
                           onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                           aria-label="Disminuir cantidad"
                         >
                           <MinusIcon className="h-4 w-4" />
                         </button>
-                        <span className="px-3 text-sm font-medium">{item.quantity}</span>
+                        <span className="px-2 text-sm font-medium">{item.quantity}</span>
                         <button
-                          className="p-2 text-muted hover:text-black transition-colors"
+                          className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
                           onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                           aria-label="Aumentar cantidad"
                         >
@@ -56,7 +56,7 @@ export default function CartPage() {
                         </button>
                       </div>
                       <button
-                        className="text-xs text-muted hover:text-red-600 transition-colors"
+                        className="inline-flex min-h-11 items-center px-1 text-xs text-muted transition-colors hover:text-red-600"
                         onClick={() => removeItem(item.productId)}
                         aria-label={`Eliminar ${item.name}`}
                       >

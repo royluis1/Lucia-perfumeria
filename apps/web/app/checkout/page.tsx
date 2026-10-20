@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { getAccessToken } from '../../lib/auth';
 import { useCart } from '../../lib/cart';
 import { API_URL } from '../../lib/config';
+import { Logo } from '../../components/logo';
 
 const apiUrl = API_URL;
 
@@ -66,7 +67,7 @@ export default function CheckoutPage() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
       <div className="flex items-center justify-between">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <a className="text-xs uppercase tracking-[0.18em] underline" href="/cart">Volver al carrito</a>
       </div>
       <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Checkout</h1>

@@ -5,6 +5,7 @@ import { FacebookIcon, InstagramIcon, MessageCircleIcon, YoutubeIcon } from './i
 
 const links = {
   about: [
+    { label: 'Colección completa', href: '/shop' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Catálogo mayorista', href: '/contacto' },
     { label: 'Trabajá con nosotros', href: '/contacto' },
@@ -47,7 +48,7 @@ export function SiteFooter() {
             {social.map(({ label, href, Icon }) => (
               <a
                 aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white transition-colors hover:bg-white hover:text-black"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30 text-white transition-colors hover:bg-white hover:text-black"
                 href={href}
                 key={label}
               >

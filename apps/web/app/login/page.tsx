@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getAccessToken, login, saveSession } from '../../lib/auth';
 import { verifyMfa } from '../../lib/account';
 import { GoogleLoginButton } from '../../components/google-login-button';
+import { Logo } from '../../components/logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <h1 className="mt-16 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Bienvenida</h1>
         <p className="mt-5 text-muted">
           {mfaToken ? 'Ingresá el código de 6 dígitos de tu aplicación de autenticación.' : 'Ingresá para ver tu carrito y tus pedidos.'}

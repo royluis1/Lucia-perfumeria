@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getAccessToken } from '../../../lib/auth';
 import { API_URL } from '../../../lib/config';
+import { Logo } from '../../../components/logo';
 
 type Order = {
   id: string;
@@ -103,7 +104,7 @@ export default function OrdersPage() {
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">
       <div className="flex items-center justify-between">
-        <a className="font-display text-xl font-bold tracking-[0.18em]" href="/">LUCÍA</a>
+        <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <a className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</a>
       </div>
       <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em]">Mis pedidos</h1>

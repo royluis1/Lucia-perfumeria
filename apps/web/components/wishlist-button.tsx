@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { getAccessToken } from '../lib/auth';
 import { useWishlist } from '../lib/wishlist';
 import { HeartIcon } from './icons';
-import type { Product } from '../lib/api';
+import type { ProductSummary } from '../lib/api';
 
-export function WishlistButton({ product }: { product: Product }) {
+export function WishlistButton({ product }: { product: ProductSummary }) {
   const { isSaved, toggle } = useWishlist();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +35,7 @@ export function WishlistButton({ product }: { product: Product }) {
       type="button"
       aria-label={saved ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       aria-pressed={saved}
-      className={`flex h-9 w-9 items-center justify-center rounded-full border transition disabled:cursor-wait ${
+      className={`flex h-11 w-11 items-center justify-center rounded-full border transition disabled:cursor-wait ${
         saved
           ? 'border-black bg-black text-white'
           : 'border-line bg-white/90 text-muted backdrop-blur-sm hover:border-black hover:text-black'

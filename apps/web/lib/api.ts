@@ -25,6 +25,16 @@ export type Product = {
 
 export type ProductSort = 'recent' | 'price_asc' | 'price_desc' | 'name';
 
+export type ProductSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  price: string;
+  imageUrl: string | null;
+  images?: ProductImage[];
+};
+
 export type HomeHero = {
   product: Product | null;
   imageUrl: string | null;
@@ -40,7 +50,7 @@ export type HomeData = {
 };
 
 export type ProductList = {
-  data: Product[];
+  data: ProductSummary[];
   total: number;
   page: number;
   limit: number;

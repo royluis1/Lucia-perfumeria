@@ -74,7 +74,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
             alt={current.alt ?? name}
             className={`gallery-swap object-contain ${zoomed ? '' : 'cursor-zoom-in'}`}
             key={current.id}
-            priority
+            priority={safeIndex === 0}
             sizes="(min-width: 768px) 50vw, 100vw"
             src={current.url}
           />
@@ -84,7 +84,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
           <>
             <button
               aria-label="Foto anterior"
-              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 border border-line bg-white/90 p-2 text-ink opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+              className="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-line bg-white/90 text-ink opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
               onClick={() => go(-1)}
               type="button"
             >
@@ -92,7 +92,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
             </button>
             <button
               aria-label="Foto siguiente"
-              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 border border-line bg-white/90 p-2 text-ink opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+              className="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-line bg-white/90 text-ink opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
               onClick={() => go(1)}
               type="button"
             >
