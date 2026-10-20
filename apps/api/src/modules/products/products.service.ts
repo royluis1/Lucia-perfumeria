@@ -2,7 +2,14 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductQueryDto } from './dto/product-query.dto';
-import { PaginatedProducts, PublicProduct, publicProductSelect, toPublicProduct } from './product.types';
+import {
+  PaginatedProducts,
+  PublicProduct,
+  publicProductListSelect,
+  publicProductSelect,
+  toPublicProduct,
+  toPublicProductList,
+} from './product.types';
 
 @Injectable()
 export class ProductsService {
@@ -46,7 +53,7 @@ export class ProductsService {
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
-        select: publicProductSelect,
+        select: publicProductListSelect,
         orderBy,
         skip: (page - 1) * limit,
         take: limit,
@@ -55,7 +62,7 @@ export class ProductsService {
     ]);
 
     return {
-      data: products.map((product) => toPublicProduct(product)),
+      data: products.map((product) => toPublicProductList(product)),
       page,
       limit,
       total,

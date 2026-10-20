@@ -3,12 +3,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
+import compression = require('compression');
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(helmet());
+  app.use(compression());
   app.useStaticAssets(join(process.cwd(), process.env.UPLOADS_DIR?.trim() || 'public'), {
     prefix: process.env.UPLOADS_PREFIX?.trim() || '/uploads',
   });

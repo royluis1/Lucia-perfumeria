@@ -21,7 +21,26 @@ export const publicProductSelect = {
 
 export type PublicProductRow = Prisma.ProductGetPayload<{ select: typeof publicProductSelect }>;
 
+export const publicProductListSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  brand: true,
+  price: true,
+  imageUrl: true,
+  images: {
+    select: { id: true, url: true, alt: true },
+    orderBy: { position: 'asc' as const },
+  },
+} satisfies Prisma.ProductSelect;
+
+export type PublicProductListRow = Prisma.ProductGetPayload<{ select: typeof publicProductListSelect }>;
+
 export function toPublicProduct(product: PublicProductRow): PublicProduct {
+  return { ...product, price: product.price.toString() };
+}
+
+export function toPublicProductList(product: PublicProductListRow): PublicProductSummary {
   return { ...product, price: product.price.toString() };
 }
 
@@ -48,8 +67,18 @@ export interface PublicProduct {
   images: PublicProductImage[];
 }
 
+export interface PublicProductSummary {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  price: string;
+  imageUrl: string | null;
+  images: Array<{ id: string; url: string; alt: string | null }>;
+}
+
 export interface PaginatedProducts {
-  data: PublicProduct[];
+  data: PublicProductSummary[];
   page: number;
   limit: number;
   total: number;
