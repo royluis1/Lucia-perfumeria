@@ -66,7 +66,7 @@ export function SiteFooter() {
           </Link>
         </div>
       </div>
-      <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/15 pt-5 sm:flex-row">
+      <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center gap-3 border-t border-white/15 pt-5 sm:flex-row sm:justify-end">
         <a
           aria-label="Creado por RoyTech, abrir portafolio"
           className="group inline-flex min-h-11 items-center gap-3 rounded-sm px-2 text-white/70 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
