@@ -13,3 +13,7 @@ export const LEGAL_LINKS = {
   privacidad: '/privacidad',
   preguntas: '/faq',
 };
+
+export const siteConfig = {
+  portfolioUrl: 'https://portafolio-web.royluis206.workers.dev',
+};
