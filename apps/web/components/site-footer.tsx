@@ -29,7 +29,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
           <Logo className="text-3xl" />
-          <p className="mt-4 max-w-sm text-xs leading-5 text-white/50">© 2026 Lucía Perfumería. Todos los derechos reservados.</p>
+          <p className="mt-4 max-w-sm text-xs leading-5 text-white/50">© {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.</p>
           <div className="mt-5 border-t border-white/15 pt-5 text-xs leading-5 text-white/50">
             {siteConfig.contact.legalName && <p>{siteConfig.contact.legalName}</p>}
             {siteConfig.contact.cuit && <p>CUIT {siteConfig.contact.cuit}</p>}

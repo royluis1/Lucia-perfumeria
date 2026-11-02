@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import { isVercelBlobUrl } from '../lib/api';
+import { ProductBottlePlaceholder } from './product-bottle-placeholder';
 
 export function SmartImage({
   src,
@@ -13,17 +15,8 @@ export function SmartImage({
   sizes?: string;
   priority?: boolean;
 }) {
-  if (src.startsWith('data:')) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        className={`absolute inset-0 h-full w-full ${className}`}
-        src={src}
-        alt={alt}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-      />
-    );
+  if (!isVercelBlobUrl(src)) {
+    return <ProductBottlePlaceholder className={`absolute inset-0 ${className}`} />;
   }
 
   return <Image className={className} src={src} alt={alt} fill sizes={sizes} priority={priority} />;

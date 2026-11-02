@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from './icons';
 import { SmartImage } from './smart-image';
+import { ProductBottlePlaceholder } from './product-bottle-placeholder';
 
 export type GalleryImage = {
   id: string;
@@ -27,9 +28,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
 
   if (!current) {
     return (
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden border border-line bg-sand p-10">
-        <div className="float h-72 w-40 bg-gradient-to-b from-white to-line shadow-2xl" />
-      </div>
+      <ProductBottlePlaceholder className="aspect-square w-full border border-line p-10" />
     );
   }
 

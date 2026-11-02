@@ -16,7 +16,6 @@ export const API_URL =
     ? process.env.API_PROXY_TARGET?.replace(/\/+$/, '') ?? publicApiUrl
     : publicApiUrl;
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.NEXT_PUBLIC_WEB_APP_URL ??
-  'https://lucia-perfumeria-royluis1.vercel.app';
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://lucia-perfumeria.vercel.app'
+).replace(/\/+$/, '');

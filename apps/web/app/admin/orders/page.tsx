@@ -5,6 +5,7 @@ import { listAdminOrders, updateAdminOrder } from '../../../lib/admin';
 import type { AdminOrder } from '../../../lib/admin';
 import { Logo } from '../../../components/logo';
 import { StatusBadge } from '../../../components/status-badge';
+import { formatPrice } from '../../../lib/utils';
 
 const orderStatuses = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 const paymentStatuses = ['PENDING', 'PAID', 'REJECTED', 'REFUNDED'];
@@ -84,7 +85,7 @@ export default function AdminOrdersPage() {
                   </select>
                 </label>
               </div>
-              <p className="text-lg font-semibold">${order.total}</p>
+              <p className="text-lg font-semibold">{formatPrice(Number(order.total))}</p>
             </div>
           </article>
         ))}

@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
 import { siteConfig } from '../../lib/brand';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Política de privacidad',
   description: 'Cómo protegemos tus datos personales en Lucía Perfumería (Ley 25.326).',
-  alternates: { canonical: '/privacidad' },
-};
+  path: '/privacidad',
+});
 
 export default function PrivacidadPage() {
   return (

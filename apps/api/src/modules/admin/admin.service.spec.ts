@@ -75,6 +75,14 @@ describe('AdminService destacados y hero', () => {
     expect(product.update).not.toHaveBeenCalled();
   });
 
+  it('no publica productos sin una foto de Vercel Blob', async () => {
+    product.findUnique.mockResolvedValue(baseProduct({ isActive: false }));
+    productImage.findMany.mockResolvedValue([{ url: '/uploads/products/perfume.webp' }]);
+
+    await expect(service.updateProduct('admin1', 'p1', { isActive: true })).rejects.toThrow(BadRequestException);
+    expect(product.update).not.toHaveBeenCalled();
+  });
+
   it('lanza NotFound si el producto no existe', async () => {
     product.findUnique.mockResolvedValue(null);
 
@@ -355,6 +363,7 @@ describe('AdminService marcas y categorias', () => {
       weightGrams: 100,
       gender: 'FEMENINO',
       categoryIds: ['c1'],
+      imageUrl: 'https://store.public.blob.vercel-storage.com/products/perfume.webp',
       ...overrides,
     };
   }
@@ -395,6 +404,13 @@ describe('AdminService marcas y categorias', () => {
       'p1',
       expect.objectContaining({ brandId: 'b1', categoryIds: ['c1'] }),
     );
+  });
+
+  it('createProduct exige una foto alojada en Vercel Blob', async () => {
+    await expect(
+      service.createProduct('admin1', createDto({ imageUrl: 'https://imagenes.example.com/foto.webp' }) as never),
+    ).rejects.toThrow(BadRequestException);
+    expect(product.create).not.toHaveBeenCalled();
   });
 
   it('createProduct crea la marca nueva con nombre normalizado (sin tildes ni espacios extra)', async () => {
@@ -487,20 +503,18 @@ describe('AdminService marcas y categorias', () => {
     expect(result).toMatchObject({ id: 'b1' });
   });
 
-  it('mergeBrands mueve los productos al destino, borra el origen y audita', async () => {
+  it('mergeBrands mueve los productos al destino, conserva el origen y audita', async () => {
     brand.findUnique
       .mockResolvedValueOnce({ id: 'b1', name: 'Ysl', slug: 'ysl' })
       .mockResolvedValueOnce({ id: 'b2', name: 'YSL', slug: 'ysl-2' });
     product.updateMany.mockResolvedValue({ count: 2 });
-    brand.delete.mockResolvedValue({ id: 'b1' });
-
     const result = await service.mergeBrands('admin1', 'b1', 'b2');
 
     expect(product.updateMany).toHaveBeenCalledWith({
       where: { brandId: 'b1' },
       data: { brandId: 'b2', brand: 'YSL' },
     });
-    expect(brand.delete).toHaveBeenCalledWith({ where: { id: 'b1' } });
+    expect(brand.delete).not.toHaveBeenCalled();
     expect(auditLog.record).toHaveBeenCalledWith(
       'admin1',
       'MERGE_BRAND',

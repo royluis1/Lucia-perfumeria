@@ -5,8 +5,8 @@ import { ProductCard } from '../../../components/product-card';
 import { Header } from '../../../components/header';
 import { SortSelect } from '../../../components/sort-select';
 import { getBrand } from '../../../lib/api';
-import type { Metadata } from 'next';
 import type { BrandDetail, ProductSort } from '../../../lib/api';
+import { createPageMetadata } from '../../../lib/metadata';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,15 +17,15 @@ type BrandPageProps = {
   searchParams: Promise<{ genero?: string; sort?: string; page?: string }>;
 };
 
-export async function generateMetadata({ params }: BrandPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: BrandPageProps) {
   const { slug } = await params;
   try {
     const brand = await getBrand(slug);
-    return {
+    return createPageMetadata({
       title: `${brand.name} — Perfumes`,
       description: `Descubrí todos los perfumes ${brand.name} disponibles en Lucía Perfumería.`,
-      alternates: { canonical: `/marcas/${brand.slug}` },
-    };
+      path: `/marcas/${brand.slug}`,
+    });
   } catch {
     return { title: 'Marca no encontrada' };
   }

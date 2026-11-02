@@ -1,16 +1,16 @@
 import Link from 'next/link';
 import { Header } from '../../components/header';
 import { getBrands } from '../../lib/api';
-import type { Metadata } from 'next';
 import type { BrandSummary } from '../../lib/api';
+import { createPageMetadata } from '../../lib/metadata';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Marcas',
-  description: 'Todas las marcas de perfumes disponibles en Lucía Perfumería, con su colección completa.',
-  alternates: { canonical: '/marcas' },
-};
+  description: 'Todas las marcas de perfumes disponibles en Lucía Perfumería.',
+  path: '/marcas',
+});
 
 export default async function MarcasPage() {
   let brands: BrandSummary[] | null = null;

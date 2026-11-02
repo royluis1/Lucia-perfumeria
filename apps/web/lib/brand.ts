@@ -1,8 +1,16 @@
+const address = {
+  street: 'Pedernera 499',
+  locality: 'Villa Mercedes',
+  region: 'San Luis',
+  postalCode: '5730',
+};
+
 export const siteConfig = {
+  name: 'Lucía Perfumería',
   portfolioUrl: 'https://portafolio-web.royluis206.workers.dev',
   contact: {
-    address: 'Pedernera 499, Villa Mercedes, San Luis',
-    postalCode: '5730',
+    ...address,
+    address: `${address.street}, ${address.locality}, ${address.region}`,
     mapsUrl: 'https://maps.google.com/?q=Pedernera+499,+Villa+Mercedes,+San+Luis,+5730',
     phone: '02657 43-4149',
     phoneHref: 'tel:+542657434149',
@@ -18,7 +26,7 @@ export const siteConfig = {
   benefits: [
     { id: 'payment', text: 'Pago con Mercado Pago' },
     { id: 'authenticity', text: 'Fragancias originales' },
-    { id: 'location', text: 'Local en Villa Mercedes, Pedernera 499' },
+    { id: 'location', text: `Local en ${address.locality}, ${address.street}` },
   ],
   heroDefaults: {
     title: 'Una esencia para cada versión de vos.',

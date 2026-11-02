@@ -21,6 +21,7 @@ export type Product = {
   brand: string;
   description: string;
   price: string;
+  inStock: boolean;
   isActive: boolean;
   weightGrams: number;
   category: string;
@@ -97,10 +98,23 @@ export type ProductList = {
 
 const apiUrl = API_URL;
 
+export function isVercelBlobUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      parsed.hostname.endsWith('.public.blob.vercel-storage.com') &&
+      parsed.pathname.length > 1
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function resolveImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (/^(https?:|data:|blob:)/i.test(url)) return url;
-  return `${apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  if (!url || !isVercelBlobUrl(url)) return null;
+  return url;
 }
 
 export async function getProducts(searchParams?: URLSearchParams): Promise<ProductList> {

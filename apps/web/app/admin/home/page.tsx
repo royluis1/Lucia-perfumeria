@@ -14,7 +14,9 @@ import type { AdminHero, AdminProduct } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
 import { Logo } from '../../../components/logo';
 import { SmartImage } from '../../../components/smart-image';
+import { ProductBottlePlaceholder } from '../../../components/product-bottle-placeholder';
 import { siteConfig } from '../../../lib/brand';
+import { formatPrice } from '../../../lib/utils';
 
 const heroTextDefaults = siteConfig.heroDefaults;
 
@@ -262,19 +264,21 @@ export default function AdminHomePage() {
             <div className="relative mt-2 flex aspect-[4/5] items-end justify-center overflow-hidden border border-line bg-sand p-8">
               {heroImagePreview ? (
                 <SmartImage alt="" className="object-cover" sizes="(min-width: 1024px) 480px, 100vw" src={heroImagePreview} />
-              ) : !selectedHeroProduct ? (
+              ) : selectedHeroProduct ? (
+                <ProductBottlePlaceholder className="mx-auto mt-6 h-48 w-32" />
+              ) : (
                 <div className="w-32 border border-black/20 bg-white/70 px-4 py-8 text-center shadow-xl">
                   <p className="font-display text-3xl font-black tracking-[0.12em]">L</p>
                   <p className="mt-2 text-[9px] uppercase tracking-[0.24em]">Lucía</p>
                 </div>
-              ) : null}
+              )}
               {selectedHeroProduct && (
                 <div className="relative z-10 w-full border border-line bg-white/95 px-4 py-3">
                   <p className="font-display text-xl font-black uppercase leading-none">{selectedHeroProduct.name}</p>
                   <div className="mt-2 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.14em] text-muted">
                     <span>{selectedHeroProduct.brand}</span>
                     <span className="font-bold text-ink">
-                      {Number(selectedHeroProduct.price).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}
+                      {formatPrice(Number(selectedHeroProduct.price))}
                     </span>
                   </div>
                 </div>

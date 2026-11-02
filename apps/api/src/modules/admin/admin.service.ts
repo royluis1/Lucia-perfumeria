@@ -15,7 +15,7 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { UpdateUserRoleDto } from './dto/update-user.dto';
 import { UpdateHomeHeroDto } from './dto/update-home-hero.dto';
 import { AuditLogService } from '../audit-log/audit-log.service';
-import { StorageService } from '../storage/storage.service';
+import { isVercelBlobUrl, StorageService } from '../storage/storage.service';
 
 const MAX_PRODUCT_IMAGES = 8;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -58,6 +58,9 @@ export class AdminService {
   }
 
   async createProduct(actorId: string, dto: CreateProductDto) {
+    if (!isVercelBlobUrl(dto.imageUrl)) {
+      throw new BadRequestException('Subí una foto al almacenamiento de la tienda antes de publicar el producto');
+    }
     const { brandId, categoryIds, category: legacyCategory, ...rest } = dto;
     const brand = await this.resolveBrand(brandId, dto.brand);
     if (!brand) throw new BadRequestException('Marca inválida');
@@ -101,6 +104,19 @@ export class AdminService {
   async updateProduct(actorId: string, id: string, dto: UpdateProductDto) {
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Product not found');
+    if (dto.imageUrl !== undefined && !isVercelBlobUrl(dto.imageUrl)) {
+      throw new BadRequestException('La foto debe estar guardada en el almacenamiento de la tienda');
+    }
+
+    if (dto.isActive === true && !existing.isActive) {
+      const images = await this.prisma.productImage.findMany({
+        where: { productId: id },
+        select: { url: true },
+      });
+      if (!isVercelBlobUrl(existing.imageUrl) && !images.some((image) => isVercelBlobUrl(image.url))) {
+        throw new BadRequestException('Subí al menos una foto al almacenamiento de la tienda antes de publicar');
+      }
+    }
 
     const { brandId, categoryIds, category: legacyCategory, ...rest } = dto;
     const data: Prisma.ProductUpdateInput = { ...rest };
@@ -197,6 +213,7 @@ export class AdminService {
 
   async listBrands() {
     const brands = await this.prisma.brand.findMany({
+      where: { products: { some: {} } },
       select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
       orderBy: { name: 'asc' },
     });
@@ -255,7 +272,6 @@ export class AdminService {
       where: { brandId: sourceId },
       data: { brandId: targetId, brand: target.name },
     });
-    await this.prisma.brand.delete({ where: { id: sourceId } });
     await this.auditLog.record(actorId, 'MERGE_BRAND', 'Brand', sourceId, {
       source: source.name,
       target: target.name,
@@ -727,5 +743,3 @@ export class AdminService {
     }
   }
 }
-
-

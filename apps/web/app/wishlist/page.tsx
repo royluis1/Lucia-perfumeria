@@ -8,6 +8,8 @@ import { SmartImage } from '../../components/smart-image';
 import { useWishlist } from '../../lib/wishlist';
 import { getAccessToken } from '../../lib/auth';
 import { resolveImageUrl } from '../../lib/api';
+import { formatPrice } from '../../lib/utils';
+import { ProductBottlePlaceholder } from '../../components/product-bottle-placeholder';
 
 export default function WishlistPage() {
   const { items, remove } = useWishlist();
@@ -57,14 +59,17 @@ export default function WishlistPage() {
             <div className="space-y-4">
               {items.map((item) => {
                 const priceValue = Number(item.product.price);
+                const imageUrl =
+                  (item.product.images ?? [])
+                    .map((image) => resolveImageUrl(image.url))
+                    .find((url): url is string => Boolean(url)) ??
+                  resolveImageUrl(item.product.imageUrl);
                 return (
                   <div key={item.product.id} className="flex gap-4 border-b border-line py-5">
                     <Link href={`/shop/${item.product.slug}`} className="relative h-24 w-20 flex-shrink-0 overflow-hidden border border-line bg-white">
-                      {item.product.imageUrl ? (
-                        <SmartImage alt={item.product.name} sizes="80px" src={resolveImageUrl(item.product.imageUrl) ?? item.product.imageUrl} />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-b from-white to-sand" />
-                      )}
+                      {imageUrl ? (
+                        <SmartImage alt={item.product.name} sizes="80px" src={imageUrl} />
+                      ) : <ProductBottlePlaceholder className="absolute inset-0" />}
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col justify-between">
                       <div>
@@ -83,7 +88,7 @@ export default function WishlistPage() {
                       </button>
                     </div>
                     <p className="self-center font-semibold">
-                      {priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}
+                      {formatPrice(priceValue)}
                     </p>
                   </div>
                 );

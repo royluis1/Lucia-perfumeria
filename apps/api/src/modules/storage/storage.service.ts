@@ -1,6 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { mkdirSync } from 'fs';
-import { unlink, writeFile } from 'fs/promises';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { unlink } from 'fs/promises';
 import { basename, extname, join, resolve } from 'path';
 import { randomUUID } from 'crypto';
 import { del, put } from '@vercel/blob';
@@ -8,13 +7,26 @@ import sharp from 'sharp';
 
 const MAX_IMAGE_DIMENSION = 1600;
 
+export function isVercelBlobUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === 'https:' &&
+      url.hostname.endsWith('.public.blob.vercel-storage.com') &&
+      url.pathname.length > 1
+    );
+  } catch {
+    return false;
+  }
+}
+
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
   private readonly token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
   private readonly uploadsRoot = resolve(process.cwd(), process.env.UPLOADS_DIR?.trim() || 'public');
   private readonly uploadsDir = join(this.uploadsRoot, 'products');
-  private readonly uploadsPrefix = process.env.UPLOADS_PREFIX?.trim() || '/uploads';
 
   get remoteEnabled(): boolean {
     return Boolean(this.token);
@@ -35,31 +47,29 @@ export class StorageService {
   }
 
   async uploadImage(buffer: Buffer, originalName: string, contentType?: string): Promise<string> {
+    if (!this.token) {
+      throw new ServiceUnavailableException('El almacenamiento de imágenes no está configurado.');
+    }
+
     const optimized = await this.optimize(buffer);
     const data = optimized?.data ?? buffer;
     const ext = optimized?.ext ?? extname(originalName).toLowerCase();
     const effectiveContentType = optimized?.contentType ?? contentType;
     const filename = `${randomUUID()}${ext}`;
 
-    if (this.token) {
-      const blob = await put(`products/${filename}`, data, {
-        access: 'public',
-        token: this.token,
-        contentType: effectiveContentType,
-        addRandomSuffix: false,
-      });
-      return blob.url;
-    }
-
-    mkdirSync(this.uploadsDir, { recursive: true });
-    await writeFile(join(this.uploadsDir, filename), data);
-    return `${this.uploadsPrefix}/products/${filename}`;
+    const blob = await put(`products/${filename}`, data, {
+      access: 'public',
+      token: this.token,
+      contentType: effectiveContentType,
+      addRandomSuffix: false,
+    });
+    return blob.url;
   }
 
   async deleteImage(url: string): Promise<void> {
     try {
       if (/^https?:\/\//i.test(url)) {
-        if (!this.token) return;
+        if (!this.token || !isVercelBlobUrl(url)) return;
         await del(url, { token: this.token });
         return;
       }

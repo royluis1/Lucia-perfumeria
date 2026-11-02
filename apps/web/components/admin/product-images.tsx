@@ -6,6 +6,7 @@ import type { AdminProductImage } from '../../lib/admin';
 import { resolveImageUrl } from '../../lib/api';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from '../icons';
 import { SmartImage } from '../smart-image';
+import { ProductBottlePlaceholder } from '../product-bottle-placeholder';
 
 export const MAX_PRODUCT_IMAGES = 8;
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -217,8 +218,9 @@ export function ProductImagesManager({
         </p>
       ) : (
         <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {images.map((image, index) => (
-            <li
+          {images.map((image, index) => {
+            const imageUrl = resolveImageUrl(image.url);
+            return <li
               draggable={!reordering}
               key={image.id}
               onDragEnd={() => setDragIndex(null)}
@@ -229,12 +231,21 @@ export function ProductImagesManager({
                 dragIndex === index ? 'border-black opacity-60' : 'border-line'
               }`}
             >
-              <SmartImage
-                alt={image.alt ?? ''}
-                className="object-cover"
-                sizes="(min-width: 640px) 20vw, 45vw"
-                src={resolveImageUrl(image.url) ?? image.url}
-              />
+              {imageUrl ? (
+                <SmartImage
+                  alt={image.alt ?? ''}
+                  className="object-cover"
+                  sizes="(min-width: 640px) 20vw, 45vw"
+                  src={imageUrl}
+                />
+              ) : (
+                <ProductBottlePlaceholder className="absolute inset-0" />
+              )}
+              {!imageUrl && (
+                <span className="absolute inset-x-0 top-9 bg-amber-50/95 px-2 py-1 text-center text-[10px] font-semibold text-amber-900">
+                  Volvé a subir esta foto
+                </span>
+              )}
               {index === 0 && (
                 <span className="absolute left-2 top-2 border border-black bg-black px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
                   Principal
@@ -279,8 +290,8 @@ export function ProductImagesManager({
                   Hacer principal
                 </button>
               )}
-            </li>
-          ))}
+            </li>;
+          })}
         </ul>
       )}
     </div>

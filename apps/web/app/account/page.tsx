@@ -7,6 +7,7 @@ import type { UserProfile } from '../../lib/auth';
 import { getMyOrders, updateProfile, changePassword } from '../../lib/account';
 import type { Order } from '../../lib/account';
 import { Logo } from '../../components/logo';
+import { formatPrice } from '../../lib/utils';
 
 export default function AccountPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -172,7 +173,7 @@ export default function AccountPage() {
             <article className="border border-line bg-white p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
-                <p className="text-sm font-semibold">${order.total}</p>
+                <p className="text-sm font-semibold">{formatPrice(Number(order.total))}</p>
               </div>
               <p className="mt-3 text-sm text-muted">{new Date(order.createdAt).toLocaleDateString('es-AR')} · {order.status} · Pago {order.paymentStatus}</p>
               <ul className="mt-4 space-y-1 text-sm">

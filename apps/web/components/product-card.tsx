@@ -4,6 +4,8 @@ import { WishlistButton } from './wishlist-button';
 import { SmartImage } from './smart-image';
 import { resolveImageUrl } from '../lib/api';
 import type { ProductSummary } from '../lib/api';
+import { formatPrice } from '../lib/utils';
+import { ProductBottlePlaceholder } from './product-bottle-placeholder';
 
 export function ProductCard({ product }: { product: ProductSummary }) {
   const priceValue = Number(product.price);
@@ -36,11 +38,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
                 </span>
               )}
             </>
-          ) : (
-            <span className="flex h-full w-full items-end justify-center p-10">
-              <span className="img block h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl transition" />
-            </span>
-          )}
+          ) : <ProductBottlePlaceholder className="h-full w-full" />}
         </Link>
         <div className="heart absolute right-4 top-4 z-10">
           <WishlistButton product={product} />
@@ -68,7 +66,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             <p className="mt-1 text-sm text-muted">{product.brand}</p>
           )}
         </div>
-        <p className="text-sm font-semibold">{priceValue.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })}</p>
+        <p className="text-sm font-semibold">{formatPrice(priceValue)}</p>
       </div>
     </article>
   );

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'Nosotros',
+export const metadata = createPageMetadata({
+  title: 'Nuestra historia',
   description: 'Conocé la historia de Lucía Perfumería y qué nos hace elegir cada fragancia.',
-  alternates: { canonical: '/nosotros' },
-};
+  path: '/nosotros',
+});
 
 export default function NosotrosPage() {
   return (

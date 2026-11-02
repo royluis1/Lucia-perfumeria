@@ -51,7 +51,7 @@ export class BrandsService {
     query: { gender?: string; sort?: string; page?: string; limit?: string },
   ): Promise<BrandDetail> {
     const brand = await this.prisma.brand.findUnique({
-      where: { slug },
+      where: { slug, products: { some: { isActive: true } } },
       select: { id: true, name: true, slug: true },
     });
     if (!brand) throw new NotFoundException('Brand not found');

@@ -4,11 +4,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/auth';
 import { useCart } from '../../lib/cart';
 import { Logo } from '../../components/logo';
+import { formatPrice } from '../../lib/utils';
 
 const SHIPPING_FORM_KEY = 'lucia_checkout_shipping';
 
 export default function CheckoutPage() {
-  const { clearCart } = useCart();
+  const { clearCart, items, subtotal } = useCart();
   const [form, setForm] = useState({
     recipient: '',
     street: '',
@@ -83,6 +84,21 @@ export default function CheckoutPage() {
       </div>
       <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Checkout</h1>
       <p className="mt-5 text-muted">Completá tus datos de envío. El precio final se valida en el servidor.</p>
+      <section aria-label="Resumen de la compra" className="mt-8 border border-line bg-white p-5">
+        <h2 className="text-xs font-extrabold uppercase tracking-[0.2em]">Resumen de la compra</h2>
+        <ul className="mt-4 space-y-3">
+          {items.map((item) => (
+            <li className="flex justify-between gap-4 text-sm" key={item.productId}>
+              <span>{item.quantity} × {item.name}</span>
+              <span className="shrink-0 font-semibold">{formatPrice(item.price * item.quantity)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex justify-between border-t border-line pt-4 text-sm font-semibold">
+          <span>Subtotal</span>
+          <span>{formatPrice(subtotal)}</span>
+        </div>
+      </section>
       <form className="mt-10 grid gap-5 md:grid-cols-2" onSubmit={submitOrder}>
         {([
           ['recipient', 'Nombre completo'],

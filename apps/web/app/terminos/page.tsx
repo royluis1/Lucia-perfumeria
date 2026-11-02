@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Términos y condiciones',
   description: 'Condiciones de uso y compra del sitio de Lucía Perfumería.',
-  alternates: { canonical: '/terminos' },
-};
+  path: '/terminos',
+});
 
 export default function TerminosPage() {
   return (

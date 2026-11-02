@@ -6,6 +6,7 @@ import { CartProvider } from '../lib/cart';
 import { WishlistProvider } from '../lib/wishlist';
 import { CartSidebar } from '../components/cart-sidebar';
 import { SITE_URL } from '../lib/config';
+import { siteConfig } from '../lib/brand';
 import './globals.css';
 
 const archivo = Archivo({
@@ -35,24 +36,26 @@ const cormorant = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Lucía Perfumería',
-    template: '%s · Lucía Perfumería',
+    default: siteConfig.name,
+    template: `%s · ${siteConfig.name}`,
   },
   description:
-    'Perfumes y cosmética seleccionados para vos. Fragancias para mujer, hombre y nicho con precios en pesos. Comprá online o retirá en nuestro local.',
+    'Perfumes y cosmética en Villa Mercedes, San Luis.',
   keywords: ['perfumes', 'perfumería', 'cosmética', 'fragancias', 'Argentina', 'eau de parfum'],
   openGraph: {
-    siteName: 'Lucía Perfumería',
+    siteName: siteConfig.name,
     locale: 'es_AR',
     type: 'website',
-    title: 'Lucía Perfumería',
-    description: 'Perfumes y cosmética seleccionados para vos.',
+    title: siteConfig.name,
+    description: 'Perfumes y cosmética en Villa Mercedes, San Luis.',
     url: SITE_URL,
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: siteConfig.name }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lucía Perfumería',
-    description: 'Perfumes y cosmética seleccionados para vos.',
+    title: siteConfig.name,
+    description: 'Perfumes y cosmética en Villa Mercedes, San Luis.',
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,

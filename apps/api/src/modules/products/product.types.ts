@@ -7,6 +7,7 @@ export const publicProductSelect = {
   brand: true,
   description: true,
   price: true,
+  stock: true,
   weightGrams: true,
   category: true,
   gender: true,
@@ -45,10 +46,11 @@ export const publicProductListSelect = {
 export type PublicProductListRow = Prisma.ProductGetPayload<{ select: typeof publicProductListSelect }>;
 
 export function toPublicProduct(row: PublicProductRow): PublicProduct {
-  const { brandRef, categories, ...product } = row;
+  const { brandRef, categories, stock, ...product } = row;
   return {
     ...product,
     price: product.price.toString(),
+    inStock: stock > 0,
     gender: product.gender ?? null,
     brandSlug: brandRef?.slug ?? null,
     categories: (categories ?? []).map((item) => item.category),
@@ -84,6 +86,7 @@ export interface PublicProduct {
   brand: string;
   description: string;
   price: string;
+  inStock: boolean;
   weightGrams: number;
   category: string;
   gender: ProductGender | null;

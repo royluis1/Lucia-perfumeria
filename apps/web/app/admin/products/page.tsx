@@ -6,7 +6,6 @@ import {
   listAdminProducts,
   createAdminProduct,
   updateAdminProduct,
-  deactivateAdminProduct,
   listAdminBrands,
   listAdminCategories,
   updateAdminBrand,
@@ -21,9 +20,11 @@ import type {
   AdminProductGender,
   AdminProductImage,
 } from '../../../lib/admin';
-import { resolveImageUrl } from '../../../lib/api';
+import { isVercelBlobUrl, resolveImageUrl } from '../../../lib/api';
 import { Logo } from '../../../components/logo';
 import { SmartImage } from '../../../components/smart-image';
+import { ProductBottlePlaceholder } from '../../../components/product-bottle-placeholder';
+import { formatPrice } from '../../../lib/utils';
 
 const ProductImagesManager = dynamic(
   () => import('../../../components/admin/product-images').then((mod) => mod.ProductImagesManager),
@@ -48,6 +49,30 @@ function normalize(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function getLegacyImageSources(product: AdminProduct) {
+  const imageUrls = [...new Set([product.imageUrl, ...product.images.map((image) => image.url)].filter(
+    (url): url is string => Boolean(url),
+  ))];
+
+  return imageUrls.flatMap((url) => {
+    if (isVercelBlobUrl(url)) return [];
+    try {
+      const parsed = new URL(url);
+      if (parsed.pathname.startsWith('/uploads/')) {
+        return [{ url, label: 'Archivo /uploads del servidor' }];
+      }
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return [{ url, label: 'Dominio externo' }];
+      }
+    } catch {
+      if (url.startsWith('/uploads/')) {
+        return [{ url, label: 'Archivo /uploads del servidor' }];
+      }
+    }
+    return [];
+  });
 }
 
 const emptyForm = {
@@ -149,6 +174,7 @@ export default function AdminProductsPage() {
   }
 
   const editingProduct = products.find((product) => product.id === editingId) ?? null;
+  const formImageUrl = resolveImageUrl(form.imageUrl);
 
   const brandSuggestions = brands
     .filter((brand) => !form.brand.trim() || normalize(brand.name).includes(normalize(form.brand)))
@@ -224,6 +250,10 @@ export default function AdminProductsPage() {
       setError('Elegí el género del producto.');
       return;
     }
+    if (!editingId && !isVercelBlobUrl(form.imageUrl)) {
+      setError('Subí una foto al almacenamiento de la tienda antes de publicar el producto.');
+      return;
+    }
     const categoryIds = [...new Set([form.categoryId1, form.categoryId2].filter(Boolean))];
     if (categoryIds.length === 0) {
       setError('Elegí al menos una categoría.');
@@ -269,18 +299,6 @@ export default function AdminProductsPage() {
     }
   }
 
-  async function handleDelete(product: AdminProduct) {
-    if (!window.confirm(`¿Desactivar "${product.name}"? No se elimina del historial de pedidos.`)) return;
-    try {
-      await deactivateAdminProduct(product.id);
-      await loadProducts();
-      await revalidateHome();
-      setMessage('Producto desactivado.');
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'No se pudo desactivar el producto');
-    }
-  }
-
   async function handleRenameBrand(brand: AdminBrand) {
     const name = (brandNames[brand.id] ?? brand.name).trim();
     if (!name || name === brand.name) return;
@@ -310,7 +328,7 @@ export default function AdminProductsPage() {
     const target = brands.find((item) => item.id === targetId);
     if (!window.confirm(
       `¿Fusionar "${brand.name}" dentro de "${target?.name ?? 'la marca elegida'}"? ` +
-      `Los productos pasan a la marca destino y "${brand.name}" se elimina.`,
+      `Los productos pasan a la marca destino y el registro de origen se conserva sin productos.`,
     )) {
       return;
     }
@@ -345,6 +363,34 @@ export default function AdminProductsPage() {
       <h1 className="mt-5 font-display text-6xl font-black uppercase tracking-[-0.02em]">Productos</h1>
       {message && <p className="mt-6 border border-line bg-white px-4 py-3 text-sm" role="status">{message}</p>}
       {error && <p className="mt-6 border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
+
+      {products.some((product) => getLegacyImageSources(product).length > 0) && (
+        <section className="mt-8 border border-amber-700/30 bg-amber-50 p-5" aria-labelledby="legacy-images-title">
+          <h2 className="font-display text-2xl font-black uppercase" id="legacy-images-title">Fotos para volver a subir</h2>
+          <p className="mt-2 text-sm text-muted">
+            Estas fotos no pertenecen a Vercel Blob; no se muestran en la tienda. Editá cada producto y subí sus archivos al almacenamiento.
+          </p>
+          <ul className="mt-4 max-h-80 space-y-3 overflow-y-auto">
+            {products.flatMap((product) =>
+              getLegacyImageSources(product).map(({ url, label }) => (
+                <li className="flex flex-wrap items-start justify-between gap-3 border-t border-amber-700/15 pt-3" key={`${product.id}-${url}`}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">{product.name} · {label}</p>
+                    <code className="block break-all text-xs text-muted">{url}</code>
+                  </div>
+                  <button
+                    className="min-h-11 border border-black px-4 text-[11px] font-extrabold uppercase tracking-[0.16em]"
+                    onClick={() => startEdit(product)}
+                    type="button"
+                  >
+                    Editar producto
+                  </button>
+                </li>
+              )),
+            )}
+          </ul>
+        </section>
+      )}
 
       <form className="mt-10 grid gap-6 border border-line bg-white p-6 md:grid-cols-3" onSubmit={handleSubmit}>
         <label className="label-xs block text-muted">Nombre<input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" required value={form.name} onChange={(event) => setField('name', event.target.value)} /></label>
@@ -440,16 +486,16 @@ export default function AdminProductsPage() {
           )
         ) : (
           <>
-            <label className="label-xs block text-muted">Imagen (URL)
-              <input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" value={form.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} placeholder="/uploads/products/xxx.png" />
+            <label className="label-xs block text-muted">Imagen (URL de Vercel Blob)
+              <input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" value={form.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} placeholder="https://...public.blob.vercel-storage.com/..." />
             </label>
             <label className="label-xs block text-muted">O subir archivo
               <input accept="image/*" className="mt-2 w-full cursor-pointer border-b border-black/30 bg-transparent py-2 text-sm normal-case tracking-normal text-muted transition-colors file:mr-3 file:border-0 file:bg-black file:px-3 file:py-2 file:text-[11px] file:font-extrabold file:uppercase file:tracking-[0.18em] file:text-white" disabled={uploading} type="file" onChange={(event) => void handleImageUpload(event.target.files?.[0])} />
             </label>
-            {form.imageUrl && (
+            {formImageUrl && (
               <div className="md:col-span-3">
                 <span className="relative block h-20 w-20 border border-line">
-                  <SmartImage alt="Vista previa" className="object-cover" sizes="80px" src={resolveImageUrl(form.imageUrl) ?? form.imageUrl} />
+                  <SmartImage alt="Vista previa" className="object-cover" sizes="80px" src={formImageUrl} />
                 </span>
               </div>
             )}
@@ -474,17 +520,19 @@ export default function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {products.map((product) => {
+              const imageUrl = resolveImageUrl(product.imageUrl);
+              return (
               <tr className="border-b border-line transition-colors last:border-b-0 hover:bg-black/[0.03]" key={product.id}>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    {product.imageUrl
+                    {imageUrl
                       ? (
                         <span className="relative block h-12 w-12 shrink-0 border border-line">
-                          <SmartImage alt={product.name} className="object-cover" sizes="48px" src={resolveImageUrl(product.imageUrl) ?? product.imageUrl} />
+                          <SmartImage alt={product.name} className="object-cover" sizes="48px" src={imageUrl} />
                         </span>
                       )
-                      : <div className="h-12 w-12 shrink-0 border border-line bg-gradient-to-b from-white to-sand" />}
+                      : <ProductBottlePlaceholder className="h-12 w-12 shrink-0 border border-line" />}
                     <div>
                       <span className="font-semibold">{product.name}</span>
                       <span className="block text-xs text-muted">{product.sku}</span>
@@ -504,7 +552,7 @@ export default function AdminProductsPage() {
                     <span className="badge-flat text-muted">Sin clasificar</span>
                   )}
                 </td>
-                <td className="p-4">${Number(product.price).toLocaleString('es-AR')}</td>
+                <td className="p-4">{formatPrice(Number(product.price))}</td>
                 <td className="p-4">{product.stock}</td>
                 <td className="p-4">
                   <span className={product.isActive ? 'badge-flat border-black bg-black text-white' : 'badge-flat text-muted'}>{product.isActive ? 'Activo' : 'Inactivo'}</span>
@@ -512,19 +560,19 @@ export default function AdminProductsPage() {
                 <td className="p-4 text-right">
                   <div className="inline-flex gap-2">
                     <button className="border border-black px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] transition-colors hover:bg-black hover:text-white" onClick={() => startEdit(product)} type="button">Editar</button>
-                    <button className="border border-black px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] transition-colors hover:bg-black hover:text-white" onClick={() => void handleToggle(product)} type="button">{product.isActive ? 'Desactivar' : 'Activar'}</button>
-                    <button className="border border-red-700/30 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-red-700 transition-colors hover:bg-red-50" onClick={() => void handleDelete(product)} type="button">Eliminar</button>
+                    <button className="border border-black px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] transition-colors hover:bg-black hover:text-white" onClick={() => void handleToggle(product)} type="button">{product.isActive ? 'Despublicar' : 'Publicar'}</button>
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       <section className="mt-14 border border-line bg-white p-6">
         <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Marcas</h2>
-        <p className="mt-2 text-sm text-muted">Renombrá una marca o fusioná duplicados. Los productos y la tienda se actualizan solos.</p>
+        <p className="mt-2 text-sm text-muted">Renombrá una marca o fusioná duplicados. La marca origen se conserva en los datos y queda oculta mientras no tenga productos.</p>
         <div className="mt-6 space-y-3">
           {brands.map((brand) => (
             <div className="flex flex-wrap items-center gap-3 border-b border-line pb-3 last:border-b-0 last:pb-0" key={brand.id}>

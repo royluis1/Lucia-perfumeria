@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../../lib/auth';
 import { Logo } from '../../../components/logo';
+import { formatPrice } from '../../../lib/utils';
 
 type Order = {
   id: string;
@@ -16,14 +17,6 @@ type Order = {
 };
 
 const NON_PAYABLE_PAYMENT_STATUSES = ['APPROVED', 'REFUNDED', 'CHARGED_BACK'];
-
-function formatArs(value: string) {
-  return Number(value).toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 2,
-  });
-}
 
 const PAYMENT_BANNERS: Record<string, string> = {
   success: '¡Pago exitoso! Estamos confirmando la acreditación con Mercado Pago; el estado del pedido se actualiza automáticamente.',
@@ -105,7 +98,7 @@ export default function OrdersPage() {
             <article className="border border-line bg-white p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
-                <p className="text-sm font-semibold">{formatArs(order.total)}</p>
+                <p className="text-sm font-semibold">{formatPrice(Number(order.total))}</p>
               </div>
               <p className="mt-3 text-sm text-muted">
                 {new Date(order.createdAt).toLocaleDateString('es-AR')} · {ORDER_STATUS_LABELS[order.status] ?? order.status} · Pago {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
@@ -114,7 +107,7 @@ export default function OrdersPage() {
                 {order.items.map((item, index) => <li key={`${order.id}-${index}`}>{item.quantity} × {item.product.name} ({item.product.brand})</li>)}
               </ul>
               <p className="mt-3 text-xs text-muted">
-                Productos {formatArs(order.subtotal)} + Envío {formatArs(order.shippingCost)} = {formatArs(order.total)} (pesos argentinos)
+                Productos {formatPrice(Number(order.subtotal))} + Envío {formatPrice(Number(order.shippingCost))} = {formatPrice(Number(order.total))} (pesos argentinos)
               </p>
               {canPay && (
                 <button

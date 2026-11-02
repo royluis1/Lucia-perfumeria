@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
 import { siteConfig } from '../../lib/brand';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Preguntas frecuentes',
   description: 'Respuestas a las dudas más comunes sobre compras, envíos, pagos y devoluciones en Lucía Perfumería.',
-  alternates: { canonical: '/faq' },
-};
+  path: '/faq',
+});
 
 export default function FaqPage() {
   return (

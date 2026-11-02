@@ -7,6 +7,9 @@ import type { GalleryImage } from '../../../components/product-gallery';
 import { getProduct, resolveImageUrl } from '../../../lib/api';
 import type { Product } from '../../../lib/api';
 import type { Metadata } from 'next';
+import { SITE_URL } from '../../../lib/config';
+import { createPageMetadata } from '../../../lib/metadata';
+import { formatPrice, serializeJsonLd } from '../../../lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,18 +31,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   try {
     const product = await getProduct(slug);
     const gallery = buildGallery(product);
-    return {
+    return createPageMetadata({
       title: product.name,
       description: product.description.slice(0, 155),
-      alternates: { canonical: `/shop/${product.slug}` },
-      openGraph: {
-        title: `${product.name} · Lucía Perfumería`,
-        description: product.description.slice(0, 155),
-        type: 'website',
-        url: `/shop/${product.slug}`,
-        ...(gallery.length > 0 ? { images: gallery.map((image) => image.url) } : {}),
-      },
-    };
+      path: `/shop/${product.slug}`,
+      ...(gallery.length > 0 ? { images: [gallery[0].url] } : {}),
+    });
   } catch {
     return {};
   }
@@ -55,11 +52,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const priceValue = Number(product.price);
-  const price = priceValue.toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0,
-  });
+  const price = formatPrice(priceValue);
   const gallery = buildGallery(product);
 
   const jsonLd = {
@@ -69,14 +62,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     brand: { '@type': 'Brand', name: product.brand },
     description: product.description,
     ...(gallery.length > 0 ? { image: gallery.map((image) => image.url) } : {}),
-    sku: product.slug,
     category: product.category,
     offers: {
       '@type': 'Offer',
-      url: `/shop/${product.slug}`,
+      url: new URL(`/shop/${product.slug}`, SITE_URL).toString(),
       priceCurrency: 'ARS',
       price: product.price,
-      availability: 'https://schema.org/InStock',
+      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     },
   };
 
@@ -84,7 +76,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <main>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <Header />
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
@@ -101,7 +93,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <p className="mt-6 text-2xl font-semibold">{price}</p>
           <p className="mt-8 max-w-lg leading-7 text-muted">{product.description}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-            <span>Disponible para compra</span>
+            <span>{product.inStock ? 'Disponible para compra' : 'Agotado'}</span>
             {product.categories.map((category) => (
               <Link
                 key={category.slug}
@@ -112,12 +104,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </Link>
             ))}
           </div>
-          <AddToCartButton
-            productId={product.id}
-            productName={product.name}
-            productBrand={product.brand}
-            productPrice={priceValue}
-          />
+          {product.inStock && (
+            <AddToCartButton
+              productId={product.id}
+              productName={product.name}
+              productBrand={product.brand}
+              productPrice={priceValue}
+            />
+          )}
         </div>
       </section>
     </main>

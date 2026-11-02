@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Header } from '../../components/header';
 import { useCart } from '../../lib/cart';
 import { formatPrice } from '../../lib/utils';
+import { ProductBottlePlaceholder } from '../../components/product-bottle-placeholder';
 
 export default function CartPage() {
   const { items, subtotal, removeItem, updateQuantity, clearCart } = useCart();
@@ -30,7 +31,7 @@ export default function CartPage() {
               {items.map((item) => (
                 <div key={item.productId} className="flex gap-4 border-b border-line py-5">
                   <div className="relative h-20 w-16 flex-shrink-0 bg-white border border-line">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white to-sand" />
+                    <ProductBottlePlaceholder className="absolute inset-0" />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>

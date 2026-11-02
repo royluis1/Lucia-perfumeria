@@ -4,21 +4,14 @@ import { SmartImage } from '../components/smart-image';
 import { TrustMarquee } from '../components/trust-marquee';
 import { BenefitsRow } from '../components/benefits-row';
 import { HeroSeal } from '../components/hero-seal';
+import { ProductBottlePlaceholder } from '../components/product-bottle-placeholder';
 import { getHome, resolveImageUrl } from '../lib/api';
 import type { HomeData } from '../lib/api';
 import { siteConfig } from '../lib/brand';
+import { formatPrice, serializeJsonLd } from '../lib/utils';
+import { SITE_URL } from '../lib/config';
 
 const heroDefaults = siteConfig.heroDefaults;
-
-const featuredFallback = [
-  { name: 'Eau de Parfum No. 01', brand: 'Floral amaderado', price: '$ 89.900' },
-  { name: 'Eau de Parfum No. 02', brand: 'Ámbar especiado', price: '$ 94.500' },
-  { name: 'Eau de Parfum No. 03', brand: 'Cítrico fresco', price: '$ 76.200' },
-];
-
-function formatPrice(value: string | number): string {
-  return Number(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-}
 
 async function loadHome(): Promise<HomeData | null> {
   try {
@@ -38,14 +31,34 @@ export default async function HomePage() {
   const heroButtonHref = heroProduct ? `/shop/${heroProduct.slug}` : '/shop';
   const featured = home?.featured ?? [];
   const titleWords = heroTitle.split(/\s+/);
+  const localBusinessJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: siteConfig.name,
+    url: SITE_URL,
+    image: new URL('/opengraph-image', SITE_URL).toString(),
+    telephone: siteConfig.contact.phoneHref.replace(/^tel:/, ''),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: siteConfig.contact.street,
+      addressLocality: siteConfig.contact.locality,
+      addressRegion: siteConfig.contact.region,
+      postalCode: siteConfig.contact.postalCode,
+      addressCountry: 'AR',
+    },
+    sameAs: [siteConfig.contact.instagramUrl, siteConfig.contact.facebookUrl],
+  };
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(localBusinessJsonLd) }}
+      />
       <Header />
 
       <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-12 md:grid-cols-[1.05fr_0.95fr] md:pt-16">
         <div>
-          <p className="rv d1 text-xs font-semibold uppercase tracking-[0.3em] text-muted">Nueva colección / 2026</p>
           <h1 className="mt-6 max-w-3xl font-display text-5xl font-black uppercase leading-[0.92] tracking-[-0.02em] md:text-7xl">
             {titleWords.map((word, index) => (
               <span className="lt mr-[0.28em] inline-block" key={`${word}-${index}`}>
@@ -78,7 +91,7 @@ export default async function HomePage() {
                 <span aria-hidden="true" className="sh absolute bottom-12 left-1/2 h-4 w-44 -translate-x-1/2 rounded-full bg-black/50 blur-md" />
               </>
             ) : heroProduct ? (
-              <div className="float relative z-10 mb-12 h-64 w-36 bg-gradient-to-b from-white to-black/10 shadow-xl" />
+              <ProductBottlePlaceholder className="float relative z-10 mb-12 h-64 w-36 shadow-xl" />
             ) : (
               <div className="float relative z-10 mb-12 w-44 border border-black/10 bg-white/70 px-6 py-12 text-center shadow-xl">
                 <p className="font-display text-4xl font-black tracking-[0.12em]">L</p>
@@ -97,7 +110,7 @@ export default async function HomePage() {
                 <p className="font-display text-2xl font-black uppercase leading-none tracking-[-0.02em]">{heroProduct.name}</p>
                 <div className="mt-3 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.18em] text-muted">
                   <span>{heroProduct.brand}</span>
-                  <span className="font-extrabold text-ink">{formatPrice(heroProduct.price)}</span>
+                  <span className="font-extrabold text-ink">{formatPrice(Number(heroProduct.price))}</span>
                 </div>
               </a>
             )}
@@ -107,39 +120,24 @@ export default async function HomePage() {
 
       <TrustMarquee />
 
-      <section className="mx-auto max-w-7xl px-6 py-20" id="favoritos">
-        <div className="flex items-end justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Selección Lucía</p>
-            <h2 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em]">Favoritos</h2>
+      {featured.length > 0 && (
+        <section className="mx-auto max-w-7xl px-6 py-20" id="favoritos">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Selección Lucía</p>
+              <h2 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em]">Favoritos</h2>
+            </div>
+            <a className="ul hidden text-xs font-extrabold uppercase tracking-[0.22em] md:block" href="/shop">Ver todo</a>
           </div>
-          <a className="ul hidden text-xs font-extrabold uppercase tracking-[0.22em] md:block" href="/shop">Ver todo</a>
-        </div>
-        <div className="mt-12 grid gap-x-5 gap-y-12 md:grid-cols-3">
-          {featured.length > 0
-            ? featured.map((product, index) => (
+          <div className="mt-12 grid gap-x-5 gap-y-12 md:grid-cols-3">
+            {featured.map((product, index) => (
                 <div className={`rv d${Math.min(index + 1, 3)}`} key={product.id}>
                   <ProductCard product={product} />
                 </div>
-              ))
-            : featuredFallback.map((product, index) => (
-                <article className={`card rv d${Math.min(index + 1, 3)}`} key={product.name}>
-                  <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                    <span className="flex h-full w-full items-end justify-center p-10">
-                      <span className="img block h-52 w-28 bg-gradient-to-b from-white to-black/10 shadow-xl transition" />
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4 pt-5">
-                    <div>
-                      <h3 className="text-sm font-semibold">{product.name}</h3>
-                      <p className="mt-1 text-sm text-muted">{product.brand}</p>
-                    </div>
-                    <p className="text-sm font-semibold">{product.price}</p>
-                  </div>
-                </article>
-              ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       <BenefitsRow />
     </main>

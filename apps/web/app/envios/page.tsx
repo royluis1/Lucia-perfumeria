@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Envíos y medios de pago',
   description: 'Consultas sobre envíos y medios de pago en Lucía Perfumería.',
-  alternates: { canonical: '/envios' },
-};
+  path: '/envios',
+});
 
 export default function EnviosPage() {
   return (

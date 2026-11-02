@@ -3,16 +3,16 @@ import { ProductCard } from '../../components/product-card';
 import { Header } from '../../components/header';
 import { SortSelect } from '../../components/sort-select';
 import { getCategories, getProducts } from '../../lib/api';
-import type { Metadata } from 'next';
 import type { ProductList, ProductSort } from '../../lib/api';
+import { createPageMetadata } from '../../lib/metadata';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Colección completa',
-  description: 'Explorá la colección completa de fragancias de Lucía Perfumería: mujer, hombre y nicho.',
-  alternates: { canonical: '/shop' },
-};
+  description: 'Explorá la colección completa de fragancias de Lucía Perfumería.',
+  path: '/shop',
+});
 
 const sortOptions: ProductSort[] = ['recent', 'name', 'price_asc', 'price_desc'];
 

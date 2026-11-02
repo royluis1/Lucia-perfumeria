@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
 import { LEGAL_LINKS, siteConfig } from '../../lib/brand';
+import { createPageMetadata } from '../../lib/metadata';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: 'Contacto',
   description: 'Escribinos para resolver dudas, consultar por un pedido o iniciar un arrepentimiento.',
-  alternates: { canonical: '/contacto' },
-};
+  path: '/contacto',
+});
 
 export default function ContactoPage() {
   return (
