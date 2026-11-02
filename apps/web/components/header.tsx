@@ -8,7 +8,8 @@ import { AUTH_CHANGE_EVENT } from '../lib/auth';
 import { getCategories } from '../lib/api';
 import type { CategorySummary } from '../lib/api';
 import { Logo } from './logo';
-import { CartIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from './icons';
+import { CatalogSearch } from './catalog-search';
+import { CartIcon, CloseIcon, HeartIcon, MenuIcon, UserIcon } from './icons';
 
 const navLinks = [
   { label: 'Colección completa', href: '/shop' },
@@ -93,13 +94,7 @@ export function Header() {
             <span className="hidden sm:inline">{loggedIn ? 'Mi cuenta' : 'Ingresar'}</span>
           </Link>
 
-          <Link
-            className="hidden h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black md:inline-flex"
-            href="/shop"
-            aria-label="Buscar en el catálogo"
-          >
-            <SearchIcon className="h-5 w-5" />
-          </Link>
+          <CatalogSearch />
 
           <Link
             className="relative flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"

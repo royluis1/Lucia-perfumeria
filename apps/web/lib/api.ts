@@ -45,7 +45,7 @@ export type ProductSummary = {
   gender: ProductGender | null;
   brandSlug: string | null;
   imageUrl: string | null;
-  images?: ProductImage[];
+  images?: Array<Pick<ProductImage, 'id' | 'url' | 'alt'>>;
 };
 
 export type CategorySummary = {
@@ -86,6 +86,30 @@ export type HomeData = {
   hero: HomeHero;
   featured: Product[];
   categories: string[];
+  genderCategories: Array<{
+    gender: ProductGender;
+    label: string;
+    value: string;
+    productCount: number;
+  }>;
+  newest: ProductSummary[];
+  brands: BrandSummary[];
+};
+
+export type ProductReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  isVerifiedPurchase: boolean;
+  createdAt: string;
+  user: { name: string };
+};
+
+export type ProductReviews = {
+  data: ProductReview[];
+  total: number;
+  averageRating: number;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
 };
 
 export type ProductList = {
@@ -117,10 +141,11 @@ export function resolveImageUrl(url: string | null | undefined): string | null {
   return url;
 }
 
-export async function getProducts(searchParams?: URLSearchParams): Promise<ProductList> {
+export async function getProducts(searchParams?: URLSearchParams, signal?: AbortSignal): Promise<ProductList> {
   const query = searchParams?.toString();
   const response = await fetch(`${apiUrl}/products${query ? `?${query}` : ''}`, {
     headers: { Accept: 'application/json' },
+    signal,
   });
 
   if (!response.ok) {
@@ -138,8 +163,19 @@ export async function getProduct(slug: string): Promise<Product> {
   if (!response.ok) {
     throw new Error('Producto no encontrado');
   }
-
   return response.json() as Promise<Product>;
+}
+
+export async function getProductReviews(productId: string): Promise<ProductReviews> {
+  const response = await fetch(`${apiUrl}/products/${encodeURIComponent(productId)}/reviews`, {
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudieron cargar las reseñas');
+  }
+
+  return response.json() as Promise<ProductReviews>;
 }
 
 export async function getCategories(): Promise<CategorySummary[]> {

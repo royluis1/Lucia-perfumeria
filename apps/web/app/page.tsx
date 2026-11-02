@@ -5,6 +5,7 @@ import { TrustMarquee } from '../components/trust-marquee';
 import { BenefitsRow } from '../components/benefits-row';
 import { HeroSeal } from '../components/hero-seal';
 import { ProductBottlePlaceholder } from '../components/product-bottle-placeholder';
+import { WhatsAppButton } from '../components/whatsapp-button';
 import { getHome, resolveImageUrl } from '../lib/api';
 import type { HomeData } from '../lib/api';
 import { siteConfig } from '../lib/brand';
@@ -30,6 +31,9 @@ export default async function HomePage() {
   const heroButtonLabel = home?.hero.buttonLabel?.trim() || heroDefaults.buttonLabel;
   const heroButtonHref = heroProduct ? `/shop/${heroProduct.slug}` : '/shop';
   const featured = home?.featured ?? [];
+  const genderCategories = home?.genderCategories ?? [];
+  const newest = home?.newest ?? [];
+  const brands = home?.brands ?? [];
   const titleWords = heroTitle.split(/\s+/);
   const localBusinessJsonLd = {
     '@context': 'https://schema.org',
@@ -139,7 +143,69 @@ export default async function HomePage() {
         </section>
       )}
 
+      {genderCategories.length > 0 && (
+        <section aria-labelledby="gender-collections-title" className="mx-auto max-w-7xl px-6 pb-20">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Encontrá tu fragancia</p>
+          <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-[-0.02em]" id="gender-collections-title">
+            Colecciones por género
+          </h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {genderCategories.map((collection) => (
+              <a
+                className="group flex min-h-40 flex-col justify-between border border-line bg-white p-6 transition-colors hover:border-ink hover:bg-sand"
+                href={`/shop?genero=${collection.value}`}
+                key={collection.value}
+              >
+                <span aria-hidden="true" className="text-3xl text-muted transition-transform group-hover:translate-x-1">↗</span>
+                <span className="font-display text-2xl font-bold uppercase">{collection.label}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {newest.length > 0 && (
+        <section aria-labelledby="new-arrivals-title" className="mx-auto max-w-7xl px-6 pb-20">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Lo último</p>
+              <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-[-0.02em]" id="new-arrivals-title">
+                Nuevos ingresos
+              </h2>
+            </div>
+            <a className="ul hidden text-xs font-extrabold uppercase tracking-[0.18em] sm:block" href="/shop?sort=recent">
+              Ver colección
+            </a>
+          </div>
+          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {newest.map((product) => <ProductCard key={product.id} product={product} />)}
+          </div>
+        </section>
+      )}
+
+      {brands.length > 0 && (
+        <section aria-labelledby="home-brands-title" className="mx-auto max-w-7xl px-6 pb-20">
+          <div className="border-y border-line py-8">
+            <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted" id="home-brands-title">
+              Explorá por marca
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {brands.map((brand) => (
+                <a
+                  className="min-h-11 border border-line bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-ink hover:bg-sand"
+                  href={`/marcas/${brand.slug}`}
+                  key={brand.id}
+                >
+                  {brand.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <BenefitsRow />
+      <WhatsAppButton />
     </main>
   );
 }
