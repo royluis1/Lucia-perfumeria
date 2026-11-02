@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
-import { COMPANY } from '../../lib/brand';
+import { siteConfig } from '../../lib/brand';
 
 export const metadata: Metadata = {
   title: 'Política de privacidad',
@@ -31,7 +31,7 @@ export default function PrivacidadPage() {
           title: 'Tus derechos',
           content: [
             'Podés solicitar acceso, rectificación o supresión de tus datos personales, o revocar tu consentimiento, escribiéndonos a {0}.',
-          ].map((line) => line.replace('{0}', COMPANY.email)),
+          ].map((line) => line.replace('{0}', siteConfig.contact.email)),
         },
       ]}
     />

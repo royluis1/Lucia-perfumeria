@@ -1,17 +1,14 @@
 import Link from 'next/link';
-import { COMPANY, LEGAL_LINKS } from '../lib/brand';
+import { LEGAL_LINKS, siteConfig } from '../lib/brand';
 import { Logo } from './logo';
 import { RoyTechAttribution } from './roytech-attribution';
-import { FacebookIcon, InstagramIcon, MessageCircleIcon, YoutubeIcon } from './icons';
+import { FacebookIcon, InstagramIcon } from './icons';
 
 const links = {
   about: [
     { label: 'Colección completa', href: '/shop' },
     { label: 'Marcas', href: '/marcas' },
-    { label: 'Nosotros', href: '/nosotros' },
-    { label: 'Catálogo mayorista', href: '/contacto' },
-    { label: 'Trabajá con nosotros', href: '/contacto' },
-    { label: 'Eventos', href: '/contacto' },
+    { label: 'Nuestra historia', href: '/nosotros' },
   ],
   help: [
     { label: 'Envíos y medios de pago', href: '/envios' },
@@ -22,10 +19,8 @@ const links = {
 };
 
 const social = [
-  { label: 'Instagram', href: '#', Icon: InstagramIcon },
-  { label: 'WhatsApp', href: '#', Icon: MessageCircleIcon },
-  { label: 'Facebook', href: '#', Icon: FacebookIcon },
-  { label: 'YouTube', href: '#', Icon: YoutubeIcon },
+  { label: 'Instagram', href: siteConfig.contact.instagramUrl, Icon: InstagramIcon },
+  { label: 'Facebook', href: siteConfig.contact.facebookUrl, Icon: FacebookIcon },
 ];
 
 export function SiteFooter() {
@@ -36,10 +31,12 @@ export function SiteFooter() {
           <Logo className="text-3xl" />
           <p className="mt-4 max-w-sm text-xs leading-5 text-white/50">© 2026 Lucía Perfumería. Todos los derechos reservados.</p>
           <div className="mt-5 border-t border-white/15 pt-5 text-xs leading-5 text-white/50">
-            <p>{COMPANY.legalName}</p>
-            <p>CUIT {COMPANY.cuit}</p>
-            <p>{COMPANY.address}</p>
-            <p>{COMPANY.email}</p>
+            {siteConfig.contact.legalName && <p>{siteConfig.contact.legalName}</p>}
+            {siteConfig.contact.cuit && <p>CUIT {siteConfig.contact.cuit}</p>}
+            {siteConfig.contact.businessHours && <p>{siteConfig.contact.businessHours}</p>}
+            <p><a className="hover:text-white" href={siteConfig.contact.mapsUrl}>{siteConfig.contact.address}, CP {siteConfig.contact.postalCode}</a></p>
+            <p><a className="hover:text-white" href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a></p>
+            <p><a className="hover:text-white" href={`mailto:${siteConfig.contact.email}`}>{siteConfig.contact.email}</a></p>
           </div>
         </div>
         <FooterColumn links={links.about} title="Acerca de nosotros" />

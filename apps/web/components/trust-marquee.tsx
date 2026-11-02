@@ -1,13 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
-const items = [
-  'Envíos a todo el país',
-  'Pago con Mercado Pago',
-  'Fragancias originales',
-  'Cambios sin complicaciones',
-];
+import { siteConfig } from '../lib/brand';
 
 export function TrustMarquee() {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -33,9 +27,9 @@ export function TrustMarquee() {
       <div className={`mq flex w-max items-center whitespace-nowrap ${inView ? '' : 'mq-paused'}`}>
         {[0, 1].map((copy) => (
           <div aria-hidden={copy === 1} className="flex items-center" key={copy}>
-            {items.map((item) => (
-              <span className="flex items-center" key={`${copy}-${item}`}>
-                <span className="px-8 text-xs font-semibold uppercase tracking-[0.3em]">{item}</span>
+            {siteConfig.benefits.map(({ id, text }) => (
+              <span className="flex items-center" key={`${copy}-${id}`}>
+                <span className="px-8 text-xs font-semibold uppercase tracking-[0.3em]">{text}</span>
                 <span aria-hidden="true" className="h-1.5 w-1.5 rotate-45 bg-sand/70" />
               </span>
             ))}

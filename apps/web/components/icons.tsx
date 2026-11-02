@@ -133,6 +133,24 @@ export function ShieldIcon({ className = 'h-5 w-5' }: IconProps) {
   );
 }
 
+export function MapPinIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
+export function SparklesIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg {...svgProps(className)}>
+      <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z" />
+      <path d="m19 14 1.1 2.9L23 18l-2.9 1.1L19 22l-1.1-2.9L15 18l2.9-1.1L19 14Z" />
+    </svg>
+  );
+}
+
 export function RefreshIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg {...svgProps(className)}>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { InfoPage } from '../../components/info-page';
-import { COMPANY, LEGAL_LINKS } from '../../lib/brand';
+import { LEGAL_LINKS, siteConfig } from '../../lib/brand';
 
 export const metadata: Metadata = {
   title: 'Contacto',
@@ -13,15 +13,16 @@ export default function ContactoPage() {
     <InfoPage
       eyebrow="Ayuda"
       title="Contacto"
-      intro="Estamos para ayudarte. Elegí el canal que te quede más cómodo."
+      intro="Consultanos por Instagram o por teléfono."
       sections={[
         {
           title: 'Canales',
           content: [
-            `Correo: ${COMPANY.email}`,
-            `Teléfono / WhatsApp: ${COMPANY.phone}`,
-            `Local: ${COMPANY.address}`,
-            'Horario de atención: lunes a viernes de 9 a 18 h.',
+            <>Instagram: <a className="underline underline-offset-4" href={siteConfig.contact.instagramUrl} rel="noreferrer" target="_blank">@luciaperfumesvm</a></>,
+            <>Facebook: <a className="underline underline-offset-4" href={siteConfig.contact.facebookUrl} rel="noreferrer" target="_blank">Lucía Perfumería Villa Mercedes</a></>,
+            <>Teléfono: <a className="underline underline-offset-4" href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a></>,
+            <>Correo: <a className="underline underline-offset-4" href={`mailto:${siteConfig.contact.email}`}>{siteConfig.contact.email}</a></>,
+            <>Local: <a className="underline underline-offset-4" href={siteConfig.contact.mapsUrl} rel="noreferrer" target="_blank">{siteConfig.contact.address}, CP {siteConfig.contact.postalCode}</a></>,
           ],
         },
       ]}
@@ -29,7 +30,7 @@ export default function ContactoPage() {
       <div className="mt-10 border border-line bg-gold-soft px-6 py-8">
         <h2 className="font-display text-2xl font-black uppercase tracking-[-0.02em]">¿Querés revocar una compra?</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          No hace falta que contactes a un operador: usá el botón oficial y te respondemos por mail.
+          Para iniciar una solicitud de arrepentimiento, usá el botón disponible en el sitio.
         </p>
         <a className="mt-5 inline-block border border-black bg-black px-5 py-3 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href={LEGAL_LINKS.arrepentimiento}>
           Botón de arrepentimiento

@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react';
 import { Header } from './header';
 
 type InfoSection = {
   title: string;
-  content: string[];
+  content: ReactNode[];
 };
 
 export function InfoPage({
@@ -16,7 +17,7 @@ export function InfoPage({
   title: string;
   intro?: string;
   sections?: InfoSection[];
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <main>
@@ -28,9 +29,9 @@ export function InfoPage({
         {sections?.map((section) => (
           <section className="mt-12 border-t border-line pt-10" key={section.title}>
             <h2 className="font-display text-2xl font-black uppercase tracking-[-0.02em]">{section.title}</h2>
-            <div className="mt-4 space-y-3">
-              {section.content.map((paragraph) => (
-                <p className="text-sm leading-7 text-muted" key={paragraph.slice(0, 40)}>{paragraph}</p>
+            <div className="mt-4 space-y-3 text-sm leading-7 text-muted">
+              {section.content.map((paragraph, index) => (
+                <p key={`${section.title}-${index}`}>{paragraph}</p>
               ))}
             </div>
           </section>

@@ -6,12 +6,9 @@ import { BenefitsRow } from '../components/benefits-row';
 import { HeroSeal } from '../components/hero-seal';
 import { getHome, resolveImageUrl } from '../lib/api';
 import type { HomeData } from '../lib/api';
+import { siteConfig } from '../lib/brand';
 
-const heroDefaults = {
-  title: 'Una esencia para cada versión de vos.',
-  subtitle: 'Fragancias y cosmética seleccionadas para acompañar tus rituales cotidianos.',
-  buttonLabel: 'Explorar colección',
-};
+const heroDefaults = siteConfig.heroDefaults;
 
 const featuredFallback = [
   { name: 'Eau de Parfum No. 01', brand: 'Floral amaderado', price: '$ 89.900' },

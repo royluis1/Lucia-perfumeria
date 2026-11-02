@@ -5,14 +5,21 @@ import Link from 'next/link';
 import { useCart } from '../lib/cart';
 import { useWishlist } from '../lib/wishlist';
 import { AUTH_CHANGE_EVENT } from '../lib/auth';
+import { getCategories } from '../lib/api';
+import type { CategorySummary } from '../lib/api';
 import { Logo } from './logo';
 import { CartIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from './icons';
 
 const navLinks = [
   { label: 'Colección completa', href: '/shop' },
-  { label: 'Categorías', href: '/shop' },
   { label: 'Marcas', href: '/marcas' },
   { label: 'Nuestra historia', href: '/nosotros' },
+];
+
+const genderLinks = [
+  { label: 'Femeninos', value: 'femenino' },
+  { label: 'Masculinos', value: 'masculino' },
+  { label: 'Unisex', value: 'unisex' },
 ];
 
 export function Header() {
@@ -21,8 +28,9 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartBump, setCartBump] = useState(false);
   const previousItemCount = useRef(0);
-  const { itemCount, openCart } = useCart();
+  const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -36,6 +44,18 @@ export function Header() {
     syncLoggedIn();
     window.addEventListener(AUTH_CHANGE_EVENT, syncLoggedIn);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, syncLoggedIn);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void getCategories().then((result) => {
+      if (active) setCategories(result);
+    }).catch((error: unknown) => {
+      console.error('No se pudieron cargar las categorías del menú.', error);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -60,6 +80,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          <CategoryMenu categories={categories} />
         </nav>
 
         <div className="flex items-center gap-0.5 sm:gap-1">
@@ -93,11 +114,10 @@ export function Header() {
             )}
           </Link>
 
-          <button
+          <Link
             className="relative flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
-            aria-label={`Abrir carrito (${itemCount} items)`}
-            onClick={openCart}
-            type="button"
+            aria-label={`Ir al carrito (${itemCount} productos)`}
+            href="/cart"
           >
             <CartIcon className="h-5 w-5" />
             {itemCount > 0 && (
@@ -105,7 +125,7 @@ export function Header() {
                 {itemCount > 9 ? '9+' : itemCount}
               </span>
             )}
-          </button>
+          </Link>
 
           <button
             className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black lg:hidden"
@@ -135,6 +155,37 @@ export function Header() {
               </li>
             ))}
             <li>
+              <details className="group">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center text-xs font-semibold uppercase tracking-[0.22em] [&::-webkit-details-marker]:hidden">
+                  Categorías
+                </summary>
+                <ul className="border-l border-line pl-4">
+                  {genderLinks.map((gender) => (
+                    <li key={gender.value}>
+                      <Link
+                        className="flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-muted"
+                        href={`/shop?genero=${gender.value}`}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {gender.label}
+                      </Link>
+                    </li>
+                  ))}
+                  {categories.map((category) => (
+                    <li key={category.id}>
+                      <Link
+                        className="flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-muted"
+                        href={`/shop?categoria=${encodeURIComponent(category.slug)}`}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+            <li>
               <Link
                 className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
                 href="/shop"
@@ -147,5 +198,47 @@ export function Header() {
         </nav>
       )}
     </header>
+  );
+}
+
+function CategoryMenu({ categories }: { categories: CategorySummary[] }) {
+  return (
+    <details className="group relative">
+      <summary className="ul flex min-h-11 cursor-pointer list-none items-center text-xs font-semibold uppercase tracking-[0.22em] [&::-webkit-details-marker]:hidden">
+        Categorías
+      </summary>
+      <div className="absolute left-0 top-full z-50 mt-2 min-w-56 border border-line bg-white p-4 shadow-lg">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Por género</p>
+        <ul>
+          {genderLinks.map((gender) => (
+            <li key={gender.value}>
+              <Link
+                className="flex min-h-11 items-center px-3 text-xs uppercase tracking-[0.14em] transition-colors hover:bg-sand"
+                href={`/shop?genero=${gender.value}`}
+              >
+                {gender.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {categories.length > 0 && (
+          <>
+            <p className="mt-3 border-t border-line px-3 pb-2 pt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Por categoría</p>
+            <ul>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    className="flex min-h-11 items-center px-3 text-xs uppercase tracking-[0.14em] transition-colors hover:bg-sand"
+                    href={`/shop?categoria=${encodeURIComponent(category.slug)}`}
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </details>
   );
 }

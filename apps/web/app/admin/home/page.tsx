@@ -14,12 +14,9 @@ import type { AdminHero, AdminProduct } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
 import { Logo } from '../../../components/logo';
 import { SmartImage } from '../../../components/smart-image';
+import { siteConfig } from '../../../lib/brand';
 
-const heroTextDefaults = {
-  title: 'Una esencia para cada versión de vos.',
-  subtitle: 'Fragancias y cosmética seleccionadas para acompañar tus rituales cotidianos.',
-  buttonLabel: 'Explorar colección',
-};
+const heroTextDefaults = siteConfig.heroDefaults;
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Ocurrió un error inesperado.';

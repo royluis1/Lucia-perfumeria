@@ -12,30 +12,24 @@ export default function TerminosPage() {
     <InfoPage
       eyebrow="Legal"
       title="Términos y condiciones"
-      intro="Estos términos regulan el uso del sitio y la compra de productos de Lucía Perfumería."
+      intro="Para consultas sobre productos, compras o el uso del sitio, contactanos por Instagram o por teléfono."
       sections={[
         {
           title: 'Productos y precios',
           content: [
-            'Los precios publicados están expresados en pesos argentinos (ARS) e incluyen IVA. Lucía Perfumería puede actualizarlos sin previo aviso; el precio vigente es el que se muestra al momento de confirmar la compra.',
+            'La información y disponibilidad de los productos se muestran en sus respectivas páginas. Consultanos si necesitás más detalles.',
           ],
         },
         {
           title: 'Compra y pago',
           content: [
-            'Al confirmar la compra aceptás estos términos y garantizás que los datos ingresados son correctos. Las promociones no son acumulables salvo que se indique lo contrario.',
+            'Los pagos se realizan con Mercado Pago.',
           ],
         },
         {
           title: 'Arrepentimiento',
           content: [
-            'Podés revocar la compra dentro de los 10 días corridos desde la compra o la recepción del producto, por cualquier medio idóneo. Usá el botón de arrepentimiento para iniciar el trámite (Ley 24.240, art. 34).',
-          ],
-        },
-        {
-          title: 'Responsabilidad',
-          content: [
-            'Las imágenes son de carácter ilustrativo. Ante dudas sobre un producto, contactanos antes de comprar para evitar devoluciones innecesarias.',
+            'Para iniciar una solicitud, usá el botón de arrepentimiento disponible en el sitio.',
           ],
         },
       ]}
