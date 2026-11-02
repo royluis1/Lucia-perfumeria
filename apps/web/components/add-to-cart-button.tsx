@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { getAccessToken } from '../lib/auth';
+import { apiFetch, getAccessToken } from '../lib/auth';
 import { useCart } from '../lib/cart';
-import { API_URL } from '../lib/config';
-
-const apiUrl = API_URL;
 
 export function AddToCartButton({
   productId,
@@ -40,17 +37,15 @@ export function AddToCartButton({
 
       const token = getAccessToken();
       if (token) {
-        const response = await fetch(`${apiUrl}/cart/items`, {
+        const response = await apiFetch('/cart/items', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ productId, quantity: 1 }),
-        });
+        }, { redirectOnExpired: false });
         if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { message?: string } | null;
-          throw new Error(body?.message ?? 'No se pudo sincronizar con el servidor');
+          throw new Error('No se pudo sincronizar el carrito. Tu compra sigue guardada.');
         }
       }
 

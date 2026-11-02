@@ -1,4 +1,4 @@
-import { getAccessToken } from './auth';
+import { apiFetch } from './auth';
 import type { AuthResponse } from './auth';
 import { API_URL } from './config';
 
@@ -21,25 +21,23 @@ export type Order = {
 };
 
 async function parseError(response: Response): Promise<Error> {
+  if (response.status === 401) {
+    return new Error('Tu sesión terminó. Ingresá de nuevo para continuar.');
+  }
   const body = (await response.json().catch(() => null)) as { message?: string } | null;
   return new Error(body?.message ?? 'Ocurrió un error, intentá de nuevo.');
 }
 
 export async function getMyOrders(): Promise<Order[]> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Iniciá sesión para consultar tus pedidos.');
-  const response = await fetch(`${apiUrl}/orders`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await apiFetch('/orders');
   if (!response.ok) throw await parseError(response);
   return response.json() as Promise<Order[]>;
 }
 
 export async function updateProfile(input: { name: string; phone?: string }) {
-  const token = getAccessToken();
-  const response = await fetch(`${apiUrl}/auth/profile`, {
+  const response = await apiFetch('/auth/profile', {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
   if (!response.ok) throw await parseError(response);
@@ -47,10 +45,9 @@ export async function updateProfile(input: { name: string; phone?: string }) {
 }
 
 export async function changePassword(input: { currentPassword: string; newPassword: string }) {
-  const token = getAccessToken();
-  const response = await fetch(`${apiUrl}/auth/change-password`, {
+  const response = await apiFetch('/auth/change-password', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
   if (!response.ok) throw await parseError(response);
@@ -62,6 +59,7 @@ export async function requestPasswordReset(email: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
+    credentials: 'include',
   });
   if (!response.ok) throw await parseError(response);
   return { ok: true };
@@ -72,35 +70,38 @@ export async function resetPassword(token: string, password: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, password }),
+    credentials: 'include',
   });
   if (!response.ok) throw await parseError(response);
   return { ok: true };
 }
 
 export async function verifyMfa(mfaToken: string, code: string): Promise<AuthResponse> {
-  const response = await fetch(`${apiUrl}/auth/mfa/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ challengeToken: mfaToken, code }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl}/auth/mfa/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ challengeToken: mfaToken, code }),
+      credentials: 'include',
+    });
+  } catch {
+    throw new Error('No pudimos conectar con el servidor. Intentá nuevamente.');
+  }
   if (!response.ok) throw await parseError(response);
   return response.json() as Promise<AuthResponse>;
 }
 
 export async function setupMfa(): Promise<{ secret: string; otpauthUrl: string; qrDataUrl: string }> {
-  const token = getAccessToken();
-  const response = await fetch(`${apiUrl}/auth/mfa/setup`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await apiFetch('/auth/mfa/setup');
   if (!response.ok) throw await parseError(response);
   return response.json() as Promise<{ secret: string; otpauthUrl: string; qrDataUrl: string }>;
 }
 
 export async function enableMfa(code: string) {
-  const token = getAccessToken();
-  const response = await fetch(`${apiUrl}/auth/mfa/enable`, {
+  const response = await apiFetch('/auth/mfa/enable', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
   });
   if (!response.ok) throw await parseError(response);
@@ -108,10 +109,9 @@ export async function enableMfa(code: string) {
 }
 
 export async function disableMfa(code: string) {
-  const token = getAccessToken();
-  const response = await fetch(`${apiUrl}/auth/mfa/disable`, {
+  const response = await apiFetch('/auth/mfa/disable', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
   });
   if (!response.ok) throw await parseError(response);

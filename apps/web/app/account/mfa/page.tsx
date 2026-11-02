@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { me, getAccessToken } from '../../../lib/auth';
+import { me } from '../../../lib/auth';
 import { setupMfa, enableMfa, disableMfa } from '../../../lib/account';
 import { Logo } from '../../../components/logo';
 
@@ -15,14 +15,9 @@ export default function MfaPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setMessage('Iniciá sesión para administrar tu seguridad.');
-      return;
-    }
-    me(token)
+    me()
       .then((user) => setEnabled(user.mfaEnabled))
-      .catch(() => setMessage('Tu sesión expiró. Ingresá de nuevo.'));
+      .catch(() => setMessage('No pudimos cargar tus opciones de seguridad.'));
   }, []);
 
   async function handleStartSetup() {

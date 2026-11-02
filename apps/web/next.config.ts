@@ -8,6 +8,12 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ];
 
+const apiProxyTarget = process.env.API_PROXY_TARGET?.replace(/\/+$/, '');
+
+if (process.env.NODE_ENV === 'production' && !apiProxyTarget) {
+  throw new Error('Falta API_PROXY_TARGET para enrutar la API por el dominio de la web.');
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: __dirname,
@@ -27,6 +33,11 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+  async rewrites() {
+    return apiProxyTarget
+      ? [{ source: '/api/backend/:path*', destination: `${apiProxyTarget}/:path*` }]
+      : [];
   },
 };
 

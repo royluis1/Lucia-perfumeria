@@ -3,7 +3,13 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAccessToken, login, saveSession } from '../../lib/auth';
+import {
+  getAccessToken,
+  getSafeRedirectDestination,
+  login,
+  me,
+  saveSession,
+} from '../../lib/auth';
 import { verifyMfa } from '../../lib/account';
 import { GoogleLoginButton } from '../../components/google-login-button';
 import { Logo } from '../../components/logo';
@@ -16,14 +22,24 @@ export default function LoginPage() {
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [destination, setDestination] = useState('/');
 
   useEffect(() => {
     if (window.location.hash.includes('token=')) {
       window.location.replace(`/auth/oauth${window.location.hash}`);
       return;
     }
-    if (getAccessToken()) {
-      router.replace('/shop');
+    const target = getSafeRedirectDestination(
+      new URLSearchParams(window.location.search).get('redirect'),
+    );
+    setDestination(target);
+    const token = getAccessToken();
+    if (token) {
+      void me(token)
+        .then(() => router.replace(target))
+        .catch(() => {
+          if (getAccessToken()) setError('No pudimos verificar tu sesión. Ingresá nuevamente.');
+        });
     }
   }, [router]);
 
@@ -35,7 +51,7 @@ export default function LoginPage() {
       const session = await login(email, password);
       if ('accessToken' in session) {
         saveSession(session);
-        router.push('/shop');
+        router.push(destination);
         return;
       }
       setMfaToken(session.mfaToken);
@@ -54,7 +70,7 @@ export default function LoginPage() {
     try {
       const session = await verifyMfa(mfaToken, code);
       saveSession(session);
-      router.push('/shop');
+      router.push(destination);
     } catch (verifyError) {
       setError(verifyError instanceof Error ? verifyError.message : 'Código inválido');
     } finally {

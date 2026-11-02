@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAccessToken } from '../../../lib/auth';
-import { API_URL } from '../../../lib/config';
+import { apiFetch } from '../../../lib/auth';
 import { Logo } from '../../../components/logo';
 
 type AuditEntry = {
@@ -15,20 +14,13 @@ type AuditEntry = {
   createdAt: string;
 };
 
-const apiUrl = API_URL;
-
 export default function AdminAuditPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setMessage('Iniciá sesión con una cuenta administradora.');
-      return;
-    }
-    fetch(`${apiUrl}/admin/audit?limit=50`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch('/admin/audit?limit=50')
       .then(async (response) => {
         if (!response.ok) throw new Error('No tenés permisos para ver este módulo.');
         return response.json() as Promise<{ data: AuditEntry[] }>;

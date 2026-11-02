@@ -1,12 +1,19 @@
 'use client';
 
-import { googleAuthUrl } from '../lib/auth';
+import { AUTH_REDIRECT_KEY, getSafeRedirectDestination, googleAuthUrl } from '../lib/auth';
 
 export function GoogleLoginButton({ label = 'Continuar con Google' }: { label?: string }) {
   return (
     <a
       className="flex w-full items-center justify-center gap-3 border border-black/20 bg-white px-8 py-4 text-sm font-semibold text-black transition hover:border-black hover:bg-black/[0.03]"
       href={googleAuthUrl()}
+      onClick={() => {
+        const destination = getSafeRedirectDestination(
+          new URLSearchParams(window.location.search).get('redirect'),
+        );
+        if (destination !== '/') window.sessionStorage.setItem(AUTH_REDIRECT_KEY, destination);
+        else window.sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+      }}
     >
       <GoogleIcon />
       {label}

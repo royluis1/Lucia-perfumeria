@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { me, getAccessToken, clearSession } from '../../lib/auth';
+import { me, logout } from '../../lib/auth';
 import type { UserProfile } from '../../lib/auth';
 import { getMyOrders, updateProfile, changePassword } from '../../lib/account';
 import type { Order } from '../../lib/account';
@@ -20,24 +20,30 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [logoutError, setLogoutError] = useState('');
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setProfileMessage('Iniciá sesión para ver tu cuenta.');
-      return;
-    }
-    me(token)
+    me()
       .then((user) => {
         setProfile(user);
         setName(user.name);
         setPhone(user.phone ?? '');
       })
-      .catch(() => setProfileMessage('Tu sesión expiró. Ingresá de nuevo.'));
+      .catch(() => setProfileMessage('No pudimos cargar tu cuenta. Intentá nuevamente.'));
     getMyOrders()
       .then(setOrders)
       .catch(() => undefined);
   }, []);
+
+  async function handleLogout() {
+    setLogoutError('');
+    try {
+      await logout();
+      window.location.assign('/');
+    } catch {
+      setLogoutError('No pudimos cerrar la sesión con el servidor. Intentá nuevamente.');
+    }
+  }
 
   async function handleProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,8 +91,12 @@ export default function AccountPage() {
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
       <div className="flex items-center justify-between">
         <Link className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></Link>
-        <Link className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</Link>
+        <div className="flex items-center gap-5">
+          <Link className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</Link>
+          <button className="text-xs uppercase tracking-[0.18em] underline" onClick={handleLogout} type="button">Cerrar sesión</button>
+        </div>
       </div>
+      {logoutError && <p className="mt-4 text-sm text-red-700" role="alert">{logoutError}</p>}
 
       <p className="mt-20 text-xs uppercase tracking-[0.3em] text-muted">Mi cuenta</p>
       <h1 className="mt-3 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Hola, {profile.name}</h1>
@@ -173,15 +183,6 @@ export default function AccountPage() {
         </div>
       </section>
 
-      <div className="mt-16 border-t border-line pt-8">
-        <button
-          className="text-xs uppercase tracking-[0.16em] text-muted underline underline-offset-4"
-          type="button"
-          onClick={() => { clearSession(); window.location.href = '/'; }}
-        >
-          Cerrar sesión
-        </button>
-      </div>
     </main>
   );
 }

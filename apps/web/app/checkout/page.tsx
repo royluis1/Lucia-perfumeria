@@ -1,12 +1,11 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { getAccessToken } from '../../lib/auth';
+import { apiFetch } from '../../lib/auth';
 import { useCart } from '../../lib/cart';
-import { API_URL } from '../../lib/config';
 import { Logo } from '../../components/logo';
 
-const apiUrl = API_URL;
+const SHIPPING_FORM_KEY = 'lucia_checkout_shipping';
 
 export default function CheckoutPage() {
   const { clearCart } = useCart();
@@ -20,6 +19,28 @@ export default function CheckoutPage() {
   });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formRestored, setFormRestored] = useState(false);
+
+  useEffect(() => {
+    const stored = window.sessionStorage.getItem(SHIPPING_FORM_KEY);
+    if (stored) {
+      try {
+        setForm((current) => ({ ...current, ...(JSON.parse(stored) as Partial<typeof form>) }));
+      } catch {
+        window.sessionStorage.removeItem(SHIPPING_FORM_KEY);
+      }
+    }
+    setFormRestored(true);
+    void apiFetch('/auth/me').catch(() => {
+      setMessage('No pudimos verificar tu sesión. Intentá nuevamente.');
+    });
+  }, []);
+
+  useEffect(() => {
+    if (formRestored) {
+      window.sessionStorage.setItem(SHIPPING_FORM_KEY, JSON.stringify(form));
+    }
+  }, [form, formRestored]);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -27,19 +48,12 @@ export default function CheckoutPage() {
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const token = getAccessToken();
-    if (!token) {
-      window.location.href = '/login';
-      return;
-    }
-
     setIsSubmitting(true);
     setMessage('');
     try {
-      const response = await fetch(`${apiUrl}/orders/pay`, {
+      const response = await apiFetch('/orders/pay', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -49,20 +63,17 @@ export default function CheckoutPage() {
       const body = (await response.json().catch(() => null)) as
         | { message?: string; checkoutUrl?: string }
         | null;
-      if (!response.ok) throw new Error(body?.message ?? 'No se pudo iniciar el pago');
-      if (!body?.checkoutUrl) throw new Error('No se pudo iniciar el pago. Tu carrito quedó intacto.');
+      if (!response.ok) throw new Error('No pudimos iniciar el pago.');
+      if (!body?.checkoutUrl) throw new Error('No pudimos iniciar el pago.');
+      window.sessionStorage.removeItem(SHIPPING_FORM_KEY);
       clearCart();
       window.location.assign(body.checkoutUrl);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar el pago');
+    } catch {
+      setMessage('No pudimos iniciar el pago. Tus datos y tu carrito siguen guardados.');
     } finally {
       setIsSubmitting(false);
     }
   }
-
-  useEffect(() => {
-    if (!getAccessToken()) setMessage('Iniciá sesión para completar tu compra.');
-  }, []);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">

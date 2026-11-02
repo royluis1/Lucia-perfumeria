@@ -15,16 +15,22 @@ services:
     preDeployCommand: npx prisma db push && node prisma/backfill-product-images.cjs
     startCommand: node dist/main.js
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: NODE_VERSION
         value: 22
       - key: HOST
         value: 0.0.0.0
+      # Access token corto; 1m solo para pruebas temporales.
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: 15m
+      - key: AUTH_COOKIE_PATH
+        value: /api/backend/auth
       # Cadena de conexión de Neon terminada en ?sslmode=require. Se carga en el dashboard.
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
+        # Render conserva este valor entre reinicios y deploys; no lo regeneres salvo rotación intencional.
         generateValue: true
       - key: PAYMENTS_WEBHOOK_SECRET
         generateValue: true
@@ -47,8 +53,9 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      # Esta URL también debe estar autorizada como redirect URI en Google Cloud Console.
       - key: GOOGLE_REDIRECT_URI
-        value: https://lucia-perfumeria-609t.onrender.com/auth/google/callback
+        value: https://lucia-perfumeria-royluis1.vercel.app/api/backend/auth/google/callback
       - key: GOOGLE_OAUTH_CLIENT_REDIRECT
         value: https://lucia-perfumeria-royluis1.vercel.app/auth/oauth
       # Vercel Blob: almacenamiento externo de fotos de producto (el disco de Render es efímero).

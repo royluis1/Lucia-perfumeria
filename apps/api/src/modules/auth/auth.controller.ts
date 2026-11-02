@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { randomBytes } from 'crypto';
 import { AuthService, REFRESH_COOKIE_NAME } from './auth.service';
@@ -88,10 +99,17 @@ export class AuthController {
 
   @Post('refresh')
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    const result = await this.authService.refresh(this.getRefreshToken(request));
-    this.setRefreshCookie(response, result.refreshToken);
-    const { refreshToken: _refreshToken, ...safeResult } = result;
-    return safeResult;
+    try {
+      const result = await this.authService.refresh(this.getRefreshToken(request));
+      this.setRefreshCookie(response, result.refreshToken);
+      const { refreshToken: _refreshToken, ...safeResult } = result;
+      return safeResult;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        response.clearCookie(REFRESH_COOKIE_NAME, this.cookieOptions());
+      }
+      throw error;
+    }
   }
 
   @Post('logout')
@@ -178,7 +196,7 @@ export class AuthController {
       sameSite: 'lax' as const,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/auth',
+      path: process.env.AUTH_COOKIE_PATH?.trim() || '/auth',
     };
   }
 

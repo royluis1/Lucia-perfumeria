@@ -1,4 +1,9 @@
-import { getAccessToken } from './auth';
+import {
+  apiFetch,
+  expireSession,
+  getAccessToken,
+  recoverSessionAfterUnauthorized,
+} from './auth';
 import { API_URL } from './config';
 
 const apiUrl = API_URL;
@@ -86,17 +91,17 @@ export type AdminUser = {
 };
 
 async function adminFetch(path: string, init?: RequestInit) {
-  const token = getAccessToken();
-  if (!token) throw new Error('Iniciá sesión con una cuenta administradora.');
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await apiFetch(path, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
       ...(init?.body && typeof init.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
       ...(init?.headers ?? {}),
     },
   });
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Tu sesión terminó. Ingresá nuevamente para continuar.');
+    }
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? 'No tenés permisos para realizar esta acción.');
   }
@@ -163,9 +168,10 @@ export async function reorderFeaturedProducts(ids: string[]) {
 }
 
 export async function revalidateHome() {
-  const token = getAccessToken();
-  if (!token) return;
   try {
+    const profile = await apiFetch('/auth/me');
+    const token = getAccessToken();
+    if (!profile.ok || !token) return;
     await fetch('/api/revalidate', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
   } catch {
     return;
@@ -173,16 +179,16 @@ export async function revalidateHome() {
 }
 
 export async function uploadImage(file: File): Promise<string> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Iniciá sesión con una cuenta administradora.');
   const form = new FormData();
   form.append('file', file);
-  const response = await fetch(`${apiUrl}/admin/products/upload`, {
+  const response = await apiFetch('/admin/products/upload', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
     body: form,
   });
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Tu sesión terminó. Ingresá nuevamente para continuar.');
+    }
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? 'No se pudo subir la imagen');
   }
@@ -198,39 +204,57 @@ function parseJsonBody(text: string) {
   }
 }
 
-export function uploadProductImage(
+export async function uploadProductImage(
   productId: string,
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<AdminProductImage> {
-  const token = getAccessToken();
-  if (!token) return Promise.reject(new Error('Iniciá sesión con una cuenta administradora.'));
+  let token = getAccessToken();
+  if (!token) {
+    const response = await apiFetch('/auth/me');
+    token = getAccessToken();
+    if (!response.ok || !token) throw new Error('Iniciá sesión con una cuenta administradora.');
+  }
 
-  return new Promise((resolve, reject) => {
+  const path = `/admin/products/${productId}/images`;
+  const send = (accessToken: string) => new Promise<XMLHttpRequest>((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open('POST', `${apiUrl}/admin/products/${productId}/images`);
-    request.setRequestHeader('Authorization', `Bearer ${token}`);
+    request.open('POST', `${apiUrl}${path}`);
+    request.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+    request.withCredentials = true;
     request.upload.onprogress = (event) => {
       if (onProgress && event.lengthComputable) {
         onProgress(Math.round((event.loaded / event.total) * 100));
       }
     };
-    request.onload = () => {
-      const body = parseJsonBody(request.responseText) as
-        | { message?: string }
-        | AdminProductImage
-        | null;
-      if (request.status >= 200 && request.status < 300) {
-        resolve(body as AdminProductImage);
-        return;
-      }
-      reject(new Error((body as { message?: string } | null)?.message ?? 'No se pudo subir la foto'));
-    };
+    request.onload = () => resolve(request);
     request.onerror = () => reject(new Error('No se pudo subir la foto'));
     const form = new FormData();
     form.append('file', file);
     request.send(form);
   });
+
+  return (async () => {
+    let request = await send(token);
+    if (request.status === 401) {
+      const refreshedToken = await recoverSessionAfterUnauthorized(true, token);
+      if (!refreshedToken) throw new Error('Tu sesión terminó. Ingresá nuevamente para continuar.');
+      request = await send(refreshedToken);
+    }
+    if (request.status === 401) {
+      expireSession();
+      throw new Error('Tu sesión terminó. Ingresá nuevamente para continuar.');
+    }
+
+    const body = parseJsonBody(request.responseText) as
+      | { message?: string }
+      | AdminProductImage
+      | null;
+    if (request.status < 200 || request.status >= 300) {
+      throw new Error('No se pudo subir la foto. Intentá nuevamente.');
+    }
+    return body as AdminProductImage;
+  })();
 }
 
 export async function deleteProductImage(productId: string, imageId: string) {

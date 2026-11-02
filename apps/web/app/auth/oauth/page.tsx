@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, me, saveAccessToken, saveSession } from '../../../lib/auth';
+import {
+  AUTH_REDIRECT_KEY,
+  clearSession,
+  getAccessToken,
+  getSafeRedirectDestination,
+  me,
+  saveAccessToken,
+  saveSession,
+} from '../../../lib/auth';
 import { Logo } from '../../../components/logo';
 
 export default function OAuthCallbackPage() {
@@ -14,14 +22,19 @@ export default function OAuthCallbackPage() {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const queryParams = new URLSearchParams(window.location.search);
     const token = hashParams.get('token');
+    const destination = getSafeRedirectDestination(
+      window.sessionStorage.getItem(AUTH_REDIRECT_KEY) ?? queryParams.get('redirect'),
+    );
 
     if (queryParams.get('error')) {
+      window.sessionStorage.removeItem(AUTH_REDIRECT_KEY);
       setHasError(true);
       setMessage('No se pudo iniciar sesión con Google. Intentalo de nuevo.');
       return;
     }
 
     if (!token) {
+      window.sessionStorage.removeItem(AUTH_REDIRECT_KEY);
       setHasError(true);
       setMessage('No se recibió una sesión válida de Google.');
       return;
@@ -30,11 +43,12 @@ export default function OAuthCallbackPage() {
     let cancelled = false;
     (async () => {
       try {
-        const profile = await me(token);
-        if (cancelled) return;
         saveAccessToken(token);
-        saveSession({ accessToken: token, user: profile });
-        router.replace('/shop');
+        const profile = await me(token, false);
+        if (cancelled) return;
+        saveSession({ accessToken: getAccessToken() ?? token, user: profile });
+        window.sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+        router.replace(destination);
       } catch {
         if (cancelled) return;
         clearSession();

@@ -1,9 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAccessToken } from './auth';
+import { apiFetch, getAccessToken } from './auth';
 import type { ProductSummary } from './api';
-import { API_URL } from './config';
 
 type WishlistItem = {
   product: ProductSummary;
@@ -18,8 +17,6 @@ type WishlistContextType = {
   remove: (productId: string) => Promise<void>;
 };
 
-const apiUrl = API_URL;
-
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
@@ -30,9 +27,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     if (!token) return;
     let cancelled = false;
 
-    fetch(`${apiUrl}/wishlist`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    })
+    apiFetch('/wishlist')
       .then((response) => {
         if (!response.ok) throw new Error('No se pudo cargar la lista');
         return response.json() as Promise<WishlistItem[]>;
@@ -57,9 +52,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     }
 
     const saved = isSaved(product.id);
-    const response = await fetch(`${apiUrl}/wishlist/${product.id}`, {
+    const response = await apiFetch(`/wishlist/${product.id}`, {
       method: saved ? 'DELETE' : 'POST',
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     });
 
     if (!response.ok) {
@@ -77,9 +71,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     const token = getAccessToken();
     if (!token) return;
 
-    await fetch(`${apiUrl}/wishlist/${productId}`, {
+    await apiFetch(`/wishlist/${productId}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
     });
 
     setItems((prev) => prev.filter((item) => item.product.id !== productId));

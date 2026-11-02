@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAccessToken } from '../../../lib/auth';
-import { API_URL } from '../../../lib/config';
+import { apiFetch } from '../../../lib/auth';
 import { Logo } from '../../../components/logo';
 
 type Order = {
@@ -15,8 +14,6 @@ type Order = {
   createdAt: string;
   items: Array<{ quantity: number; product: { name: string; brand: string } }>;
 };
-
-const apiUrl = API_URL;
 
 const NON_PAYABLE_PAYMENT_STATUSES = ['APPROVED', 'REFUNDED', 'CHARGED_BACK'];
 
@@ -62,41 +59,31 @@ export default function OrdersPage() {
     const payment = new URLSearchParams(window.location.search).get('payment');
     if (payment && PAYMENT_BANNERS[payment]) setBanner(PAYMENT_BANNERS[payment]);
 
-    const token = getAccessToken();
-    if (!token) {
-      setMessage('Iniciá sesión para consultar tus pedidos.');
-      return;
-    }
-    fetch(`${apiUrl}/orders`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch('/orders')
       .then(async (response) => {
         if (!response.ok) throw new Error('No se pudieron cargar tus pedidos');
         return response.json() as Promise<Order[]>;
       })
       .then(setOrders)
-      .catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'No se pudieron cargar tus pedidos'));
+      .catch(() => setMessage('No se pudieron cargar tus pedidos. Intentá nuevamente.'));
   }, []);
 
   async function payNow(orderId: string) {
-    const token = getAccessToken();
-    if (!token) {
-      setMessage('Iniciá sesión para pagar tus pedidos.');
-      return;
-    }
     setPayingOrderId(orderId);
     setMessage('');
     try {
-      const response = await fetch(`${apiUrl}/payments/preference`, {
+      const response = await apiFetch('/payments/preference', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId }),
       });
       const payment = (await response.json().catch(() => null)) as { checkoutUrl?: string; message?: string } | null;
       if (!response.ok || !payment?.checkoutUrl) {
-        throw new Error(payment?.message ?? 'No se pudo iniciar el pago');
+        throw new Error('No se pudo iniciar el pago. Intentá nuevamente.');
       }
       window.location.assign(payment.checkoutUrl);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo iniciar el pago');
+    } catch {
+      setMessage('No se pudo iniciar el pago. Intentá nuevamente.');
       setPayingOrderId('');
     }
   }
