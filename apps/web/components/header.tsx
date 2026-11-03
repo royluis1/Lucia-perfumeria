@@ -23,6 +23,9 @@ const genderLinks = [
   { label: 'Unisex', value: 'unisex' },
 ];
 
+const desktopNavItemClass =
+  'desktop-nav-item text-xs font-semibold uppercase tracking-[0.22em] leading-none';
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -75,13 +78,11 @@ export function Header() {
           <Logo className="text-[22px]" />
         </Link>
 
-        <nav aria-label="Principal" className="hidden gap-9 lg:flex">
-          {navLinks.map((link) => (
-            <Link className="ul text-xs font-semibold uppercase tracking-[0.22em]" href={link.href} key={link.label}>
-              {link.label}
-            </Link>
-          ))}
-          <CategoryMenu categories={categories} />
+        <nav aria-label="Principal" className="hidden items-center gap-9 lg:flex">
+          <Link className={desktopNavItemClass} href="/shop">Colección completa</Link>
+          <CategoryMenu categories={categories} className={desktopNavItemClass} />
+          <Link className={desktopNavItemClass} href="/marcas">Marcas</Link>
+          <Link className={desktopNavItemClass} href="/nosotros">Nuestra historia</Link>
         </nav>
 
         <div className="flex items-center gap-0.5 sm:gap-1">
@@ -138,17 +139,15 @@ export function Header() {
       {menuOpen && (
         <nav aria-label="Menú móvil" className="border-t border-line bg-canvas px-6 pb-4 pt-2 lg:hidden" id="mobile-nav">
           <ul>
-            {navLinks.map((link) => (
-              <li key={link.label}>
-                <Link
-                  className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link
+                className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
+                href="/shop"
+                onClick={() => setMenuOpen(false)}
+              >
+                Colección completa
+              </Link>
+            </li>
             <li>
               <details className="group">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center text-xs font-semibold uppercase tracking-[0.22em] [&::-webkit-details-marker]:hidden">
@@ -180,6 +179,17 @@ export function Header() {
                 </ul>
               </details>
             </li>
+            {navLinks.slice(1).map((link) => (
+              <li key={link.label}>
+                <Link
+                  className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
             <li>
               <Link
                 className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
@@ -196,10 +206,10 @@ export function Header() {
   );
 }
 
-function CategoryMenu({ categories }: { categories: CategorySummary[] }) {
+function CategoryMenu({ categories, className }: { categories: CategorySummary[]; className: string }) {
   return (
     <details className="group relative">
-      <summary className="ul flex min-h-11 cursor-pointer list-none items-center text-xs font-semibold uppercase tracking-[0.22em] [&::-webkit-details-marker]:hidden">
+      <summary className={`${className} cursor-pointer list-none bg-transparent p-0 [&::-webkit-details-marker]:hidden`}>
         Categorías
       </summary>
       <div className="absolute left-0 top-full z-50 mt-2 min-w-56 border border-line bg-white p-4 shadow-lg">

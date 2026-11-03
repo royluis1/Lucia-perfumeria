@@ -305,6 +305,41 @@ textarea {
   transition: background-size 0.3s;
 }
 
+.desktop-nav-item {
+  position: relative;
+  display: inline-flex;
+  height: 44px;
+  align-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.desktop-nav-item::after {
+  position: absolute;
+  right: 0;
+  bottom: 7px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  content: '';
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease;
+}
+
+@media (hover: hover) {
+  .desktop-nav-item:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.desktop-nav-item:focus-visible::after {
+  transform: scaleX(1);
+}
+
 .card .img {
   transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
