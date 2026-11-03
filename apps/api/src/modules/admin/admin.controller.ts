@@ -21,6 +21,7 @@ import { ReorderProductImagesDto } from './dto/reorder-product-images.dto';
 import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { CancellationService } from '../cancellation/cancellation.service';
 import { StorageService } from '../storage/storage.service';
+import { EarningsService } from './earnings.service';
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 const PRODUCT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
@@ -48,6 +49,7 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly cancellationService: CancellationService,
     private readonly storage: StorageService,
+    private readonly earningsService: EarningsService,
   ) {}
 
   @Post('products/upload')
@@ -185,6 +187,27 @@ export class AdminController {
       page === undefined ? undefined : Number(page),
       limit === undefined ? undefined : Number(limit),
     );
+  }
+
+  @Get('earnings')
+  getEarnings(
+    @Query('period') period?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.earningsService.getReport({ period, from, to, page: page === undefined ? undefined : Number(page), status, search });
+  }
+
+  @Get('earnings/export')
+  exportEarningsCsv(
+    @Query('period') period?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.earningsService.exportCsv({ period, from, to });
   }
 
   @Patch('orders/:id')

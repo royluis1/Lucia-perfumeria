@@ -6,10 +6,11 @@ import { AdminService } from './admin.service';
 import { AuditLogModule } from '../audit-log/audit-log.module';
 import { CancellationService } from '../cancellation/cancellation.service';
 import { StorageModule } from '../storage/storage.module';
+import { EarningsService } from './earnings.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, AuditLogModule, StorageModule],
   controllers: [AdminController],
-  providers: [AdminService, CancellationService],
+  providers: [AdminService, CancellationService, EarningsService],
 })
 export class AdminModule {}

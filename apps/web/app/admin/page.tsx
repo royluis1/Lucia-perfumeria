@@ -5,6 +5,7 @@ const modules: Array<{ title: string; description: string; href: string }> = [
   { title: 'Portada', description: 'Elegí el hero y los productos favoritos del inicio.', href: '/admin/home' },
   { title: 'Productos', description: 'Catálogo, precios, stock, categorías e imágenes.', href: '/admin/products' },
   { title: 'Pedidos', description: 'Revisá órdenes y actualizá estados.', href: '/admin/orders' },
+  { title: 'Ganancias', description: 'Analizá ventas cobradas, productos y períodos.', href: '/admin/earnings' },
   { title: 'Usuarios', description: 'Gestioná roles de la tienda.', href: '/admin/users' },
   { title: 'Reseñas', description: 'Moderá opiniones pendientes.', href: '/admin/reviews' },
   { title: 'Auditoría', description: 'Historial de cambios del panel.', href: '/admin/audit' },

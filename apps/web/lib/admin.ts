@@ -92,6 +92,59 @@ export type AdminUser = {
   _count: { orders: number };
 };
 
+export type AdminEarningsReport = {
+  period: string;
+  range: { from: string; to: string };
+  summary: {
+    completedSales: number;
+    collectedTotal: number;
+    unitsSold: number;
+    averageTicket: number;
+    pendingOrders: number;
+    refundedOrders: number;
+    refundedAmount: number | null;
+    returnedUnits: number | null;
+    netProfit: number | null;
+    currency: 'ARS';
+    previous: { completedSales: number; collectedTotal: number; unitsSold: number };
+    comparison: { completedSales: number | null; collectedTotal: number | null };
+    limitations: {
+      costsRecorded: boolean;
+      operationalExpensesRecorded: boolean;
+      partialRefundsRecorded: boolean;
+      productReturnsRecorded: boolean;
+      discountsRecorded: boolean;
+      message: string;
+    };
+  };
+  paymentMethods: Array<{ method: string; sales: number; amount: number }>;
+  trend: Array<{ date: string; sales: number; revenue: number }>;
+  products: {
+    byUnits: Array<{ id: string; name: string; imageUrl: string | null; unitsSold: number; revenue: number }>;
+    byRevenue: Array<{ id: string; name: string; imageUrl: string | null; unitsSold: number; revenue: number }>;
+  };
+  orders: {
+    data: Array<{
+      id: string;
+      createdAt: string;
+      customer: string;
+      itemCount: number;
+      items: string;
+      subtotal: string;
+      shippingCost: string;
+      total: string;
+      status: string;
+      paymentStatus: string;
+      paymentMethod: string;
+    }>;
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  returns: { available: boolean; message: string };
+};
+
 async function adminFetch(path: string, init?: RequestInit) {
   const response = await apiFetch(path, {
     ...init,
@@ -295,6 +348,32 @@ export async function reorderProductImages(productId: string, imageIds: string[]
 export async function listAdminOrders(page = 1) {
   const response = await adminFetch(`/admin/orders?page=${page}&limit=20`);
   return response.json() as Promise<{ data: AdminOrder[]; total: number; page: number; totalPages: number }>;
+}
+
+export async function getAdminEarnings(input: {
+  period: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  status?: string;
+  search?: string;
+}) {
+  const params = new URLSearchParams({ period: input.period });
+  if (input.from) params.set('from', input.from);
+  if (input.to) params.set('to', input.to);
+  if (input.page) params.set('page', String(input.page));
+  if (input.status) params.set('status', input.status);
+  if (input.search) params.set('search', input.search);
+  const response = await adminFetch(`/admin/earnings?${params.toString()}`);
+  return response.json() as Promise<AdminEarningsReport>;
+}
+
+export async function downloadAdminEarningsCsv(input: { period: string; from?: string; to?: string }) {
+  const params = new URLSearchParams({ period: input.period });
+  if (input.from) params.set('from', input.from);
+  if (input.to) params.set('to', input.to);
+  const response = await adminFetch(`/admin/earnings/export?${params.toString()}`);
+  return response.blob();
 }
 
 export async function updateAdminOrder(id: string, input: { status?: string; paymentStatus?: string }) {

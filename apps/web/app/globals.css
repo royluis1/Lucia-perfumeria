@@ -427,6 +427,24 @@ textarea {
   }
 }
 
+@media print {
+  .earnings-controls {
+    display: none !important;
+  }
+
+  .admin-earnings {
+    max-width: none;
+    padding: 0;
+  }
+
+  .admin-earnings article,
+  .admin-earnings section,
+  .admin-earnings table {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 767px) {
   .float,
   .glow,
