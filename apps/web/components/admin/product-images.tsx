@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { deleteProductImage, reorderProductImages, uploadProductImage } from '../../lib/admin';
+import {
+  addAdminProductImageFromUrl,
+  deleteProductImage,
+  reorderProductImages,
+  uploadProductImage,
+} from '../../lib/admin';
 import type { AdminProductImage } from '../../lib/admin';
 import { resolveImageUrl } from '../../lib/api';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from '../icons';
@@ -36,6 +41,7 @@ export function ProductImagesManager({
   const [reordering, setReordering] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [imageSourceUrl, setImageSourceUrl] = useState('');
   const uploadKey = useRef(0);
 
   useEffect(() => {
@@ -92,7 +98,29 @@ export function ProductImagesManager({
       }
     }
     setBusy(false);
-    onMessage('Fotos guardadas. La primera es la principal.');
+    if (current.length > images.length) onMessage('Fotos guardadas. La primera es la principal.');
+  }
+
+  async function handleImageUrlImport() {
+    const url = imageSourceUrl.trim();
+    if (!url || busy) return;
+    if (images.length >= MAX_PRODUCT_IMAGES) {
+      onError(`Este producto ya tiene el máximo de ${MAX_PRODUCT_IMAGES} fotos.`);
+      return;
+    }
+
+    setBusy(true);
+    onError('');
+    try {
+      const image = await addAdminProductImageFromUrl(productId, url);
+      applyImages([...images, image]);
+      setImageSourceUrl('');
+      onMessage('Foto importada y guardada en el almacenamiento de la tienda.');
+    } catch (importError) {
+      onError(importError instanceof Error ? importError.message : 'No se pudo importar la imagen desde el enlace.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function persistOrder(next: AdminProductImage[]) {
@@ -195,6 +223,35 @@ export function ProductImagesManager({
         </span>
         <span className="text-xs text-muted">JPG, PNG o WebP · hasta 5 MB · la primera es la principal</span>
       </label>
+
+      <div className="mt-4">
+        <label className="label-xs block text-muted" htmlFor={`product-image-url-${productId}`}>
+          O importar desde un enlace
+        </label>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            className="input-line min-w-0 flex-1 text-sm normal-case tracking-normal text-ink"
+            disabled={full || busy}
+            id={`product-image-url-${productId}`}
+            inputMode="url"
+            onChange={(event) => setImageSourceUrl(event.target.value)}
+            placeholder="Pegá el enlace HTTPS directo a la foto"
+            type="url"
+            value={imageSourceUrl}
+          />
+          <button
+            className="btn-ghost min-h-11"
+            disabled={full || busy || !imageSourceUrl.trim()}
+            onClick={() => void handleImageUrlImport()}
+            type="button"
+          >
+            {busy ? 'Procesando…' : 'Importar enlace'}
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-muted">
+          La imagen se copia a Vercel Blob; el producto no dependerá del sitio de origen.
+        </p>
+      </div>
 
       {uploads.length > 0 && (
         <ul className="mt-4 space-y-2">

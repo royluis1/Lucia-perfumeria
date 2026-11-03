@@ -397,8 +397,34 @@ export class AdminService {
     }
 
     const url = await this.storage.uploadImage(file.buffer, file.originalname, file.mimetype);
+    return this.persistProductImage(actorId, product, productId, count, url);
+  }
+
+  async addProductImageFromUrl(actorId: string, productId: string, imageUrl: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, name: true, brand: true, imageUrl: true },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const count = await this.prisma.productImage.count({ where: { productId } });
+    if (count >= MAX_PRODUCT_IMAGES) {
+      throw new BadRequestException(`Cada producto puede tener hasta ${MAX_PRODUCT_IMAGES} fotos`);
+    }
+
+    const url = await this.storage.importImageFromUrl(imageUrl);
+    return this.persistProductImage(actorId, product, productId, count, url);
+  }
+
+  private async persistProductImage(
+    actorId: string,
+    product: { id: string; name: string; brand: string; imageUrl: string | null },
+    productId: string,
+    position: number,
+    url: string,
+  ) {
     const image = await this.prisma.productImage.create({
-      data: { productId, url, position: count, alt: `${product.name} — ${product.brand}` },
+      data: { productId, url, position, alt: `${product.name} — ${product.brand}` },
     });
     if (!product.imageUrl) {
       await this.prisma.product.update({ where: { id: productId }, data: { imageUrl: url } });

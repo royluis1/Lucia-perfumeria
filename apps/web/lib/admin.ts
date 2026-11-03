@@ -251,6 +251,23 @@ export async function uploadImage(file: File): Promise<string> {
   return result.url;
 }
 
+export async function importAdminProductImageUrl(url: string): Promise<string> {
+  const response = await adminFetch('/admin/products/import-url', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  });
+  const result = (await response.json()) as { url: string };
+  return result.url;
+}
+
+export async function addAdminProductImageFromUrl(productId: string, url: string) {
+  const response = await adminFetch(`/admin/products/${productId}/images/import-url`, {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  });
+  return response.json() as Promise<AdminProductImage>;
+}
+
 export async function uploadStorePhoto(file: File): Promise<string> {
   const form = new FormData();
   form.append('file', file);

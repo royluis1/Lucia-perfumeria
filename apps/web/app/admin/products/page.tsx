@@ -11,6 +11,7 @@ import {
   updateAdminBrand,
   mergeAdminBrand,
   uploadImage,
+  importAdminProductImageUrl,
   revalidateHome,
 } from '../../../lib/admin';
 import type {
@@ -99,6 +100,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [imageSourceUrl, setImageSourceUrl] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [brandOpen, setBrandOpen] = useState(false);
   const [brandActive, setBrandActive] = useState(-1);
@@ -234,9 +236,35 @@ export default function AdminProductsPage() {
     try {
       const url = await uploadImage(file);
       setField('imageUrl', url);
+      setImageSourceUrl('');
       setMessage('Imagen subida. Guardá el producto para aplicarla.');
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'No se pudo subir la imagen');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleImageUrlImport() {
+    const sourceUrl = imageSourceUrl.trim();
+    if (!sourceUrl) {
+      setError('Pegá el enlace directo a una imagen.');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    setMessage('');
+    try {
+      const url = isVercelBlobUrl(sourceUrl) ? sourceUrl : await importAdminProductImageUrl(sourceUrl);
+      setField('imageUrl', url);
+      setMessage(
+        isVercelBlobUrl(sourceUrl)
+          ? 'Enlace de Vercel Blob listo. Guardá el producto para aplicarlo.'
+          : 'Imagen copiada al almacenamiento de la tienda. Guardá el producto para aplicarla.',
+      );
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : 'No se pudo importar la imagen desde el enlace.');
     } finally {
       setUploading(false);
     }
@@ -486,11 +514,28 @@ export default function AdminProductsPage() {
           )
         ) : (
           <>
-            <label className="label-xs block text-muted">Imagen (URL de Vercel Blob)
-              <input className="input-line mt-2 text-sm normal-case tracking-normal text-ink" value={form.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} placeholder="https://...public.blob.vercel-storage.com/..." />
-            </label>
+            <div className="label-xs block text-muted">
+              Imagen del producto
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input
+                  aria-label="Enlace directo a una imagen"
+                  className="input-line min-w-0 flex-1 text-sm normal-case tracking-normal text-ink"
+                  inputMode="url"
+                  onChange={(event) => setImageSourceUrl(event.target.value)}
+                  placeholder="Pegá el enlace HTTPS directo a la foto"
+                  type="url"
+                  value={imageSourceUrl}
+                />
+                <button className="btn-ghost min-h-11" disabled={uploading || !imageSourceUrl.trim()} onClick={() => void handleImageUrlImport()} type="button">
+                  {uploading ? 'Procesando…' : 'Usar enlace'}
+                </button>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted">
+                El enlace se copia a Vercel Blob para que la foto no dependa de otro sitio. También podés subir un archivo JPG, PNG o WebP de hasta 5 MB.
+              </p>
+            </div>
             <label className="label-xs block text-muted">O subir archivo
-              <input accept="image/*" className="mt-2 w-full cursor-pointer border-b border-black/30 bg-transparent py-2 text-sm normal-case tracking-normal text-muted transition-colors file:mr-3 file:border-0 file:bg-black file:px-3 file:py-2 file:text-[11px] file:font-extrabold file:uppercase file:tracking-[0.18em] file:text-white" disabled={uploading} type="file" onChange={(event) => void handleImageUpload(event.target.files?.[0])} />
+              <input accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="mt-2 w-full cursor-pointer border-b border-black/30 bg-transparent py-2 text-sm normal-case tracking-normal text-muted transition-colors file:mr-3 file:border-0 file:bg-black file:px-3 file:py-2 file:text-[11px] file:font-extrabold file:uppercase file:tracking-[0.18em] file:text-white" disabled={uploading} type="file" onChange={(event) => { void handleImageUpload(event.target.files?.[0]); event.target.value = ''; }} />
             </label>
             {formImageUrl && (
               <div className="md:col-span-3">

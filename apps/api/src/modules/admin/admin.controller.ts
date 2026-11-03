@@ -22,6 +22,7 @@ import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { CancellationService } from '../cancellation/cancellation.service';
 import { StorageService } from '../storage/storage.service';
 import { EarningsService } from './earnings.service';
+import { ImportProductImageDto } from './dto/import-product-image.dto';
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 const PRODUCT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
@@ -74,6 +75,13 @@ export class AdminController {
     return { url };
   }
 
+  @Post('products/import-url')
+  async importProductImageUrl(@Req() request: AuthenticatedRequest, @Body() body: ImportProductImageDto) {
+    const url = await this.storage.importImageFromUrl(body.url);
+    await this.adminService.recordUpload(request.userId, url);
+    return { url };
+  }
+
   @Post('products/:id/images')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -88,6 +96,15 @@ export class AdminController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.adminService.addProductImage(request.userId, id, file);
+  }
+
+  @Post('products/:id/images/import-url')
+  addProductImageFromUrl(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: ImportProductImageDto,
+  ) {
+    return this.adminService.addProductImageFromUrl(request.userId, id, body.url);
   }
 
   @Delete('products/:id/images/:imageId')
