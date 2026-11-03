@@ -1,0 +1,3 @@
+ALTER TABLE "HomeHero"
+  ADD COLUMN IF NOT EXISTS "businessHours" TEXT,
+  ADD COLUMN IF NOT EXISTS "storePhotoUrl" TEXT;

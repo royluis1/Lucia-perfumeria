@@ -9,7 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
       POSTGRES_DB: ${POSTGRES_DB:-lucia_perfumeria}
     ports:
-      - "5432:5432"
+      # Solo accesible desde la máquina local; no exponer estos puertos a la red
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -18,7 +19,7 @@ services:
     image: redis:7-alpine
     container_name: lucia_redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -28,8 +29,8 @@ services:
     image: mailhog/mailhog
     container_name: lucia_mailhog
     ports:
-      - "1025:1025" # Puerto SMTP para que el backend envíe mails
-      - "8025:8025" # Interfaz Web para ver los mails (http://localhost:8025)
+      - "127.0.0.1:1025:1025" # Puerto SMTP para que el backend envíe mails
+      - "127.0.0.1:8025:8025" # Interfaz Web para ver los mails (http://localhost:8025)
     restart: unless-stopped
 
 volumes:

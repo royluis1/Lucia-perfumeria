@@ -9,7 +9,9 @@
     "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true
-  }
+    "rootDir": "./src",
+    "incremental": true,
+    "isolatedModules": true
+  },
+  "exclude": ["dist", "prisma", "node_modules", "__mocks__", "jest.config.js", "**/*.spec.ts"]
 }
