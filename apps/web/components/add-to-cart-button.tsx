@@ -26,17 +26,17 @@ export function AddToCartButton({
   async function handleAddToCart() {
     setIsAdding(true);
     setMessage('');
-    try {
-      addItem({
-        id: productId,
-        productId,
-        name: productName,
-        brand: productBrand,
-        price: productPrice,
-      });
+    addItem({
+      id: productId,
+      productId,
+      name: productName,
+      brand: productBrand,
+      price: productPrice,
+    });
 
-      const token = getAccessToken();
-      if (token) {
+    const token = getAccessToken();
+    if (token) {
+      try {
         const response = await apiFetch('/cart/items', {
           method: 'POST',
           headers: {
@@ -44,17 +44,15 @@ export function AddToCartButton({
           },
           body: JSON.stringify({ productId, quantity: 1 }),
         }, { redirectOnExpired: false });
-        if (!response.ok) {
-          throw new Error('No se pudo sincronizar el carrito. Tu compra sigue guardada.');
+        if (!response.ok && response.status !== 401) {
+          console.error('No se pudo sincronizar el carrito de la cuenta; el carrito local se conservó.');
         }
+      } catch (error) {
+        console.error('No se pudo sincronizar el carrito de la cuenta; el carrito local se conservó.', error);
       }
-
-      setMessage('Agregado al carrito');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error al agregar');
-    } finally {
-      setIsAdding(false);
     }
+    setMessage('Agregado al carrito');
+    setIsAdding(false);
   }
 
   if (overlay) {

@@ -194,8 +194,9 @@ export function saveSession(session: AuthResponse) {
 }
 
 export function saveAccessToken(accessToken: string) {
+  const hadAccessToken = Boolean(window.localStorage.getItem(ACCESS_TOKEN_KEY));
   window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  notifyAuthChange();
+  if (!hadAccessToken) notifyAuthChange();
 }
 
 export function getAccessToken() {

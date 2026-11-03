@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { apiFetch, AUTH_CHANGE_EVENT, getAccessToken } from './auth';
 
 type CartItem = {
   id: string;
@@ -31,6 +32,14 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [cartReady, setCartReady] = useState(false);
+  const itemsRef = useRef(items);
+  const syncingRef = useRef(false);
+  const syncAgainRef = useRef(false);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   useEffect(() => {
     const stored = localStorage.getItem('lucia_cart');
@@ -41,11 +50,87 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('lucia_cart');
       }
     }
+    setCartReady(true);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('lucia_cart', JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    if (!cartReady) return;
+    let active = true;
+
+    async function syncCart() {
+      if (!getAccessToken()) return;
+      if (syncingRef.current) {
+        syncAgainRef.current = true;
+        return;
+      }
+
+      syncingRef.current = true;
+      try {
+        do {
+          syncAgainRef.current = false;
+          if (!getAccessToken()) break;
+
+          const response = await apiFetch('/cart', {}, { redirectOnExpired: false });
+          if (!response.ok) {
+            if (response.status !== 401 && getAccessToken()) {
+              console.error('No se pudo cargar el carrito para fusionarlo con la cuenta.');
+            }
+            break;
+          }
+
+          const remoteCart = (await response.json()) as {
+            items: Array<{ productId: string; quantity: number }>;
+          };
+          const remoteItems = new Map(remoteCart.items.map((item) => [item.productId, item.quantity]));
+
+          for (const localItem of itemsRef.current) {
+            if (!active || !getAccessToken()) break;
+            const remoteQuantity = remoteItems.get(localItem.productId) ?? 0;
+            const quantity = Math.min(99, Math.max(remoteQuantity, localItem.quantity));
+            if (quantity === remoteQuantity) continue;
+
+            const isExisting = remoteItems.has(localItem.productId);
+            const updateResponse = await apiFetch(
+              isExisting ? `/cart/items/${encodeURIComponent(localItem.productId)}` : '/cart/items',
+              {
+                method: isExisting ? 'PATCH' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(
+                  isExisting
+                    ? { quantity }
+                    : { productId: localItem.productId, quantity },
+                ),
+              },
+              { redirectOnExpired: false },
+            );
+            if (updateResponse.status === 401) break;
+            if (!updateResponse.ok) {
+              console.error(`No se pudo fusionar el producto ${localItem.productId} con el carrito de la cuenta.`);
+              continue;
+            }
+            remoteItems.set(localItem.productId, quantity);
+          }
+        } while (active && syncAgainRef.current && getAccessToken());
+      } catch (error) {
+        if (getAccessToken()) {
+          console.error('No se pudo fusionar el carrito de esta sesión con la cuenta.', error);
+        }
+      } finally {
+        syncingRef.current = false;
+      }
+    }
+
+    window.addEventListener(AUTH_CHANGE_EVENT, syncCart);
+    if (getAccessToken()) void syncCart();
+    return () => {
+      active = false;
+      window.removeEventListener(AUTH_CHANGE_EVENT, syncCart);
+    };
+  }, [cartReady]);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
