@@ -9,6 +9,7 @@ import {
   updateAdminHero,
   updateAdminProduct,
   uploadImage,
+  uploadStorePhoto,
 } from '../../../lib/admin';
 import type { AdminHero, AdminProduct } from '../../../lib/admin';
 import { resolveImageUrl } from '../../../lib/api';
@@ -32,6 +33,8 @@ export default function AdminHomePage() {
   const [heroTitle, setHeroTitle] = useState('');
   const [heroSubtitle, setHeroSubtitle] = useState('');
   const [heroButtonLabel, setHeroButtonLabel] = useState('');
+  const [businessHours, setBusinessHours] = useState('');
+  const [storePhotoUrl, setStorePhotoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [savingHero, setSavingHero] = useState(false);
   const [pendingId, setPendingId] = useState('');
@@ -48,6 +51,8 @@ export default function AdminHomePage() {
       setHeroTitle(heroConfig.title ?? '');
       setHeroSubtitle(heroConfig.subtitle ?? '');
       setHeroButtonLabel(heroConfig.buttonLabel ?? '');
+      setBusinessHours(heroConfig.businessHours ?? '');
+      setStorePhotoUrl(heroConfig.storePhotoUrl ?? '');
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     }
@@ -79,9 +84,11 @@ export default function AdminHomePage() {
         title: heroTitle || null,
         subtitle: heroSubtitle || null,
         buttonLabel: heroButtonLabel || null,
+        businessHours: businessHours || null,
+        storePhotoUrl: storePhotoUrl || null,
       });
       setHero(updated);
-      setMessage('Portada guardada. El inicio ya muestra los cambios.');
+      setMessage('Portada e información del local guardadas.');
       await revalidateHome();
     } catch (saveError) {
       setError(getErrorMessage(saveError));
@@ -99,6 +106,22 @@ export default function AdminHomePage() {
       const url = await uploadImage(file);
       setHeroImageUrl(url);
       setMessage('Imagen subida. Guardá los cambios para aplicarla.');
+    } catch (uploadError) {
+      setError(getErrorMessage(uploadError));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleStorePhotoUpload(file?: File) {
+    if (!file) return;
+    setError('');
+    setMessage('');
+    setUploading(true);
+    try {
+      const url = await uploadStorePhoto(file);
+      setStorePhotoUrl(url);
+      setMessage('Foto del local subida. Guardá los cambios para mostrarla.');
     } catch (uploadError) {
       setError(getErrorMessage(uploadError));
     } finally {
@@ -255,7 +278,7 @@ export default function AdminHomePage() {
               disabled={savingHero}
               type="submit"
             >
-              {savingHero ? 'Guardando…' : 'Guardar portada'}
+              {savingHero ? 'Guardando…' : 'Guardar cambios'}
             </button>
           </div>
 
@@ -291,6 +314,57 @@ export default function AdminHomePage() {
             </p>
           </div>
         </div>
+
+        <section className="mt-10 border-t border-line pt-8" aria-labelledby="store-info-title">
+          <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]" id="store-info-title">Información del local</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
+            Los horarios y la foto se muestran en Contacto y en el footer solo después de cargarlos aquí.
+          </p>
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <label className="label-xs block text-muted">
+              Horarios de atención
+              <textarea
+                className="input-line mt-2 text-sm normal-case tracking-normal text-ink"
+                maxLength={500}
+                placeholder="Cargá los horarios confirmados"
+                rows={4}
+                value={businessHours}
+                onChange={(event) => setBusinessHours(event.target.value)}
+              />
+            </label>
+            <div>
+              <p className="label-xs text-muted">Foto del local</p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <label className="btn-ghost cursor-pointer">
+                  {uploading ? 'Subiendo…' : 'Subir foto'}
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(event) => void handleStorePhotoUpload(event.target.files?.[0])}
+                    type="file"
+                  />
+                </label>
+                {storePhotoUrl && (
+                  <button
+                    className="min-h-11 px-3 text-xs font-semibold underline"
+                    onClick={() => setStorePhotoUrl('')}
+                    type="button"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+              {storePhotoUrl ? (
+                <div className="relative mt-3 aspect-[4/3] max-w-sm overflow-hidden border border-line bg-sand">
+                  <SmartImage alt="Vista previa del local" sizes="(min-width: 640px) 384px, 100vw" src={storePhotoUrl} />
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted">Todavía no hay una foto cargada.</p>
+              )}
+            </div>
+          </div>
+        </section>
       </form>
 
       <section className="mt-12 border border-line bg-white p-6">

@@ -3,6 +3,7 @@ import { LEGAL_LINKS, siteConfig } from '../lib/brand';
 import { Logo } from './logo';
 import { RoyTechAttribution } from './roytech-attribution';
 import { FacebookIcon, InstagramIcon } from './icons';
+import { StoreLocationInfo } from './store-location-info';
 
 const links = {
   about: [
@@ -77,8 +78,7 @@ function ContactDetails() {
     <>
       {siteConfig.contact.legalName && <p>{siteConfig.contact.legalName}</p>}
       {siteConfig.contact.cuit && <p>CUIT {siteConfig.contact.cuit}</p>}
-      {siteConfig.contact.businessHours && <p>{siteConfig.contact.businessHours}</p>}
-      <p><a href={siteConfig.contact.mapsUrl}>{siteConfig.contact.address}, CP {siteConfig.contact.postalCode}</a></p>
+      <StoreLocationInfo compact />
       <p><a href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a></p>
       <p><a href={`mailto:${siteConfig.contact.email}`}>{siteConfig.contact.email}</a></p>
     </>

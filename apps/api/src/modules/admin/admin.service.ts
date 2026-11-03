@@ -546,11 +546,17 @@ export class AdminService {
       title: hero?.title ?? null,
       subtitle: hero?.subtitle ?? null,
       buttonLabel: hero?.buttonLabel ?? null,
+      businessHours: hero?.businessHours ?? null,
+      storePhotoUrl: hero?.storePhotoUrl ?? null,
       product: hero?.product ? { ...hero.product, price: hero.product.price.toString() } : null,
     };
   }
 
   async updateHomeHero(actorId: string, dto: UpdateHomeHeroDto) {
+    if (dto.storePhotoUrl && !isVercelBlobUrl(dto.storePhotoUrl)) {
+      throw new BadRequestException('La foto del local debe estar guardada en el almacenamiento de la tienda');
+    }
+
     if (dto.productId) {
       const product = await this.prisma.product.findUnique({
         where: { id: dto.productId },
@@ -572,6 +578,8 @@ export class AdminService {
     if (dto.title !== undefined) changes.title = cleanText(dto.title);
     if (dto.subtitle !== undefined) changes.subtitle = cleanText(dto.subtitle);
     if (dto.buttonLabel !== undefined) changes.buttonLabel = cleanText(dto.buttonLabel);
+    if (dto.businessHours !== undefined) changes.businessHours = cleanText(dto.businessHours);
+    if (dto.storePhotoUrl !== undefined) changes.storePhotoUrl = cleanText(dto.storePhotoUrl);
 
     await this.prisma.homeHero.upsert({
       where: { id: 'home' },
@@ -582,10 +590,19 @@ export class AdminService {
         title: (changes.title as string | null) ?? null,
         subtitle: (changes.subtitle as string | null) ?? null,
         buttonLabel: (changes.buttonLabel as string | null) ?? null,
+        businessHours: (changes.businessHours as string | null) ?? null,
+        storePhotoUrl: (changes.storePhotoUrl as string | null) ?? null,
       },
       update: changes,
     });
-    await this.auditLog.record(actorId, 'UPDATE_HOME_HERO', 'HomeHero', 'home', { fields: Object.keys(changes) });
+    const updatesStoreInfo = 'businessHours' in changes || 'storePhotoUrl' in changes;
+    await this.auditLog.record(
+      actorId,
+      updatesStoreInfo ? 'UPDATE_STORE_INFO' : 'UPDATE_HOME_HERO',
+      'HomeHero',
+      'home',
+      { fields: Object.keys(changes) },
+    );
     return this.getHomeHero();
   }
 

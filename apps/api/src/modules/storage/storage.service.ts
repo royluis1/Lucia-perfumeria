@@ -46,7 +46,12 @@ export class StorageService {
     }
   }
 
-  async uploadImage(buffer: Buffer, originalName: string, contentType?: string): Promise<string> {
+  async uploadImage(
+    buffer: Buffer,
+    originalName: string,
+    contentType?: string,
+    folder: 'products' | 'store' = 'products',
+  ): Promise<string> {
     if (!this.token) {
       throw new ServiceUnavailableException('El almacenamiento de imágenes no está configurado.');
     }
@@ -57,7 +62,7 @@ export class StorageService {
     const effectiveContentType = optimized?.contentType ?? contentType;
     const filename = `${randomUUID()}${ext}`;
 
-    const blob = await put(`products/${filename}`, data, {
+    const blob = await put(`${folder}/${filename}`, data, {
       access: 'public',
       token: this.token,
       contentType: effectiveContentType,

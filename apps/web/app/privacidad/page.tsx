@@ -4,34 +4,37 @@ import { createPageMetadata } from '../../lib/metadata';
 
 export const metadata = createPageMetadata({
   title: 'Política de privacidad',
-  description: 'Cómo protegemos tus datos personales en Lucía Perfumería (Ley 25.326).',
+  description: 'Borrador de política de privacidad de Lucía Perfumería.',
   path: '/privacidad',
 });
 
 export default function PrivacidadPage() {
   return (
     <InfoPage
-      eyebrow="Legal"
+      eyebrow="Legal · borrador"
       title="Política de privacidad"
-      intro="En Lucía Perfumería tratamos tus datos personales con responsabilidad y de acuerdo a la Ley 25.326 de Protección de Datos Personales."
+      intro="Este texto es un borrador y debe revisarse con un abogado antes de publicarse como política definitiva."
       sections={[
         {
-          title: 'Qué datos recopilamos',
+          title: 'Qué datos se guardan',
           content: [
-            'Recopilamos los datos que nos proporcionás al crear tu cuenta, hacer una compra o contactarnos: nombre, correo electrónico, teléfono y dirección de envío.',
+            'Según cómo uses la tienda, podemos guardar los datos que proporcionás en tu cuenta, pedidos y consultas, como nombre, correo electrónico, teléfono y dirección de envío, además de la información necesaria para identificar y atender cada pedido.',
+            'Los pagos se gestionan mediante Mercado Pago; no ingreses datos de tarjetas en formularios de contacto.',
           ],
         },
         {
           title: 'Para qué los usamos',
           content: [
-            'Usamos tus datos para procesar y enviar tus pedidos, gestionar devoluciones, responder consultas y, si lo autorizaste, enviarte novedades y promociones.',
+            'Usamos esos datos para administrar la cuenta, gestionar pedidos y solicitudes, y responder consultas relacionadas con la compra o el servicio.',
+            'Si se habilitan herramientas de medición como Google Analytics o Meta Pixel, pueden utilizarse datos técnicos de navegación según la configuración del sitio.',
           ],
         },
         {
-          title: 'Tus derechos',
+          title: 'Cómo solicitar acceso o baja',
           content: [
-            'Podés solicitar acceso, rectificación o supresión de tus datos personales, o revocar tu consentimiento, escribiéndonos a {0}.',
-          ].map((line) => line.replace('{0}', siteConfig.contact.email)),
+            `Podés solicitar acceso, corrección o supresión de tus datos escribiéndonos a ${siteConfig.contact.email}.`,
+            'La eliminación puede estar sujeta a la conservación de información que resulte necesaria para cumplir obligaciones legales o resolver operaciones pendientes.',
+          ],
         },
       ]}
     />

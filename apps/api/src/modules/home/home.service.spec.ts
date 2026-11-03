@@ -37,6 +37,22 @@ describe('HomeService', () => {
     service = new HomeService(prisma);
   });
 
+  it('devuelve los horarios y la foto cargados para el local', async () => {
+    homeHero.findUnique.mockResolvedValue({
+      businessHours: 'Lunes a viernes, consultar por teléfono',
+      storePhotoUrl: 'https://store.public.blob.vercel-storage.com/local.webp',
+    });
+
+    await expect(service.getStoreInfo()).resolves.toEqual({
+      businessHours: 'Lunes a viernes, consultar por teléfono',
+      storePhotoUrl: 'https://store.public.blob.vercel-storage.com/local.webp',
+    });
+    expect(homeHero.findUnique).toHaveBeenCalledWith({
+      where: { id: 'home' },
+      select: { businessHours: true, storePhotoUrl: true },
+    });
+  });
+
   it('devuelve destacados, novedades, géneros con productos y marcas activas', async () => {
     homeHero.findUnique.mockResolvedValue(null);
     product.findMany.mockResolvedValueOnce([productRow()]);

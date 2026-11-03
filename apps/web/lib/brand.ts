@@ -21,7 +21,6 @@ export const siteConfig = {
     whatsappUrl: 'https://wa.me/5492657434149',
     legalName: undefined as string | undefined,
     cuit: undefined as string | undefined,
-    businessHours: undefined as string | undefined,
   },
   benefits: [
     { id: 'payment', text: 'Pago con Mercado Pago' },

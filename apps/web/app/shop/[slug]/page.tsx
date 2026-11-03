@@ -132,6 +132,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           </div>
           <p className="mt-6 text-2xl font-semibold">{price}</p>
+          <p className="mt-2 text-sm text-muted">Pagá en cuotas con Mercado Pago</p>
           <details className="mt-6 max-w-lg border-y border-line py-3">
             <summary className="flex min-h-11 cursor-pointer items-center justify-between text-xs font-semibold uppercase tracking-[0.18em]">
               Descripción

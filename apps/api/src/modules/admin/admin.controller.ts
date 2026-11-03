@@ -159,6 +159,21 @@ export class AdminController {
     return this.adminService.getHomeHero();
   }
 
+  @Post('home/store-photo/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
+      fileFilter: productImageFileFilter,
+    }),
+  )
+  async uploadStorePhoto(@Req() request: AuthenticatedRequest, @UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Enviá una foto del local');
+    const url = await this.storage.uploadImage(file.buffer, file.originalname, file.mimetype, 'store');
+    await this.adminService.recordUpload(request.userId, file.originalname);
+    return { url };
+  }
+
   @Put('home/hero')
   updateHomeHero(@Req() request: AuthenticatedRequest, @Body() body: UpdateHomeHeroDto) {
     return this.adminService.updateHomeHero(request.userId, body);

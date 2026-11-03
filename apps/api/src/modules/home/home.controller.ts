@@ -5,6 +5,12 @@ import { HomeService } from './home.service';
 export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 
+  @Get('store-info')
+  @Header('Cache-Control', 'no-store')
+  getStoreInfo() {
+    return this.homeService.getStoreInfo();
+  }
+
   @Get()
   @Header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600')
   getHome() {

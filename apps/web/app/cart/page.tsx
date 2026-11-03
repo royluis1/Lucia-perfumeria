@@ -84,6 +84,7 @@ export default function CartPage() {
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
               </div>
+              <p className="text-sm text-muted">Pagá en cuotas con Mercado Pago</p>
               <Link className="block w-full border border-black bg-black px-8 py-4 text-center text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href="/checkout">
                 Continuar al checkout
               </Link>

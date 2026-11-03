@@ -215,6 +215,40 @@ describe('AdminService destacados y hero', () => {
     expect(auditLog.record).toHaveBeenCalledWith('admin1', 'UPDATE_HOME_HERO', 'HomeHero', 'home', expect.anything());
   });
 
+  it('guarda y audita los horarios y foto del local', async () => {
+    const storePhotoUrl = 'https://store.public.blob.vercel-storage.com/local.webp';
+    homeHero.upsert.mockResolvedValue({ id: 'home' });
+    homeHero.findUnique.mockResolvedValue({
+      id: 'home',
+      businessHours: 'Lunes a viernes',
+      storePhotoUrl,
+      product: null,
+    });
+
+    await service.updateHomeHero('admin1', { businessHours: ' Lunes a viernes ', storePhotoUrl });
+
+    expect(homeHero.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'home' },
+        update: { businessHours: 'Lunes a viernes', storePhotoUrl },
+      }),
+    );
+    expect(auditLog.record).toHaveBeenCalledWith(
+      'admin1',
+      'UPDATE_STORE_INFO',
+      'HomeHero',
+      'home',
+      { fields: ['businessHours', 'storePhotoUrl'] },
+    );
+  });
+
+  it('rechaza una foto del local que no esté en Vercel Blob', async () => {
+    await expect(
+      service.updateHomeHero('admin1', { storePhotoUrl: 'https://example.com/local.jpg' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(homeHero.upsert).not.toHaveBeenCalled();
+  });
+
   function fakeImageFile(overrides: Partial<Express.Multer.File> = {}) {
     return {
       buffer: Buffer.from('fake'),

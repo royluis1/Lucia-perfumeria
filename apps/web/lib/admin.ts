@@ -58,6 +58,8 @@ export type AdminHero = {
   title: string | null;
   subtitle: string | null;
   buttonLabel: string | null;
+  businessHours: string | null;
+  storePhotoUrl: string | null;
   product: {
     id: string;
     slug: string;
@@ -191,6 +193,24 @@ export async function uploadImage(file: File): Promise<string> {
     }
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? 'No se pudo subir la imagen');
+  }
+  const result = (await response.json()) as { url: string };
+  return result.url;
+}
+
+export async function uploadStorePhoto(file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await apiFetch('/admin/home/store-photo/upload', {
+    method: 'POST',
+    body: form,
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Tu sesión terminó. Ingresá nuevamente para continuar.');
+    }
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? 'No se pudo subir la foto del local');
   }
   const result = (await response.json()) as { url: string };
   return result.url;

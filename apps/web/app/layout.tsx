@@ -5,6 +5,7 @@ import { SiteFooter } from '../components/site-footer';
 import { CartProvider } from '../lib/cart';
 import { WishlistProvider } from '../lib/wishlist';
 import { CartSidebar } from '../components/cart-sidebar';
+import { AnalyticsScripts } from '../components/analytics-scripts';
 import { SITE_URL } from '../lib/config';
 import { siteConfig } from '../lib/brand';
 import './globals.css';
@@ -79,6 +80,7 @@ export default function RootLayout({
   return (
     <html className={`${archivo.variable} ${bodoni.variable} ${cormorant.variable}`} lang="es">
       <body>
+        <AnalyticsScripts />
         <CartProvider>
           <WishlistProvider>
             {children}

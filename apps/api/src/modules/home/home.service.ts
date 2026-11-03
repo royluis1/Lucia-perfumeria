@@ -17,6 +17,18 @@ const GENDER_LINKS = [
 export class HomeService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getStoreInfo() {
+    const settings = await this.prisma.homeHero.findUnique({
+      where: { id: 'home' },
+      select: { businessHours: true, storePhotoUrl: true },
+    });
+
+    return {
+      businessHours: settings?.businessHours ?? null,
+      storePhotoUrl: settings?.storePhotoUrl ?? null,
+    };
+  }
+
   async getHome() {
     const [heroRow, featuredRows, categoryRows, newestRows, genderRows, brandRows] = await Promise.all([
       this.prisma.homeHero.findUnique({

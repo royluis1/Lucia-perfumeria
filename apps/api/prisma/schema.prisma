@@ -149,9 +149,11 @@ model HomeHero {
   imageUrl    String?
   title       String?
   subtitle    String?
-  buttonLabel String?
-  updatedAt   DateTime @updatedAt
-  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  buttonLabel   String?
+  businessHours String?
+  storePhotoUrl String?
+  updatedAt     DateTime @updatedAt
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([productId])
 }

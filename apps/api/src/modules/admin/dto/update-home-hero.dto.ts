@@ -23,4 +23,14 @@ export class UpdateHomeHeroDto {
   @IsString()
   @MaxLength(40)
   buttonLabel?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  businessHours?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  storePhotoUrl?: string | null;
 }
