@@ -33,7 +33,15 @@ export class HomeService {
     const [heroRow, featuredRows, categoryRows, newestRows, genderRows, brandRows] = await Promise.all([
       this.prisma.homeHero.findUnique({
         where: { id: 'home' },
-        include: { product: { select: publicProductSelect } },
+        select: {
+          id: true,
+          productId: true,
+          imageUrl: true,
+          title: true,
+          subtitle: true,
+          buttonLabel: true,
+          product: { select: publicProductSelect },
+        },
       }),
       this.prisma.product.findMany({
         where: { isActive: true, stock: { gt: 0 }, featured: true },

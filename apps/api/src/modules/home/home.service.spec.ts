@@ -86,6 +86,18 @@ describe('HomeService', () => {
 
     await service.getHome();
 
+    expect(homeHero.findUnique).toHaveBeenCalledWith({
+      where: { id: 'home' },
+      select: {
+        id: true,
+        productId: true,
+        imageUrl: true,
+        title: true,
+        subtitle: true,
+        buttonLabel: true,
+        product: { select: expect.any(Object) },
+      },
+    });
     const featuredCall = product.findMany.mock.calls[0][0];
     expect(featuredCall.where).toEqual({ isActive: true, stock: { gt: 0 }, featured: true });
     expect(featuredCall.orderBy).toEqual([{ featuredOrder: 'asc' }, { createdAt: 'desc' }]);
