@@ -125,7 +125,7 @@ export function CatalogSearch() {
       aria-label="Buscar productos"
       aria-modal={mobile}
       className={mobile
-        ? 'fixed inset-0 z-[70] flex h-dvh min-h-dvh flex-col bg-canvas p-5'
+        ? 'fixed inset-0 z-[70] flex h-dvh min-h-dvh flex-col bg-canvas px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))]'
         : 'absolute right-0 top-full z-[70] mt-2 w-[min(90vw,28rem)] border border-line bg-canvas p-4 shadow-xl'}
       id="catalog-search-panel"
       role="dialog"

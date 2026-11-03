@@ -13,13 +13,13 @@ export default function CartPage() {
   const total = subtotal + shipping;
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">
+    <main className="mx-auto min-h-[100dvh] max-w-4xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <Header />
-      <div className="mt-10 space-y-4">
+      <div className="mt-7 space-y-4 sm:mt-10">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
             <CartIcon className="h-24 w-24 mb-6 text-black/20" />
-            <h1 className="font-display text-4xl font-black uppercase tracking-[-0.02em] mb-4">Tu carrito está vacío</h1>
+            <h1 className="mb-4 font-display text-[clamp(2rem,8vw,2.5rem)] font-black uppercase tracking-[-0.02em]">Tu carrito está vacío</h1>
             <p className="mb-8 max-w-md">Todavía no agregaste productos. ¡Explorá nuestra colección!</p>
             <Link className="border border-black bg-black px-8 py-4 text-xs font-extrabold uppercase tracking-[0.22em] text-white transition hover:bg-white hover:text-black" href="/shop">
               Ir a la tienda
@@ -27,9 +27,10 @@ export default function CartPage() {
           </div>
         ) : (
           <>
+            <h1 className="font-display text-[clamp(2rem,8vw,2.5rem)] font-black uppercase tracking-[-0.02em]">Tu carrito</h1>
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-4 border-b border-line py-5">
+                <div key={item.productId} className="grid grid-cols-[4rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-b border-line py-5 sm:grid-cols-[4rem_minmax(0,1fr)_auto] sm:gap-x-4">
                   <div className="relative h-20 w-16 flex-shrink-0 bg-white border border-line">
                     <ProductBottlePlaceholder className="absolute inset-0" />
                   </div>
@@ -65,7 +66,7 @@ export default function CartPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="font-semibold self-center">{formatPrice(item.price * item.quantity)}</p>
+                  <p className="col-start-2 text-right font-semibold sm:col-start-3 sm:self-center">{formatPrice(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>

@@ -36,7 +36,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
     <div className="select-none">
       <div
         aria-label="Galería de fotos"
-        className="group relative flex aspect-square items-center justify-center overflow-hidden border border-line bg-sand p-10"
+        className="group relative flex aspect-square touch-pan-y items-center justify-center overflow-hidden border border-line bg-sand p-4 sm:p-10"
         onKeyDown={(event) => {
           if (event.key === 'ArrowLeft') {
             event.preventDefault();
@@ -59,7 +59,9 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
       >
         <span
           className="absolute inset-0 block transition-transform duration-300 ease-out"
-          onMouseEnter={() => setZoomed(true)}
+          onMouseEnter={() => {
+            if (window.matchMedia('(hover: hover)').matches) setZoomed(true);
+          }}
           onMouseLeave={() => setZoomed(false)}
           onMouseMove={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -100,6 +102,20 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
             <span className="absolute bottom-4 right-4 z-10 border border-line bg-white/90 px-2 py-1 text-[11px] font-semibold tracking-[0.14em] text-muted">
               {safeIndex + 1} / {total}
             </span>
+            <div aria-label="Seleccionar foto" className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
+              {images.map((image, imageIndex) => (
+                <button
+                  aria-label={`Ver foto ${imageIndex + 1}`}
+                  aria-pressed={imageIndex === safeIndex}
+                  className={`h-2.5 w-2.5 rounded-full border border-ink ${
+                    imageIndex === safeIndex ? 'bg-ink' : 'bg-white/90'
+                  }`}
+                  key={image.id}
+                  onClick={() => setIndex(imageIndex)}
+                  type="button"
+                />
+              ))}
+            </div>
           </>
         )}
       </div>

@@ -289,6 +289,10 @@ textarea {
   animation: bump 260ms ease-out;
 }
 
+.footer-social-link {
+  transition: color 200ms ease, background-color 200ms ease;
+}
+
 .shine {
   background: linear-gradient(100deg, #111 40%, #a8863f 50%, #111 60%);
   background-position: 50% 0;
@@ -374,6 +378,10 @@ textarea {
     transform: scale(1.07);
   }
 
+  .card:hover .product-card-secondary {
+    opacity: 1;
+  }
+
   .card:hover .add {
     transform: none;
   }
@@ -384,6 +392,11 @@ textarea {
 
   .tr:hover {
     transform: translateY(-6px);
+  }
+
+  .footer-social-link:hover {
+    background-color: #fff;
+    color: #111;
   }
 }
 
@@ -411,6 +424,36 @@ textarea {
 
   .card .add {
     transform: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .float,
+  .glow,
+  .sh,
+  .spin {
+    animation: none;
+  }
+
+  .mq {
+    animation-duration: 55s;
+  }
+
+  .lt,
+  .rv,
+  .gallery-swap {
+    animation-delay: 0ms;
+    animation-duration: 300ms;
+  }
+
+  .lt:nth-child(n) {
+    animation-delay: 0ms;
+  }
+
+  .animate-slide-in,
+  .animate-fade-in,
+  .animate-sheet-up {
+    animation-duration: 180ms;
   }
 }
 
@@ -453,5 +496,11 @@ textarea {
   .btn-ghost:hover {
     background-color: #111;
     color: #fff;
+  }
+}
+
+@media (max-width: 639px) {
+  .site-footer {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
   }
 }

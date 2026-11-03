@@ -32,8 +32,8 @@ export function CartSidebar() {
         onClick={closeCart}
         aria-hidden="true"
       />
-      <aside className="animate-slide-in fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-line px-6 py-3">
+      <aside className="animate-slide-in fixed right-0 top-0 z-50 flex h-dvh w-full max-w-sm flex-col bg-white pb-[env(safe-area-inset-bottom)] shadow-xl">
+        <div className="flex items-center justify-between border-b border-line px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-6">
           <h2 className="font-display text-xl font-black uppercase tracking-[0.2em]">Carrito</h2>
           <button
             className="flex h-11 w-11 items-center justify-center text-muted transition-colors hover:text-black"
@@ -98,7 +98,7 @@ export function CartSidebar() {
         </div>
 
         {items.length > 0 && (
-          <div className="space-y-4 border-t border-line p-6">
+          <div className="space-y-4 border-t border-line p-4 sm:p-6">
             <div className="flex justify-between text-sm">
               <span className="text-muted">Subtotal</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>

@@ -45,20 +45,20 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-16">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <a className="font-display text-xl" href="/admin" aria-label="Panel admin"><Logo className="text-xl" /></a>
         <a className="ul text-xs font-semibold uppercase tracking-[0.22em]" href="/shop">Tienda</a>
       </div>
       <a className="mt-10 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-muted transition-colors hover:text-black" href="/admin"><span aria-hidden="true">←</span>Volver al panel</a>
-      <h1 className="mt-5 font-display text-6xl font-black uppercase tracking-[-0.02em]">Pedidos</h1>
+      <h1 className="mt-5 font-display text-[clamp(2.25rem,8vw,3.75rem)] font-black uppercase tracking-[-0.02em] md:text-6xl">Pedidos</h1>
       {message && <p className="mt-6 border border-line bg-white px-4 py-3 text-sm" role="status">{message}</p>}
       {error && <p className="mt-6 border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
 
       <div className="mt-10 space-y-4">
         {orders.length === 0 && <p className="border border-line bg-white p-8 text-muted">Todavía no hay pedidos.</p>}
         {orders.map((order) => (
-          <article className="border border-line bg-white p-6" key={order.id}>
+          <article className="border border-line bg-white p-4 sm:p-6" key={order.id}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
@@ -71,7 +71,7 @@ export default function AdminOrdersPage() {
                   {order.items.map((item, index) => <li key={`${order.id}-${index}`}>{item.quantity} × {item.product.name} · {item.quantity}×{item.product.sku}</li>)}
                 </ul>
               </div>
-              <div className="w-64 space-y-3">
+              <div className="w-full max-w-64 space-y-3 sm:w-64">
                 <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
                   Estado
                   <select className="mt-1 w-full border-b border-black/30 bg-transparent py-2 outline-none transition-colors focus:border-black" value={order.status} onChange={(event) => void handleUpdate(order, 'status', event.target.value)}>

@@ -44,6 +44,20 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
     const syncLoggedIn = () => setLoggedIn(Boolean(window.localStorage.getItem('lucia_access_token')));
     syncLoggedIn();
     window.addEventListener(AUTH_CHANGE_EVENT, syncLoggedIn);
@@ -73,9 +87,9 @@ export function Header() {
 
   return (
     <header className={`sticky top-0 z-50 border-b border-line bg-canvas/95 backdrop-blur-sm transition-shadow ${scrolled ? 'shadow-[0_8px_24px_-20px_rgba(17,17,17,0.45)]' : ''}`}>
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        <Link className="flex min-h-11 items-center" href="/">
-          <Logo className="text-[22px]" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6 sm:py-3">
+        <Link className="flex min-h-11 shrink-0 items-center" href="/">
+          <Logo className="text-[18px] sm:text-[22px]" />
         </Link>
 
         <nav aria-label="Principal" className="hidden items-center gap-9 lg:flex">
@@ -85,10 +99,10 @@ export function Header() {
           <Link className={desktopNavItemClass} href="/nosotros">Nuestra historia</Link>
         </nav>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className="flex shrink-0 items-center gap-0 sm:gap-1">
           <Link
             aria-label={loggedIn ? 'Mi cuenta' : 'Ingresar'}
-            className="flex min-h-11 items-center gap-2 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted transition-colors hover:text-black"
+            className="hidden min-h-11 items-center gap-2 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted transition-colors hover:text-black sm:flex"
             href={loggedIn ? '/account' : '/login'}
           >
             <UserIcon className="h-4 w-4" />
@@ -137,11 +151,28 @@ export function Header() {
       </div>
 
       {menuOpen && (
-        <nav aria-label="Menú móvil" className="border-t border-line bg-canvas px-6 pb-4 pt-2 lg:hidden" id="mobile-nav">
-          <ul>
+        <nav
+          aria-label="Menú móvil"
+          className="fixed inset-0 z-[60] flex h-[100dvh] flex-col overflow-y-auto bg-canvas px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[calc(0.75rem+env(safe-area-inset-top))] lg:hidden"
+          id="mobile-nav"
+        >
+          <div className="flex min-h-11 items-center justify-between border-b border-line pb-3">
+            <Link className="inline-flex min-h-11 items-center" href="/" onClick={() => setMenuOpen(false)}>
+              <Logo className="text-[20px]" />
+            </Link>
+            <button
+              aria-label="Cerrar menú"
+              className="flex h-11 w-11 items-center justify-center text-muted"
+              onClick={() => setMenuOpen(false)}
+              type="button"
+            >
+              <CloseIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <ul className="mt-5">
             <li>
               <Link
-                className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
+                className="flex min-h-14 items-center border-b border-line text-sm font-semibold uppercase tracking-[0.18em]"
                 href="/shop"
                 onClick={() => setMenuOpen(false)}
               >
@@ -149,15 +180,15 @@ export function Header() {
               </Link>
             </li>
             <li>
-              <details className="group">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center text-xs font-semibold uppercase tracking-[0.22em] [&::-webkit-details-marker]:hidden">
+              <details className="group border-b border-line">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center text-sm font-semibold uppercase tracking-[0.18em] [&::-webkit-details-marker]:hidden">
                   Categorías
                 </summary>
-                <ul className="border-l border-line pl-4">
+                <ul className="mb-3 border-l border-line pl-4">
                   {genderLinks.map((gender) => (
                     <li key={gender.value}>
                       <Link
-                        className="flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-muted"
+                        className="flex min-h-12 items-center text-sm uppercase tracking-[0.14em] text-muted"
                         href={`/shop?genero=${gender.value}`}
                         onClick={() => setMenuOpen(false)}
                       >
@@ -168,7 +199,7 @@ export function Header() {
                   {categories.map((category) => (
                     <li key={category.id}>
                       <Link
-                        className="flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-muted"
+                        className="flex min-h-12 items-center text-sm uppercase tracking-[0.14em] text-muted"
                         href={`/shop?categoria=${encodeURIComponent(category.slug)}`}
                         onClick={() => setMenuOpen(false)}
                       >
@@ -182,7 +213,7 @@ export function Header() {
             {navLinks.slice(1).map((link) => (
               <li key={link.label}>
                 <Link
-                  className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
+                  className="flex min-h-14 items-center border-b border-line text-sm font-semibold uppercase tracking-[0.18em]"
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
                 >
@@ -192,13 +223,33 @@ export function Header() {
             ))}
             <li>
               <Link
-                className="flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.22em]"
-                href="/shop"
+                className="flex min-h-14 items-center border-b border-line text-sm font-semibold uppercase tracking-[0.18em]"
+                href={loggedIn ? '/account' : '/login'}
                 onClick={() => setMenuOpen(false)}
               >
-                Buscar en el catálogo
+                {loggedIn ? 'Mi cuenta' : 'Ingresar'}
               </Link>
             </li>
+            <li>
+              <Link
+                className="flex min-h-14 items-center border-b border-line text-sm font-semibold uppercase tracking-[0.18em]"
+                href="/wishlist"
+                onClick={() => setMenuOpen(false)}
+              >
+                Favoritos
+              </Link>
+            </li>
+            {loggedIn && (
+              <li>
+                <Link
+                  className="flex min-h-14 items-center border-b border-line text-sm font-semibold uppercase tracking-[0.18em]"
+                  href="/account/orders"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Mis pedidos
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}

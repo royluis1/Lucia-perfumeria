@@ -80,7 +80,7 @@ export default function AccountPage() {
 
   if (!profile) {
     return (
-      <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">
+      <main className="mx-auto min-h-[100dvh] max-w-4xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
         <Link className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></Link>
         <p className="mt-20 border border-line bg-white p-8 text-black/70">{profileMessage}</p>
         <Link className="mt-6 inline-block border border-black bg-black px-6 py-3 text-xs font-extrabold uppercase tracking-[0.2em] text-white" href="/login">Ingresar</Link>
@@ -89,7 +89,7 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
+    <main className="mx-auto min-h-[100dvh] max-w-6xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <Link className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></Link>
         <div className="flex items-center gap-5">
@@ -99,11 +99,11 @@ export default function AccountPage() {
       </div>
       {logoutError && <p className="mt-4 text-sm text-red-700" role="alert">{logoutError}</p>}
 
-      <p className="mt-20 text-xs uppercase tracking-[0.3em] text-muted">Mi cuenta</p>
-      <h1 className="mt-3 font-display text-6xl font-black uppercase tracking-[-0.02em] leading-none">Hola, {profile.name}</h1>
+      <p className="mt-12 text-xs uppercase tracking-[0.3em] text-muted md:mt-20">Mi cuenta</p>
+      <h1 className="mt-3 font-display text-[clamp(2.25rem,8vw,3.75rem)] font-black uppercase leading-none tracking-[-0.02em] md:text-6xl">Hola, {profile.name}</h1>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-2">
-        <section className="border border-line bg-white p-8">
+      <div className="mt-8 grid gap-5 lg:mt-12 lg:grid-cols-2 lg:gap-8">
+        <section className="min-w-0 border border-line bg-white p-4 sm:p-8">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Perfil</h2>
             <span className="text-xs uppercase tracking-[0.14em] text-muted">{profile.email}</span>
@@ -123,7 +123,7 @@ export default function AccountPage() {
           </form>
         </section>
 
-        <section className="border border-line bg-white p-8">
+        <section className="min-w-0 border border-line bg-white p-4 sm:p-8">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Seguridad</h2>
           </div>
@@ -160,7 +160,7 @@ export default function AccountPage() {
         </section>
       </div>
 
-      <section className="mt-12">
+      <section className="mt-8 sm:mt-12">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-3xl font-black uppercase tracking-[-0.02em]">Mis pedidos</h2>
           {profile.role === 'ADMIN' || profile.role === 'SUPERADMIN' ? (
@@ -170,7 +170,7 @@ export default function AccountPage() {
         <div className="mt-6 space-y-4">
           {orders.length === 0 && <p className="border border-line bg-white p-6 text-muted">Todavía no tenés pedidos.</p>}
           {orders.map((order) => (
-            <article className="border border-line bg-white p-6" key={order.id}>
+            <article className="border border-line bg-white p-4 sm:p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
                 <p className="text-sm font-semibold">{formatPrice(Number(order.total))}</p>

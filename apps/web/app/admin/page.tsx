@@ -12,7 +12,7 @@ const modules: Array<{ title: string; description: string; href: string }> = [
 
 export default function AdminPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
+    <main className="mx-auto min-h-[100dvh] max-w-6xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <Link href="/admin">
           <Logo className="text-xl" />
@@ -20,7 +20,7 @@ export default function AdminPage() {
         <Link className="ul text-xs font-semibold uppercase tracking-[0.22em]" href="/shop">← Volver a la tienda</Link>
       </div>
       <p className="rv d1 mt-20 text-xs font-semibold uppercase tracking-[0.3em] text-muted">Administración</p>
-      <h1 className="rv d1 mt-3 font-display text-6xl font-black uppercase leading-none tracking-[-0.02em]">Panel admin</h1>
+      <h1 className="rv d1 mt-3 font-display text-[clamp(2rem,8vw,3.75rem)] font-black uppercase leading-none tracking-[-0.02em] md:text-6xl">Panel admin</h1>
       <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {modules.map(({ title, description, href }, index) => (
           <section

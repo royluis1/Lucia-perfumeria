@@ -44,13 +44,13 @@ export default function AdminReviewsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-16">
+    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <a className="font-display text-xl" href="/admin" aria-label="Panel admin"><Logo className="text-xl" /></a>
         <a className="ul text-xs font-semibold uppercase tracking-[0.22em]" href="/shop">Tienda</a>
       </div>
       <a className="mt-10 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-muted transition-colors hover:text-black" href="/admin"><span aria-hidden="true">←</span>Volver al panel</a>
-      <h1 className="mt-5 font-display text-6xl font-black uppercase tracking-[-0.02em]">Reseñas pendientes</h1>
+      <h1 className="mt-5 font-display text-[clamp(2rem,8vw,3.75rem)] font-black uppercase tracking-[-0.02em] md:text-6xl">Reseñas pendientes</h1>
       {message && <p className="mt-6 border border-line bg-white px-4 py-3 text-sm" role="status">{message}</p>}
       {error && <p className="mt-6 border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
 

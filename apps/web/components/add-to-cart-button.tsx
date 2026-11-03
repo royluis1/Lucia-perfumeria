@@ -9,15 +9,19 @@ export function AddToCartButton({
   productName,
   productBrand,
   productPrice,
+  quantity = 1,
   disabled,
   overlay = false,
+  compact = false,
 }: {
   productId: string;
   productName: string;
   productBrand: string;
   productPrice: number;
+  quantity?: number;
   disabled?: boolean;
   overlay?: boolean;
+  compact?: boolean;
 }) {
   const [message, setMessage] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -32,6 +36,7 @@ export function AddToCartButton({
       name: productName,
       brand: productBrand,
       price: productPrice,
+      quantity,
     });
 
     const token = getAccessToken();
@@ -42,7 +47,7 @@ export function AddToCartButton({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ productId, quantity: 1 }),
+          body: JSON.stringify({ productId, quantity }),
         }, { redirectOnExpired: false });
         if (!response.ok && response.status !== 401) {
           console.error('No se pudo sincronizar el carrito de la cuenta; el carrito local se conservó.');
@@ -78,7 +83,7 @@ export function AddToCartButton({
   return (
     <div>
       <button
-        className="btn-primary mt-8 w-full"
+        className={`btn-primary ${compact ? 'w-full' : 'mt-8 w-full'}`}
         disabled={disabled || isAdding}
         onClick={handleAddToCart}
         type="button"

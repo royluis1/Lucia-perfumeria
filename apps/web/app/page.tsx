@@ -61,24 +61,24 @@ export default async function HomePage() {
       />
       <Header />
 
-      <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-12 md:grid-cols-[1.05fr_0.95fr] md:pt-16">
-        <div>
-          <h1 className="mt-6 max-w-3xl font-display text-5xl font-black uppercase leading-[0.92] tracking-[-0.02em] md:text-7xl">
+      <section className="mx-auto grid max-w-7xl items-center gap-8 px-4 pb-12 pt-6 sm:px-6 sm:pb-16 md:grid-cols-[1.05fr_0.95fr] md:gap-12 md:pb-20 md:pt-16">
+        <div className="min-w-0">
+          <h1 className="mt-3 min-w-0 max-w-3xl break-words font-display text-[clamp(2.5rem,10vw,4.5rem)] font-black uppercase leading-[0.92] tracking-[-0.02em] md:mt-6 md:text-7xl">
             {titleWords.map((word, index) => (
               <span className="lt mr-[0.28em] inline-block" key={`${word}-${index}`}>
                 {index === titleWords.length - 1 ? <span className="shine">{word}</span> : word}
               </span>
             ))}
           </h1>
-          <p className="rv d2 mt-8 max-w-md text-base leading-7 text-muted">{heroSubtitle}</p>
-          <div className="rv d3 mt-10 flex flex-wrap items-center gap-6">
-            <a className="btn-primary" href={heroButtonHref}>{heroButtonLabel}</a>
-            <a className="ul text-xs font-extrabold uppercase tracking-[0.22em]" href="/shop">Ver toda la colección</a>
+          <p className="rv d2 mt-5 max-w-md text-base leading-7 text-muted md:mt-8">{heroSubtitle}</p>
+          <div className="rv d3 mt-7 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6 md:mt-10">
+            <a className="btn-primary w-full sm:w-auto" href={heroButtonHref}>{heroButtonLabel}</a>
+            <a className="ul self-center text-xs font-extrabold uppercase tracking-[0.22em] sm:self-auto" href="/shop">Ver toda la colección</a>
           </div>
         </div>
 
-        <div className="rv d3">
-          <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden bg-sand p-8">
+        <div className="rv d3 min-w-0">
+          <div className="relative flex aspect-[4/5] min-w-0 items-end justify-center overflow-hidden bg-sand p-5 sm:p-8">
             <span aria-hidden="true" className="glow pointer-events-none absolute left-1/2 top-16 h-64 w-64 -translate-x-1/2 rounded-full bg-white/60 blur-3xl" />
 
             {heroImage ? (
@@ -104,14 +104,14 @@ export default async function HomePage() {
               </div>
             )}
 
-            <HeroSeal className="absolute right-5 top-5 h-24 w-24 text-black/60" />
+            <HeroSeal className="absolute right-4 top-4 h-16 w-16 text-black/60 sm:right-5 sm:top-5 sm:h-24 sm:w-24" />
 
             {heroProduct && (
               <a
-                className="relative z-10 w-full border border-line bg-white/95 px-6 py-4 backdrop-blur transition-colors hover:border-black"
+                className="relative z-10 min-w-0 w-full border border-line bg-white/95 px-4 py-4 backdrop-blur transition-colors hover:border-black sm:px-6"
                 href={`/shop/${heroProduct.slug}`}
               >
-                <p className="font-display text-2xl font-black uppercase leading-none tracking-[-0.02em]">{heroProduct.name}</p>
+                <p className="break-words font-display text-xl font-black uppercase leading-none tracking-[-0.02em] sm:text-2xl">{heroProduct.name}</p>
                 <div className="mt-3 flex items-center justify-between gap-4 text-xs uppercase tracking-[0.18em] text-muted">
                   <span>{heroProduct.brand}</span>
                   <span className="font-extrabold text-ink">{formatPrice(Number(heroProduct.price))}</span>
@@ -125,15 +125,15 @@ export default async function HomePage() {
       <TrustMarquee />
 
       {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-6 py-20" id="favoritos">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-20" id="favoritos">
           <div className="flex items-end justify-between gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Selección Lucía</p>
-              <h2 className="mt-3 font-display text-5xl font-black uppercase tracking-[-0.02em]">Favoritos</h2>
+              <h2 className="mt-3 font-display text-[clamp(2rem,8vw,3rem)] font-black uppercase tracking-[-0.02em]">Favoritos</h2>
             </div>
             <a className="ul hidden text-xs font-extrabold uppercase tracking-[0.22em] md:block" href="/shop">Ver todo</a>
           </div>
-          <div className="mt-12 grid gap-x-5 gap-y-12 md:grid-cols-3">
+          <div className="mt-7 grid grid-cols-2 gap-3 md:mt-12 md:grid-cols-3 md:gap-x-5 md:gap-y-12">
             {featured.map((product, index) => (
                 <div className={`rv d${Math.min(index + 1, 3)}`} key={product.id}>
                   <ProductCard product={product} />
@@ -144,15 +144,15 @@ export default async function HomePage() {
       )}
 
       {genderCategories.length > 0 && (
-        <section aria-labelledby="gender-collections-title" className="mx-auto max-w-7xl px-6 pb-20">
+        <section aria-labelledby="gender-collections-title" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 md:pb-20">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Encontrá tu fragancia</p>
-          <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-[-0.02em]" id="gender-collections-title">
+          <h2 className="mt-3 font-display text-[clamp(1.8rem,7vw,2.25rem)] font-black uppercase tracking-[-0.02em]" id="gender-collections-title">
             Colecciones por género
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {genderCategories.map((collection) => (
               <a
-                className="group flex min-h-40 flex-col justify-between border border-line bg-white p-6 transition-colors hover:border-ink hover:bg-sand"
+                className="group flex min-h-32 flex-col justify-between border border-line bg-white p-5 transition-colors hover:border-ink hover:bg-sand sm:min-h-40 sm:p-6"
                 href={`/shop?genero=${collection.value}`}
                 key={collection.value}
               >
@@ -165,11 +165,11 @@ export default async function HomePage() {
       )}
 
       {newest.length > 0 && (
-        <section aria-labelledby="new-arrivals-title" className="mx-auto max-w-7xl px-6 pb-20">
+        <section aria-labelledby="new-arrivals-title" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 md:pb-20">
           <div className="flex items-end justify-between gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Lo último</p>
-              <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-[-0.02em]" id="new-arrivals-title">
+              <h2 className="mt-3 font-display text-[clamp(1.8rem,7vw,2.25rem)] font-black uppercase tracking-[-0.02em]" id="new-arrivals-title">
                 Nuevos ingresos
               </h2>
             </div>
@@ -177,15 +177,15 @@ export default async function HomePage() {
               Ver colección
             </a>
           </div>
-          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-2 md:mt-8 md:gap-x-5 md:gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
             {newest.map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
         </section>
       )}
 
       {brands.length > 0 && (
-        <section aria-labelledby="home-brands-title" className="mx-auto max-w-7xl px-6 pb-20">
-          <div className="border-y border-line py-8">
+        <section aria-labelledby="home-brands-title" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 md:pb-20">
+          <div className="border-y border-line py-6 md:py-8">
             <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted" id="home-brands-title">
               Explorá por marca
             </p>

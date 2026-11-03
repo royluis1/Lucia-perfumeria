@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '../../../components/header';
-import { AddToCartButton } from '../../../components/add-to-cart-button';
 import { ProductGallery } from '../../../components/product-gallery';
 import { ProductCard } from '../../../components/product-card';
 import { ProductReviewsSection } from '../../../components/product-reviews';
+import { ProductPurchaseControls } from '../../../components/product-purchase-controls';
 import { WishlistButton } from '../../../components/wishlist-button';
 import type { GalleryImage } from '../../../components/product-gallery';
 import { getProduct, getProductReviews, getProducts, resolveImageUrl } from '../../../lib/api';
@@ -107,17 +107,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
   };
 
   return (
-    <main>
+    <main className="pb-28 lg:pb-0">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <Header />
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-2">
+      <section className="mx-auto grid max-w-7xl gap-7 px-4 pb-32 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-12 lg:py-16">
         <ProductGallery images={gallery} name={product.name} />
         <div className="self-center">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               {product.brandSlug ? (
                 <Link className="ul text-[11px] font-semibold uppercase tracking-[0.3em] text-muted" href={`/marcas/${product.brandSlug}`}>
                   {product.brand}
@@ -125,14 +125,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ) : (
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">{product.brand}</p>
               )}
-              <h1 className="mt-4 font-display text-6xl font-black uppercase leading-none tracking-[-0.02em]">{product.name}</h1>
+              <h1 className="mt-4 break-words font-display text-[clamp(2rem,8vw,3.75rem)] font-black uppercase leading-none tracking-[-0.02em] lg:text-6xl">{product.name}</h1>
             </div>
             <div className="shrink-0">
               <WishlistButton product={product} />
             </div>
           </div>
           <p className="mt-6 text-2xl font-semibold">{price}</p>
-          <p className="mt-8 max-w-lg leading-7 text-muted">{product.description}</p>
+          <details className="mt-6 max-w-lg border-y border-line py-3">
+            <summary className="flex min-h-11 cursor-pointer items-center justify-between text-xs font-semibold uppercase tracking-[0.18em]">
+              Descripción
+              <span aria-hidden="true">+</span>
+            </summary>
+            <p className="pb-3 leading-7 text-muted">{product.description}</p>
+          </details>
           <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
             <span>{product.inStock ? 'Disponible para compra' : 'Agotado'}</span>
             {product.categories.map((category) => (
@@ -145,28 +151,31 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </Link>
             ))}
           </div>
-          {product.inStock && (
-            <AddToCartButton
-              productId={product.id}
-              productName={product.name}
-              productBrand={product.brand}
-              productPrice={priceValue}
-            />
-          )}
+          <ProductPurchaseControls
+            productId={product.id}
+            productName={product.name}
+            productBrand={product.brand}
+            productPrice={priceValue}
+            inStock={product.inStock}
+          />
         </div>
       </section>
       {relatedProducts.length > 0 && (
-        <section aria-labelledby="related-products-title" className="mx-auto max-w-7xl px-6 pb-20">
+        <section aria-labelledby="related-products-title" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:pb-20">
           <div className="flex items-end justify-between gap-6">
-            <h2 className="font-display text-4xl font-black uppercase tracking-[-0.02em]" id="related-products-title">
+            <h2 className="font-display text-[clamp(1.8rem,7vw,2.25rem)] font-black uppercase tracking-[-0.02em]" id="related-products-title">
               También te puede gustar
             </h2>
             <Link className="ul hidden text-xs font-extrabold uppercase tracking-[0.18em] sm:block" href="/shop">
               Ver colección
             </Link>
           </div>
-          <div className="mt-8 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            {relatedProducts.map((item) => <ProductCard key={item.id} product={item} />)}
+          <div className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 lg:mt-8 lg:grid lg:grid-cols-4 lg:gap-x-5 lg:gap-y-10">
+            {relatedProducts.map((item) => (
+              <div className="w-[72vw] max-w-[18rem] shrink-0 snap-start lg:w-auto lg:max-w-none lg:shrink" key={item.id}>
+                <ProductCard product={item} />
+              </div>
+            ))}
           </div>
         </section>
       )}

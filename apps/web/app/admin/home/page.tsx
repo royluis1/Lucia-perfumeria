@@ -149,13 +149,13 @@ export default function AdminHomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <a className="font-display text-xl" href="/admin" aria-label="Panel admin"><Logo className="text-xl" /></a>
         <a className="ul text-xs font-semibold uppercase tracking-[0.22em]" href="/shop">Tienda</a>
       </div>
       <a className="mt-10 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-muted transition-colors hover:text-black" href="/admin"><span aria-hidden="true">←</span>Volver al panel</a>
-      <h1 className="mt-5 font-display text-6xl font-black uppercase tracking-[-0.02em]">Portada</h1>
+      <h1 className="mt-5 font-display text-[clamp(2rem,8vw,3.75rem)] font-black uppercase tracking-[-0.02em] md:text-6xl">Portada</h1>
       <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">
         Elegí el producto que protagoniza el inicio y los destacados de la sección Favoritos. Si no configurás nada, se muestran los productos más recientes.
       </p>

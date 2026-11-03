@@ -82,12 +82,12 @@ export default function OrdersPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-6 py-16">
+    <main className="mx-auto min-h-[100dvh] max-w-4xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
       <div className="flex items-center justify-between">
         <a className="inline-flex min-h-11 items-center" href="/"><Logo className="text-[22px]" /></a>
         <a className="text-xs uppercase tracking-[0.18em] underline" href="/shop">Seguir comprando</a>
       </div>
-      <h1 className="mt-20 font-display text-6xl font-black uppercase tracking-[-0.02em]">Mis pedidos</h1>
+      <h1 className="mt-12 font-display text-[clamp(2.25rem,8vw,3.75rem)] font-black uppercase tracking-[-0.02em] md:mt-20 md:text-6xl">Mis pedidos</h1>
       {banner && <p className="mt-8 border border-line bg-gold-soft px-6 py-4 text-sm" role="status">{banner}</p>}
       {message && <p className="mt-8 border border-line bg-white p-6 text-muted" role="status">{message}</p>}
       <div className="mt-10 space-y-4">
@@ -95,7 +95,7 @@ export default function OrdersPage() {
           const canPay =
             order.status === 'PENDING' && !NON_PAYABLE_PAYMENT_STATUSES.includes(order.paymentStatus);
           return (
-            <article className="border border-line bg-white p-6" key={order.id}>
+            <article className="border border-line bg-white p-4 sm:p-6" key={order.id}>
               <div className="flex flex-wrap justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.15em]">Pedido {order.id.slice(0, 8)}</p>
                 <p className="text-sm font-semibold">{formatPrice(Number(order.total))}</p>

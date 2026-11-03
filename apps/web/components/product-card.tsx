@@ -16,7 +16,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const secondaryImage = galleryImages[1] ?? null;
 
   return (
-    <article className="card relative">
+    <article className="card relative min-w-0">
       <div className="relative aspect-[4/5] overflow-hidden bg-white">
         <Link className="group absolute inset-0 block" href={`/shop/${product.slug}`} aria-label={`Ver ${product.name}`}>
           {primaryImage ? (
@@ -24,15 +24,15 @@ export function ProductCard({ product }: { product: ProductSummary }) {
               <SmartImage
                 alt={product.name}
                 className="img object-cover"
-                sizes="(min-width: 768px) 33vw, 90vw"
+                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 48vw"
                 src={primaryImage}
               />
               {secondaryImage && (
-                <span className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                <span className="product-card-secondary absolute inset-0 opacity-0 transition-opacity duration-500">
                   <SmartImage
                     alt={`${product.name} · segunda vista`}
                     className="img object-cover"
-                    sizes="(min-width: 768px) 33vw, 90vw"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 48vw"
                     src={secondaryImage}
                   />
                 </span>
@@ -40,7 +40,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             </>
           ) : <ProductBottlePlaceholder className="h-full w-full" />}
         </Link>
-        <div className="heart absolute right-4 top-4 z-10">
+        <div className="heart absolute right-2 top-2 z-10 sm:right-4 sm:top-4">
           <WishlistButton product={product} />
         </div>
         <div className="add absolute inset-x-0 bottom-0 z-10">
@@ -53,20 +53,20 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           />
         </div>
       </div>
-      <div className="flex justify-between gap-4 pt-5">
+      <div className="flex min-w-0 flex-col gap-1 pt-3 sm:flex-row sm:justify-between sm:gap-4 sm:pt-5">
         <div>
-          <h2 className="text-sm font-semibold">
+          <h2 className="text-xs font-semibold sm:text-sm">
             <Link className="ul" href={`/shop/${product.slug}`}>{product.name}</Link>
           </h2>
           {product.brandSlug ? (
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 truncate text-xs text-muted sm:text-sm">
               <Link className="ul" href={`/marcas/${product.brandSlug}`}>{product.brand}</Link>
             </p>
           ) : (
-            <p className="mt-1 text-sm text-muted">{product.brand}</p>
+            <p className="mt-1 truncate text-xs text-muted sm:text-sm">{product.brand}</p>
           )}
         </div>
-        <p className="text-sm font-semibold">{formatPrice(priceValue)}</p>
+        <p className="text-xs font-semibold sm:shrink-0 sm:text-sm">{formatPrice(priceValue)}</p>
       </div>
     </article>
   );
